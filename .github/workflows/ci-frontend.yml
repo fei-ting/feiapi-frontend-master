@@ -1,0 +1,50 @@
+name: 前端 CI（Yarn 安装 + Lint + 构建）
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 缓存 Yarn 依赖
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: 安装依赖
+        run: yarn install --frozen-lockfile
+        env:
+          HUSKY: 0
+
+      - name: TypeScript 类型检查
+        run: yarn tsc
+
+      - name: ESLint 检查
+        run: yarn lint:js
+
+      - name: 前端构建
+        run: yarn build
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 7
