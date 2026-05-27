@@ -35,7 +35,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
       const { key } = event;
       if (key === 'logout') {
         flushSync(() => {
-          setInitialState((s: InitialState) => ({ ...s, loginUser: undefined }));
+          setInitialState((s) => ({ ...s, loginUser: undefined }));
         });
         loginOut();
         return;

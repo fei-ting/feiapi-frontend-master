@@ -70,8 +70,7 @@ const getUnreadData = (noticeData: Record<string, API.NoticeIconItem[]>) => {
 };
 
 const NoticeIconView: React.FC = () => {
-  const { initialState } = useModel('@@initialState');
-  const { currentUser } = initialState || {};
+  useModel('@@initialState');
   const [notices, setNotices] = useState<API.NoticeIconItem[]>([]);
   const { data } = useRequest(getNotices);
 
@@ -81,6 +80,7 @@ const NoticeIconView: React.FC = () => {
 
   const noticeData = getNoticeData(notices);
   const unreadMsg = getUnreadData(noticeData || {});
+  const totalUnreadCount = Object.values(unreadMsg).reduce((total, count) => total + count, 0);
 
   const changeReadState = (id: string) => {
     setNotices(
@@ -110,7 +110,7 @@ const NoticeIconView: React.FC = () => {
   return (
     <NoticeIcon
       className={styles.action}
-      count={currentUser && currentUser.unreadCount}
+      count={totalUnreadCount}
       onItemClick={(item) => {
         changeReadState(item.id!);
       }}
