@@ -113,5 +113,4 @@ export default defineConfig({
     exclude: ['@playwright/test'],
   },
 
-  exportStatic: {},
 });
