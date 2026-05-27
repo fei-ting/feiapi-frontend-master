@@ -12,7 +12,6 @@ import { useParams } from '@@/exports';
  * @constructor
  */
 const Index: React.FC = () => {
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState<API.InterfaceInfo>();
   const [invokeRes, setInvokeRes] = useState<any>();
   const [invokeLoading, setInvokeLoading] = useState(false);
@@ -24,7 +23,6 @@ const Index: React.FC = () => {
       message.error('参数不存在');
       return;
     }
-    setLoading(true);
     try {
       const res = await getInterfaceInfoByIdUsingGET({
         id: Number(params.id),
@@ -33,7 +31,6 @@ const Index: React.FC = () => {
     } catch (error: any) {
       message.error('请求失败，' + error.message);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

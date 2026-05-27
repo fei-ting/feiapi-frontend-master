@@ -31,6 +31,7 @@ const genList = (current: number, pageSize: number) => {
 };
 
 let tableListDataSource = genList(1, 100);
+type RuleListItemKey = keyof API.RuleListItem;
 
 function getRule(req: Request, res: Response, u: string) {
   let realUrl = u;
@@ -49,19 +50,22 @@ function getRule(req: Request, res: Response, u: string) {
     (current as number) * (pageSize as number),
   );
   if (params.sorter) {
-    const sorter = JSON.parse(params.sorter);
+    const sorter = JSON.parse(params.sorter) as Record<string, 'ascend' | 'descend'>;
     dataSource = dataSource.sort((prev, next) => {
       let sortNumber = 0;
       Object.keys(sorter).forEach((key) => {
+        const typedKey = key as RuleListItemKey;
+        const prevValue = Number(prev[typedKey] ?? 0);
+        const nextValue = Number(next[typedKey] ?? 0);
         if (sorter[key] === 'descend') {
-          if (prev[key] - next[key] > 0) {
+          if (prevValue - nextValue > 0) {
             sortNumber += -1;
           } else {
             sortNumber += 1;
           }
           return;
         }
-        if (prev[key] - next[key] > 0) {
+        if (prevValue - nextValue > 0) {
           sortNumber += 1;
         } else {
           sortNumber += -1;
@@ -77,10 +81,11 @@ function getRule(req: Request, res: Response, u: string) {
     if (Object.keys(filter).length > 0) {
       dataSource = dataSource.filter((item) => {
         return Object.keys(filter).some((key) => {
+          const typedKey = key as RuleListItemKey;
           if (!filter[key]) {
             return true;
           }
-          if (filter[key].includes(`${item[key]}`)) {
+          if (filter[key].includes(`${item[typedKey]}`)) {
             return true;
           }
           return false;

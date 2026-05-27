@@ -1,56 +1,59 @@
 import Footer from '@/components/Footer';
 import RightContent from '@/components/RightContent';
+import { getLoginUserUsingGET } from '@/services/feiapi-backend/userController';
 import { LinkOutlined } from '@ant-design/icons';
 import { SettingDrawer } from '@ant-design/pro-components';
-import type { RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
+import type { RunTimeLayoutConfig } from '@@/plugin-layout/types';
+import { message } from 'antd';
 import { requestConfig } from './requestConfig';
-import {getLoginUserUsingGET} from "@/services/feiapi-backend/userController";
-import {message} from "antd";
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 
+type LayoutRuntimeProps = Parameters<RunTimeLayoutConfig>[0];
 
 /**
- * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
- * */
+ * 获取全局初始状态。
+ */
 export async function getInitialState(): Promise<InitialState> {
-  // 当页面首次加载时，获取要全局保存的数据，比如用户登录信息
   const state: InitialState = {
     loginUser: undefined,
-  }
+  };
 
   try {
     const res = await getLoginUserUsingGET();
     if (res.data) {
-      state.loginUser = res.data
-      if (history.location.pathname === '/user/login/'){
-        //防止用户登录后再次跳转到登录页面
-        message.success("登录成功")
+      state.loginUser = res.data;
+      if (window.location.pathname === '/user/login/') {
+        message.success('登录成功');
         history.push('/');
       }
     }
   } catch (error) {
     history.push(loginPath);
   }
+
   return state;
 }
 
-
-// ProLayout 支持的api https://procomponents.ant.design/components/layout
-export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+/**
+ * ProLayout 运行时配置。
+ */
+export const layout: RunTimeLayoutConfig = ({
+  initialState,
+  setInitialState,
+}: LayoutRuntimeProps) => {
   return {
-    layout: "top",
+    layout: 'top',
     rightContentRender: () => <RightContent />,
     waterMarkProps: {
       content: initialState?.loginUser?.userName,
     },
     footerRender: () => <Footer />,
     onPageChange: () => {
-      const { location } = history;
-      // 如果没有登录，重定向到 login
-      if (!initialState?.loginUser && location.pathname !== loginPath) {
+      const pathname = window.location.pathname;
+      if (!initialState?.loginUser && pathname !== loginPath) {
         history.push(loginPath);
       }
     },
@@ -83,11 +86,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
         ]
       : [],
     menuHeaderRender: undefined,
-    // 自定义 403 页面
-    // unAccessible: <div>unAccessible</div>,
-    // 增加一个 loading 的状态
     childrenRender: (children, props) => {
-      // if (initialState?.loading) return <PageLoading />;
       return (
         <>
           {children}
@@ -112,8 +111,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
 };
 
 /**
- * @name request 配置，可以配置错误处理
- * 它基于 axios 和 ahooks 的 useRequest 提供了一套统一的网络请求和错误处理方案。
- * @doc https://umijs.org/docs/max/request#配置
+ * 全局请求配置。
  */
 export const request = requestConfig;
