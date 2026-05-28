@@ -4,7 +4,7 @@ import { request } from '@umijs/max';
 
 /** addUser POST /api/user/add */
 export async function addUserUsingPOST(body: API.UserAddRequest, options?: { [key: string]: any }) {
-  return request<API.BaseResponselong>('/api/user/add', {
+  return request<API.BaseResponselong>('/user/add', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ export async function deleteUserUsingPOST(
   body: API.DeleteRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseboolean>('/api/user/delete', {
+  return request<API.BaseResponseboolean>('/user/delete', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export async function getUserByIdUsingGET(
   params: API.getUserByIdUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseUserVO>('/api/user/get', {
+  return request<API.BaseResponseUserVO>('/user/get', {
     method: 'GET',
     params: {
       ...params,
@@ -46,7 +46,7 @@ export async function getUserByIdUsingGET(
 
 /** getLoginUser GET /api/user/get/login */
 export async function getLoginUserUsingGET(options?: { [key: string]: any }) {
-  return request<API.BaseResponseUserVO>('/api/user/get/login', {
+  return request<API.BaseResponseUserVO>('/user/get/login', {
     method: 'GET',
     ...(options || {}),
   });
@@ -58,7 +58,7 @@ export async function listUserUsingGET(
   params: API.listUserUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseListUserVO>('/api/user/list', {
+  return request<API.BaseResponseListUserVO>('/user/list', {
     method: 'GET',
     params: {
       ...params,
@@ -73,7 +73,7 @@ export async function listUserByPageUsingGET(
   params: API.listUserByPageUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponsePageUserVO>('/api/user/list/page', {
+  return request<API.BaseResponsePageUserVO>('/user/list/page', {
     method: 'GET',
     params: {
       ...params,
@@ -87,7 +87,7 @@ export async function userLoginUsingPOST(
   body: API.UserLoginRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseUser>('/api/user/login', {
+  return request<API.BaseResponseUser>('/user/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export async function userLoginUsingPOST(
 
 /** userLogout POST /api/user/logout */
 export async function userLogoutUsingPOST(options?: { [key: string]: any }) {
-  return request<API.BaseResponseboolean>('/api/user/logout', {
+  return request<API.BaseResponseboolean>('/user/logout', {
     method: 'POST',
     ...(options || {}),
   });
@@ -110,7 +110,7 @@ export async function userRegisterUsingPOST(
   body: API.UserRegisterRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponselong>('/api/user/register', {
+  return request<API.BaseResponselong>('/user/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export async function updateUserUsingPOST(
   body: API.UserUpdateRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseboolean>('/api/user/update', {
+  return request<API.BaseResponseboolean>('/user/update', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

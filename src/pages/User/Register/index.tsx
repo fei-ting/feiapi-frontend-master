@@ -35,7 +35,7 @@ const Register: React.FC = () => {
 
         if (!history) return;
         history.push({
-          pathname: 'user/login',
+          pathname: '/user/login',
         });
         return;
       }

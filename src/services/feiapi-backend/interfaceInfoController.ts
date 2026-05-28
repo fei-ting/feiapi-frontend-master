@@ -7,7 +7,7 @@ export async function addInterfaceInfoUsingPOST(
   body: API.InterfaceInfoAddRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponselong>('/api/interfaceInfo/add', {
+  return request<API.BaseResponselong>('/interfaceInfo/add', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -22,7 +22,7 @@ export async function deleteInterfaceInfoUsingPOST(
   body: API.DeleteRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseboolean>('/api/interfaceInfo/delete', {
+  return request<API.BaseResponseboolean>('/interfaceInfo/delete', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ export async function getInterfaceInfoByIdUsingGET(
   params: API.getInterfaceInfoByIdUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseInterfaceInfo>('/api/interfaceInfo/get', {
+  return request<API.BaseResponseInterfaceInfo>('/interfaceInfo/get', {
     method: 'GET',
     params: {
       ...params,
@@ -52,7 +52,7 @@ export async function invokeInterfaceInfoUsingPOST(
   body: API.InterfaceInfoInvokeRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseobject>('/api/interfaceInfo/invoke', {
+  return request<API.BaseResponseobject>('/interfaceInfo/invoke', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export async function listInterfaceInfoUsingGET(
   params: API.listInterfaceInfoUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseListInterfaceInfo>('/api/interfaceInfo/list', {
+  return request<API.BaseResponseListInterfaceInfo>('/interfaceInfo/list', {
     method: 'GET',
     params: {
       ...params,
@@ -83,7 +83,7 @@ export async function listInterfaceInfoByPageUsingGET(
   params: API.listInterfaceInfoByPageUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponsePageInterfaceInfo>('/api/interfaceInfo/list/page', {
+  return request<API.BaseResponsePageInterfaceInfo>('/interfaceInfo/list/page', {
     method: 'GET',
     params: {
       ...params,
@@ -97,7 +97,7 @@ export async function offlineInterfaceInfoUsingPOST(
   body: API.IdRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseboolean>('/api/interfaceInfo/offline', {
+  return request<API.BaseResponseboolean>('/interfaceInfo/offline', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ export async function onlineInterfaceInfoUsingPOST(
   body: API.IdRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseboolean>('/api/interfaceInfo/online', {
+  return request<API.BaseResponseboolean>('/interfaceInfo/online', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ export async function updateInterfaceInfoUsingPOST(
   body: API.InterfaceInfoUpdateRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseboolean>('/api/interfaceInfo/update', {
+  return request<API.BaseResponseboolean>('/interfaceInfo/update', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
