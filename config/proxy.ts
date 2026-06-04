@@ -14,7 +14,6 @@ export default {
     '/api/': {
       target: 'http://localhost:9527',
       changeOrigin: true,
-      pathRewrite: { '^': '' },
     },
   },
   /**
@@ -26,14 +25,12 @@ export default {
     '/api/': {
       target: 'https://proapi.azurewebsites.net',
       changeOrigin: true,
-      pathRewrite: { '^': '' },
     },
   },
   pre: {
     '/api/': {
       target: 'your pre url',
       changeOrigin: true,
-      pathRewrite: { '^': '' },
     },
   },
 };
