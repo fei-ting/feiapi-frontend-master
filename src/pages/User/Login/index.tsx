@@ -14,6 +14,12 @@ import React, { useState } from 'react';
 import styles from './index.less';
 import { userLoginUsingPOST } from '@/services/feiapi-backend/userController';
 import {Alert, Divider, message, Space, Tabs} from "antd";
+import {
+  clearLoginAttemptRecord,
+  getRemainingLockTime,
+  isLoginAllowed,
+  recordLoginFailure,
+} from '@/utils/loginAttemptLimiter';
 
 const LoginMessage: React.FC<{
   content: string;
@@ -34,12 +40,21 @@ const Login: React.FC = () => {
   const [type, setType] = useState<string>('account');
   const { setInitialState } = useModel('@@initialState');
   const handleSubmit = async (values: API.UserLoginRequest) => {
+    const userAccount = (values.userAccount || '').trim();
+    if (!isLoginAllowed(userAccount)) {
+      const remainingMinutes = Math.ceil(getRemainingLockTime(userAccount) / 60000);
+      message.error(remainingMinutes <= 1 ? '登录失败次数过多，请稍后再试' : `登录失败次数过多，请 ${remainingMinutes} 分钟后再试`);
+      return;
+    }
+
     try {
       // 登录
       const res = await userLoginUsingPOST({
         ...values,
+        userAccount,
       });
       if (res.data) {
+        clearLoginAttemptRecord(userAccount);
         const urlParams = new URL(window.location.href).searchParams;
         setInitialState({
           loginUser: res.data
@@ -48,9 +63,21 @@ const Login: React.FC = () => {
         return;
       }
     } catch (error) {
-      const defaultLoginFailureMessage = '登录失败，请重试！';
-      console.log(error);
-      message.error(defaultLoginFailureMessage);
+      const responseMessage =
+        typeof error === 'object' && error && 'response' in error
+          ? // @ts-ignore
+            error.response?.data?.message || ''
+          : '';
+      const loginFailed =
+        responseMessage.includes('用户不存在或密码错误') || responseMessage.includes('登录失败次数过多');
+      if (loginFailed) {
+        const locked = recordLoginFailure(userAccount);
+        if (locked) {
+          message.error('登录失败次数过多，请 15 分钟后再试');
+          return;
+        }
+      }
+      message.error('登录失败，请重试！');
     }
   };
   const { status, type: loginType } = userLoginState;
