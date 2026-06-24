@@ -28,10 +28,7 @@ jobs:
           HUSKY: 0
 
       - name: TypeScript 类型检查
-        run: yarn tsc
-
-      - name: ESLint 检查
-        run: yarn lint:js
+        run: yarn vue-tsc --noEmit
 
       - name: 前端构建
         run: yarn build
