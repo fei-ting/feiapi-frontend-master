@@ -21,6 +21,14 @@
 
       <nav class="fei-nav" aria-label="主导航">
         <a class="fei-nav__link" :class="{ 'is-active': active === 'home' }" href="#/home">主页</a>
+        <a
+          v-if="loginUser?.userRole === 'admin'"
+          class="fei-nav__link"
+          :class="{ 'is-active': active === 'admin' }"
+          href="#/admin/dashboard"
+        >
+          后台管理
+        </a>
       </nav>
 
       <div class="fei-nav__actions">
