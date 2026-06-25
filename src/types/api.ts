@@ -74,4 +74,6 @@ export interface InterfaceQuery {
   current?: number;
   pageSize?: number;
   status?: number | string;
+  /** 接口描述，用于模糊搜索 */
+  description?: string;
 }

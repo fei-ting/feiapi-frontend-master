@@ -2,18 +2,77 @@
   <div class="fei-app-shell">
     <AppHeader :login-user="loginUser" active="profile" @logout="handleLogout" />
     <PageContainer>
-      <div class="fei-layout-detail" style="grid-template-columns: 240px minmax(0, 1fr)">
-        <aside class="fei-panel">
-          <div class="fei-tabbar" style="flex-direction: column">
-            <a class="fei-tab" :class="{ 'is-active': activeTab === 'records' }" href="#/profile/records">我的调用</a>
-            <a class="fei-tab" :class="{ 'is-active': activeTab === 'keys' }" href="#/profile/keys">密钥管理</a>
+      <!-- 个人信息头部卡片 -->
+      <div v-if="loginUser" class="fei-profile-header">
+        <img
+          class="fei-profile-avatar"
+          :src="loginUser.userAvatar || defaultAvatar"
+          :alt="loginUser.userName || '用户'"
+        />
+        <div class="fei-profile-info">
+          <h1 class="fei-profile-name">{{ loginUser.userName || '未设置昵称' }}</h1>
+          <p class="fei-profile-account">账号：{{ loginUser.userAccount }}</p>
+          <div class="fei-profile-meta">
+            <span class="fei-user-role-badge">
+              {{ loginUser.userRole === 'admin' ? '管理员' : '普通用户' }}
+            </span>
+            <span>ID: {{ loginUser.id }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 侧边栏 + 内容区布局 -->
+      <div class="fei-admin-layout">
+        <!-- 桌面端侧边栏 -->
+        <aside class="fei-admin-sidebar">
+          <div class="fei-card">
+            <nav class="fei-admin-sidebar-nav" style="padding: 8px">
+              <a
+                class="fei-admin-nav-link"
+                :class="{ 'is-active': activeTab === 'records' }"
+                href="#/profile/records"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                我的调用
+              </a>
+              <a
+                class="fei-admin-nav-link"
+                :class="{ 'is-active': activeTab === 'keys' }"
+                href="#/profile/keys"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                密钥管理
+              </a>
+            </nav>
           </div>
         </aside>
 
-        <section class="fei-panel">
-          <template v-if="activeTab === 'records'">
-            <SectionHeader title="我的调用记录" />
-            <div class="fei-table-wrap" style="margin-top: 18px">
+        <!-- 内容区 -->
+        <div class="fei-admin-content">
+          <!-- 移动端 Tab 导航 -->
+          <div class="fei-admin-tabs">
+            <button
+              class="fei-admin-tab"
+              :class="{ 'is-active': activeTab === 'records' }"
+              @click="switchTab('records')"
+            >
+              我的调用
+            </button>
+            <button
+              class="fei-admin-tab"
+              :class="{ 'is-active': activeTab === 'keys' }"
+              @click="switchTab('keys')"
+            >
+              密钥管理
+            </button>
+          </div>
+
+          <!-- 我的调用记录 -->
+          <div v-if="activeTab === 'records'" class="fei-card">
+            <div class="fei-card-header">
+              <h2 class="fei-section-title">我的调用记录</h2>
+            </div>
+            <div class="fei-table-wrap" style="border: none; border-radius: 0">
               <table class="fei-table">
                 <thead>
                   <tr>
@@ -29,52 +88,112 @@
                     <td>{{ item.interfaceName }}</td>
                     <td>{{ item.totalNum }}</td>
                     <td>{{ item.leftNum }}</td>
-                    <td>{{ item.status === 0 ? '正常' : '停用' }}</td>
-                    <td><a :href="`#/interface/${item.interfaceInfoId}`">去调用</a></td>
+                    <td>
+                      <span
+                        class="fei-tag"
+                        :class="item.status === 0 ? 'fei-tag--online' : 'fei-tag--offline'"
+                      >
+                        {{ item.status === 0 ? '正常' : '停用' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="fei-table-actions">
+                        <a :href="`#/interface/${item.interfaceInfoId}`">去调用</a>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </template>
+            <div v-if="!records.length" class="fei-empty">暂无调用记录</div>
+          </div>
 
-          <template v-else>
-            <SectionHeader title="访问密钥" desc="请妥善保管您的 accessKey 与 secretKey，避免泄露。" />
-            <div v-if="loginUser" class="fei-form" style="margin-top: 18px">
-              <div class="fei-field">
-                <label class="fei-label">Access Key</label>
-                <div class="fei-card" style="padding: 14px 16px">{{ loginUser.accessKey }}</div>
+          <!-- 密钥管理 -->
+          <div v-else class="fei-card">
+            <div class="fei-card-header">
+              <h2 class="fei-section-title">访问密钥</h2>
+            </div>
+            <div v-if="loginUser" class="fei-card-body">
+              <!-- 安全提示 -->
+              <div class="fei-security-notice">
+                <div class="fei-security-notice-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <div>
+                  <div class="fei-security-notice-title">安全提示</div>
+                  <p class="fei-security-notice-text">
+                    请妥善保管您的 secretKey，不要泄露给他人或在客户端代码中硬编码。如怀疑泄露，请立即重置。
+                  </p>
+                </div>
               </div>
-              <div class="fei-field">
-                <label class="fei-label">Secret Key</label>
-                <div class="fei-card" style="padding: 14px 16px">{{ maskedSecret }}</div>
+
+              <!-- Access Key -->
+              <div class="fei-key-card">
+                <span class="fei-key-label">Access Key</span>
+                <span class="fei-key-value">{{ loginUser.accessKey }}</span>
+                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(loginUser.accessKey || '')">
+                  复制
+                </button>
               </div>
-              <div class="fei-card" style="padding: 16px; background: #fafcff">
+
+              <!-- Secret Key -->
+              <div class="fei-key-card" style="margin-top: 12px">
+                <span class="fei-key-label">Secret Key</span>
+                <span class="fei-key-value">{{ showSecret ? loginUser.secretKey : maskedSecret }}</span>
+                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="showSecret = !showSecret">
+                  {{ showSecret ? '隐藏' : '显示' }}
+                </button>
+                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(loginUser.secretKey || '')">
+                  复制
+                </button>
+              </div>
+
+              <!-- SDK 接入示例 -->
+              <div style="margin-top: 24px; padding: 20px; background: #f8fafc; border: 1px solid var(--fei-border); border-radius: 10px">
+                <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 600">Java SDK 快速接入</h3>
                 <pre class="fei-code" style="margin: 0">{{ sdkSnippet }}</pre>
               </div>
             </div>
-          </template>
-        </section>
+          </div>
+        </div>
       </div>
     </PageContainer>
     <AppFooter />
+    <ToastMessage :message="toast.message" :type="toast.type" :visible="toast.visible" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import PageContainer from '@/components/PageContainer.vue';
-import SectionHeader from '@/components/SectionHeader.vue';
+import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
 import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
 import type { UserInterfaceInfoVO, UserVO } from '@/types/api';
 
 const route = useRoute();
+const router = useRouter();
 const activeTab = computed(() => (route.params.tab === 'keys' ? 'keys' : 'records'));
 const loginUser = ref<UserVO | null>(null);
 const records = ref<UserInterfaceInfoVO[]>([]);
+const showSecret = ref(false);
+const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
+
+const toast = reactive({
+  visible: false,
+  type: 'info' as 'success' | 'error' | 'info',
+  message: '',
+});
+
+const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  toast.message = message;
+  toast.type = type;
+  toast.visible = true;
+  window.setTimeout(() => { toast.visible = false; }, 2400);
+};
 
 const maskedSecret = computed(() => {
   const secret = loginUser.value?.secretKey || '';
@@ -83,10 +202,23 @@ const maskedSecret = computed(() => {
 });
 
 const sdkSnippet = computed(() => {
-  const accessKey = loginUser.value?.accessKey || '';
-  const secretKey = loginUser.value?.secretKey || '';
-  return `FeiApiClient client = new FeiApiClient("${accessKey}", "${secretKey}");\nString result = client.invoke("/api/love/random", "GET", null);`;
+  const accessKey = loginUser.value?.accessKey || '<your-access-key>';
+  const secretKey = loginUser.value?.secretKey || '<your-secret-key>';
+  return `FeiApiClient client = new FeiApiClient(\n    "${accessKey}",\n    "${secretKey}"\n);\nString result = client.invoke(\n    "/api/love/random", "GET", null\n);`;
 });
+
+const switchTab = (tab: string) => {
+  router.push(`/profile/${tab}`);
+};
+
+const copyKey = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('已复制到剪贴板', 'success');
+  } catch {
+    showToast('复制失败，请手动复制', 'error');
+  }
+};
 
 const loadLoginUser = async () => {
   try {
