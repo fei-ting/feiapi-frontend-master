@@ -106,10 +106,10 @@
                     </td>
                     <td>
                       <div class="fei-table-actions">
-                        <a :href="`#/interface/${item.id}`">编辑</a>
-                        <button v-if="item.status !== 1" @click="onlineInterface(item.id)">发布</button>
-                        <button v-else @click="offlineInterface(item.id)">下线</button>
-                        <button class="fei-action--danger" @click="deleteInterface(item.id)">删除</button>
+                        <button class="fei-action-btn" @click="openEditModal(item)">编辑</button>
+                        <button v-if="item.status !== 1" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
+                        <button v-else class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
+                        <button class="fei-action-btn fei-action-btn--danger" @click="deleteInterface(item.id)">删除</button>
                       </div>
                     </td>
                   </tr>
@@ -123,6 +123,71 @@
     </PageContainer>
     <AppFooter />
     <ToastMessage :message="toast.message" :type="toast.type" :visible="toast.visible" />
+
+    <!-- 编辑接口弹窗 -->
+    <Teleport to="body">
+      <div v-if="editModalVisible" class="fei-modal-overlay" @click.self="closeEditModal">
+        <div class="fei-modal">
+          <div class="fei-modal-header">
+            <h3>编辑接口</h3>
+            <button class="fei-modal-close" @click="closeEditModal">&times;</button>
+          </div>
+          <div class="fei-modal-body">
+            <div class="fei-form-group">
+              <label class="fei-form-label">接口名称 <span class="fei-required">*</span></label>
+              <input v-model="editForm.name" class="fei-input" placeholder="请输入接口名称" maxlength="50" />
+            </div>
+            <div class="fei-form-row">
+              <div class="fei-form-group">
+                <label class="fei-form-label">请求方法 <span class="fei-required">*</span></label>
+                <select v-model="editForm.method" class="fei-select">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+              </div>
+              <div class="fei-form-group">
+                <label class="fei-form-label">接口展示地址</label>
+                <input v-model="editForm.url" class="fei-input" placeholder="展示给用户的地址" maxlength="512" />
+              </div>
+            </div>
+            <div class="fei-form-row">
+              <div class="fei-form-group">
+                <label class="fei-form-label">网关匹配路径</label>
+                <input v-model="editForm.path" class="fei-input" placeholder="如：/api/xxx" maxlength="512" />
+              </div>
+              <div class="fei-form-group">
+                <label class="fei-form-label">真实后端地址</label>
+                <input v-model="editForm.targetHost" class="fei-input" placeholder="如：http://localhost:8080" maxlength="512" />
+              </div>
+            </div>
+            <div class="fei-form-group">
+              <label class="fei-form-label">接口描述</label>
+              <textarea v-model="editForm.description" class="fei-textarea" placeholder="请输入接口描述" rows="3" maxlength="512"></textarea>
+            </div>
+            <div class="fei-form-group">
+              <label class="fei-form-label">请求参数文档</label>
+              <textarea v-model="editForm.requestParams" class="fei-textarea" placeholder="请求参数说明" rows="3"></textarea>
+            </div>
+            <div class="fei-form-group">
+              <label class="fei-form-label">请求头文档</label>
+              <textarea v-model="editForm.requestHeader" class="fei-textarea" placeholder="请求头说明" rows="3"></textarea>
+            </div>
+            <div class="fei-form-group">
+              <label class="fei-form-label">响应头文档</label>
+              <textarea v-model="editForm.responseHeader" class="fei-textarea" placeholder="响应头说明" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="fei-modal-footer">
+            <button class="fei-btn fei-btn--secondary" @click="closeEditModal">取消</button>
+            <button class="fei-btn fei-btn--primary" :disabled="editSubmitting" @click="submitEdit">
+              {{ editSubmitting ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -168,6 +233,22 @@ const toast = reactive({
   visible: false,
   type: 'info' as 'success' | 'error' | 'info',
   message: '',
+});
+
+/** 编辑弹窗相关状态 */
+const editModalVisible = ref(false);
+const editSubmitting = ref(false);
+const editForm = reactive({
+  id: 0,
+  name: '',
+  method: 'GET',
+  url: '',
+  path: '',
+  targetHost: '',
+  description: '',
+  requestParams: '',
+  requestHeader: '',
+  responseHeader: '',
 });
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -232,6 +313,68 @@ const deleteInterface = async (_id: number) => {
   showToast('删除功能暂未实现', 'info');
 };
 
+/**
+ * 打开编辑弹窗，填充表单数据
+ * @param item 接口信息
+ */
+const openEditModal = (item: InterfaceInfoVO) => {
+  editForm.id = item.id;
+  editForm.name = item.name || '';
+  editForm.method = item.method || 'GET';
+  editForm.url = item.url || '';
+  editForm.path = item.path || '';
+  editForm.targetHost = item.targetHost || '';
+  editForm.description = item.description || '';
+  editForm.requestParams = item.requestParams || '';
+  editForm.requestHeader = item.requestHeader || '';
+  editForm.responseHeader = item.responseHeader || '';
+  editModalVisible.value = true;
+};
+
+/** 关闭编辑弹窗 */
+const closeEditModal = () => {
+  editModalVisible.value = false;
+};
+
+/**
+ * 提交编辑表单
+ * 校验必填字段后调用更新接口
+ */
+const submitEdit = async () => {
+  // 校验必填字段
+  if (!editForm.name.trim()) {
+    showToast('请输入接口名称', 'error');
+    return;
+  }
+  if (!editForm.method) {
+    showToast('请选择请求方法', 'error');
+    return;
+  }
+
+  editSubmitting.value = true;
+  try {
+    await interfaceService.update({
+      id: editForm.id,
+      name: editForm.name.trim(),
+      method: editForm.method,
+      url: editForm.url.trim() || undefined,
+      path: editForm.path.trim() || undefined,
+      targetHost: editForm.targetHost.trim() || undefined,
+      description: editForm.description.trim() || undefined,
+      requestParams: editForm.requestParams.trim() || undefined,
+      requestHeader: editForm.requestHeader.trim() || undefined,
+      responseHeader: editForm.responseHeader.trim() || undefined,
+    });
+    showToast('接口信息已更新', 'success');
+    closeEditModal();
+    await loadInterfaces();
+  } catch {
+    showToast('更新失败', 'error');
+  } finally {
+    editSubmitting.value = false;
+  }
+};
+
 const handleLogout = async () => {
   await userService.logout();
   loginUser.value = null;
@@ -242,3 +385,165 @@ onMounted(async () => {
   await loadInterfaces();
 });
 </script>
+
+<style scoped>
+/* 操作按钮样式 */
+.fei-table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fei-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--fei-primary);
+  background: rgba(22, 93, 255, 0.08);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fei-action-btn:hover {
+  background: rgba(22, 93, 255, 0.15);
+}
+
+.fei-action-btn--danger {
+  color: #e33e33;
+  background: rgba(227, 62, 51, 0.08);
+}
+
+.fei-action-btn--danger:hover {
+  background: rgba(227, 62, 51, 0.15);
+}
+
+/* 弹窗遮罩层 */
+.fei-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* 弹窗主体 */
+.fei-modal {
+  background: var(--fei-bg-primary, #fff);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 640px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.fei-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--fei-border-color, #eee);
+}
+
+.fei-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.fei-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--fei-text-muted, #999);
+  padding: 4px;
+}
+
+.fei-modal-close:hover {
+  color: var(--fei-text-primary, #333);
+}
+
+.fei-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.fei-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--fei-border-color, #eee);
+}
+
+/* 表单样式 */
+.fei-form-group {
+  margin-bottom: 16px;
+}
+
+.fei-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fei-form-row .fei-form-group {
+  margin-bottom: 0;
+}
+
+.fei-form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fei-text-primary, #333);
+}
+
+.fei-required {
+  color: #e33e33;
+  margin-left: 2px;
+}
+
+.fei-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--fei-border-color, #d9d9d9);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.fei-textarea:focus {
+  outline: none;
+  border-color: var(--fei-primary, #165dff);
+  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+}
+
+/* 响应式适配 */
+@media (max-width: 640px) {
+  .fei-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .fei-form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .fei-form-row .fei-form-group {
+    margin-bottom: 16px;
+  }
+}
+</style>

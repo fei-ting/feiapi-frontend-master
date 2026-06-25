@@ -1,6 +1,7 @@
 import http from './http';
 import type {
   IdRequest,
+  InterfaceInfoUpdateRequest,
   InterfaceInfoVO,
   InterfaceQuery,
   InvokeRequest,
@@ -31,5 +32,12 @@ export const interfaceService = {
   },
   offline(data: IdRequest) {
     return http.post<ResponseData<boolean>>('/interfaceInfo/offline', data).then((response) => response.data);
+  },
+  /**
+   * 更新接口信息
+   * @param data 接口更新请求数据，id 必填，其余字段可选
+   */
+  update(data: InterfaceInfoUpdateRequest) {
+    return http.post<ResponseData<boolean>>('/interfaceInfo/update', data).then((response) => response.data);
   },
 };

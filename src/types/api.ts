@@ -77,3 +77,30 @@ export interface InterfaceQuery {
   /** 接口描述，用于模糊搜索 */
   description?: string;
 }
+
+/**
+ * 接口信息更新请求
+ * 只有 id 必填，其余字段均为可选
+ */
+export interface InterfaceInfoUpdateRequest {
+  /** 接口 ID（必填） */
+  id: number;
+  /** 接口名称 */
+  name?: string;
+  /** 接口描述 */
+  description?: string;
+  /** 接口展示地址 */
+  url?: string;
+  /** 接口路径（网关匹配） */
+  path?: string;
+  /** 真实后端服务地址 */
+  targetHost?: string;
+  /** 请求参数文档 */
+  requestParams?: string;
+  /** 请求头文档 */
+  requestHeader?: string;
+  /** 响应头文档 */
+  responseHeader?: string;
+  /** HTTP 请求方法 */
+  method?: string;
+}
