@@ -157,7 +157,7 @@ a {
   box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
 }
 
-.fei-mobile-toggle {
+.fei-btn.fei-mobile-toggle {
   display: none;
 }
 
@@ -679,7 +679,7 @@ a {
     display: none;
   }
 
-  .fei-mobile-toggle {
+  .fei-btn.fei-mobile-toggle {
     display: inline-flex;
   }
 
