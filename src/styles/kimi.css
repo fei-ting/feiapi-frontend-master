@@ -244,10 +244,17 @@ a {
   box-sizing: border-box;
 }
 
-.fei-nav__actions .fei-btn,
-.fei-actions .fei-btn {
+.fei-nav__actions .fei-btn {
   min-width: 88px;
   padding-inline: 20px;
+}
+
+/* 首页 Hero 区域按钮 - 加大尺寸使其更醒目 */
+.fei-actions .fei-btn {
+  min-width: 140px;
+  height: 50px;
+  padding: 0 32px;
+  font-size: 15px;
 }
 
 .fei-btn--primary {

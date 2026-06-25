@@ -21,7 +21,6 @@
 
       <nav class="fei-nav" aria-label="主导航">
         <a class="fei-nav__link" :class="{ 'is-active': active === 'home' }" href="#/home">主页</a>
-        <a class="fei-nav__link" href="#/home" @click="scrollToInterfaces">接口广场</a>
       </nav>
 
       <div class="fei-nav__actions">
@@ -135,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from 'vue';
+import { ref } from 'vue';
 import type { UserVO } from '@/types/api';
 
 defineProps<{
@@ -152,13 +151,4 @@ defineEmits<{
 const showDropdown = ref(false);
 
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
-
-/** 平滑滚动到接口广场区域 */
-const scrollToInterfaces = () => {
-  nextTick(() => {
-    setTimeout(() => {
-      document.getElementById('interfaces')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  });
-};
 </script>
