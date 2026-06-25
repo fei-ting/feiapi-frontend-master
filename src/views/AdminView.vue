@@ -9,27 +9,19 @@
             <nav class="fei-admin-sidebar-nav" style="padding: 8px">
               <a
                 class="fei-admin-nav-link"
+                :class="{ 'is-active': activeTab === 'dashboard' }"
+                href="#/admin/dashboard"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                工作台
+              </a>
+              <a
+                class="fei-admin-nav-link"
                 :class="{ 'is-active': activeTab === 'interfaces' }"
                 href="#/admin/interfaces"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 接口管理
-              </a>
-              <a
-                class="fei-admin-nav-link"
-                :class="{ 'is-active': activeTab === 'analysis' }"
-                href="#/admin/analysis"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                运营分析
-              </a>
-              <a
-                class="fei-admin-nav-link"
-                :class="{ 'is-active': activeTab === 'relations' }"
-                href="#/admin/relations"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                调用关系
               </a>
             </nav>
           </div>
@@ -41,26 +33,22 @@
           <div class="fei-admin-tabs">
             <button
               class="fei-admin-tab"
+              :class="{ 'is-active': activeTab === 'dashboard' }"
+              @click="switchTab('dashboard')"
+            >
+              工作台
+            </button>
+            <button
+              class="fei-admin-tab"
               :class="{ 'is-active': activeTab === 'interfaces' }"
               @click="switchTab('interfaces')"
             >
               接口管理
             </button>
-            <button
-              class="fei-admin-tab"
-              :class="{ 'is-active': activeTab === 'analysis' }"
-              @click="switchTab('analysis')"
-            >
-              运营分析
-            </button>
-            <button
-              class="fei-admin-tab"
-              :class="{ 'is-active': activeTab === 'relations' }"
-              @click="switchTab('relations')"
-            >
-              调用关系
-            </button>
           </div>
+
+          <!-- 工作台 -->
+          <DashboardView v-if="activeTab === 'dashboard'" :user-name="loginUser?.userName ?? '管理员'" />
 
           <!-- 接口管理 -->
           <div v-if="activeTab === 'interfaces'" class="fei-card">
@@ -130,98 +118,6 @@
             </div>
             <div v-if="!interfaces.length" class="fei-empty">暂无接口数据</div>
           </div>
-
-          <!-- 运营分析 -->
-          <div v-else-if="activeTab === 'analysis'">
-            <!-- 统计卡片 -->
-            <div class="fei-analysis-grid">
-              <div class="fei-stat-card">
-                <div class="fei-stat-card-value">{{ topList.reduce((sum, i) => sum + (i.totalNum || 0), 0).toLocaleString() }}</div>
-                <div class="fei-stat-card-label">总调用次数</div>
-              </div>
-              <div class="fei-stat-card">
-                <div class="fei-stat-card-value">{{ interfaces.length }}</div>
-                <div class="fei-stat-card-label">平台接口数</div>
-              </div>
-              <div class="fei-stat-card">
-                <div class="fei-stat-card-value">{{ relations.length }}</div>
-                <div class="fei-stat-card-label">调用关系数</div>
-              </div>
-              <div class="fei-stat-card">
-                <div class="fei-stat-card-value">99.9%</div>
-                <div class="fei-stat-card-label">服务可用性</div>
-              </div>
-            </div>
-
-            <!-- TOP 接口 -->
-            <div class="fei-card">
-              <div class="fei-card-header">
-                <h2 class="fei-section-title">调用次数 TOP 接口</h2>
-              </div>
-              <div class="fei-card-body">
-                <div v-if="topList.length" class="fei-grid-3">
-                  <div v-for="item in topList" :key="item.id" class="fei-feature">
-                    <div class="fei-section-title" style="font-size: 18px">{{ item.name }}</div>
-                    <p class="fei-section-desc">调用次数：{{ item.totalNum }}</p>
-                  </div>
-                </div>
-                <div v-else class="fei-empty">暂无调用数据</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 调用关系 -->
-          <div v-else class="fei-card">
-            <div class="fei-card-header">
-              <h2 class="fei-section-title">用户接口调用关系</h2>
-              <div class="fei-admin-filter-group">
-                <input
-                  v-model="relationSearch"
-                  class="fei-input"
-                  placeholder="搜索用户/接口"
-                  @keyup.enter="loadRelations"
-                />
-                <select v-model="relationStatus" class="fei-select">
-                  <option value="">全部状态</option>
-                  <option :value="0">正常</option>
-                  <option :value="1">停用</option>
-                </select>
-                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadRelations">查询</button>
-              </div>
-            </div>
-            <div class="fei-table-wrap" style="border: none; border-radius: 0">
-              <table class="fei-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>用户</th>
-                    <th>接口</th>
-                    <th>总调用次数</th>
-                    <th>剩余次数</th>
-                    <th>状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in filteredRelations" :key="item.id">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.userName }}</td>
-                    <td>{{ item.interfaceName }}</td>
-                    <td>{{ item.totalNum }}</td>
-                    <td>{{ item.leftNum }}</td>
-                    <td>
-                      <span
-                        class="fei-tag"
-                        :class="item.status === 0 ? 'fei-tag--online' : 'fei-tag--offline'"
-                      >
-                        {{ item.status === 0 ? '正常' : '停用' }}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div v-if="!filteredRelations.length" class="fei-empty">暂无调用关系数据</div>
-          </div>
         </div>
       </div>
     </PageContainer>
@@ -234,30 +130,39 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
+import DashboardView from '@/views/admin/DashboardView.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
-import { analysisService } from '@/services/analysis';
 import { interfaceService } from '@/services/interfaceInfo';
-import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
 import { userService } from '@/services/user';
-import type { InterfaceInfoVO, UserInterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceInfoVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
-const activeTab = computed(() => (route.params.tab as string) || 'interfaces');
+
+/** 有效的后台 Tab 列表 */
+const VALID_TABS = ['dashboard', 'interfaces'] as const;
+
+/**
+ * 计算当前激活的 Tab
+ * 如果 URL 中的 tab 参数无效，则重定向到 dashboard
+ */
+const activeTab = computed(() => {
+  const tab = (route.params.tab as string) || 'interfaces';
+  if (!VALID_TABS.includes(tab as (typeof VALID_TABS)[number])) {
+    // 无效的 tab，重定向到 dashboard
+    router.replace('/admin/dashboard');
+    return 'dashboard';
+  }
+  return tab;
+});
 const loginUser = ref<UserVO | null>(null);
 const interfaces = ref<InterfaceInfoVO[]>([]);
-const relations = ref<UserInterfaceInfoVO[]>([]);
-const topList = ref<InterfaceInfoVO[]>([]);
 
 /** 接口管理筛选 */
 const interfaceSearch = ref('');
 const interfaceStatus = ref<string | number>('');
-
-/** 调用关系筛选 */
-const relationSearch = ref('');
-const relationStatus = ref<string | number>('');
 
 const toast = reactive({
   visible: false,
@@ -271,23 +176,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   toast.visible = true;
   window.setTimeout(() => { toast.visible = false; }, 2400);
 };
-
-/** 调用关系前端筛选 */
-const filteredRelations = computed(() => {
-  let list = relations.value;
-  if (relationSearch.value) {
-    const kw = relationSearch.value.toLowerCase();
-    list = list.filter(
-      (r) =>
-        (r.userName || '').toLowerCase().includes(kw) ||
-        (r.interfaceName || '').toLowerCase().includes(kw),
-    );
-  }
-  if (relationStatus.value !== '') {
-    list = list.filter((r) => r.status === Number(relationStatus.value));
-  }
-  return list;
-});
 
 const statusText = (status?: number) => {
   if (status === 1) return '上线';
@@ -317,24 +205,6 @@ const loadInterfaces = async () => {
     interfaces.value = res.data?.records ?? [];
   } catch {
     interfaces.value = [];
-  }
-};
-
-const loadRelations = async () => {
-  try {
-    const res = await userInterfaceInfoService.adminListPage({ current: 1, pageSize: 50 });
-    relations.value = res.data?.records ?? [];
-  } catch {
-    relations.value = [];
-  }
-};
-
-const loadTop = async () => {
-  try {
-    const res = await analysisService.topInvoke();
-    topList.value = res.data ?? [];
-  } catch {
-    topList.value = [];
   }
 };
 
@@ -370,7 +240,5 @@ const handleLogout = async () => {
 onMounted(async () => {
   await loadLoginUser();
   await loadInterfaces();
-  await loadRelations();
-  await loadTop();
 });
 </script>

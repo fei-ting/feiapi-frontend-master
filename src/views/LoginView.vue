@@ -74,6 +74,19 @@ const handleSubmit = async () => {
       userPassword: form.userPassword,
     });
     showToast('登录成功', 'success');
+
+    // 获取登录用户信息，管理员跳转后台工作台
+    try {
+      const res = await userService.getLoginUser();
+      const user = res.data;
+      if (user?.userRole === 'admin') {
+        await router.push('/admin/dashboard');
+        return;
+      }
+    } catch {
+      // 获取用户信息失败时使用默认跳转
+    }
+
     await router.push('/home');
   } catch {
     showToast('登录失败，请重试', 'error');
