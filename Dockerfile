@@ -6,6 +6,8 @@ WORKDIR /build/feiapi-frontend-master
 # 声明 Vite 环境变量构建参数
 ARG VITE_API_BASE=/api
 ENV VITE_API_BASE=${VITE_API_BASE}
+# 声明 npm/yarn 镜像源构建参数，默认使用国内镜像源以提升 Docker 构建稳定性
+ARG NPM_REGISTRY=https://registry.npmmirror.com
 # 禁用 husky，避免在容器内执行 git hooks
 ENV HUSKY=0
 
@@ -14,7 +16,7 @@ COPY package.json ./package.json
 COPY yarn.lock ./yarn.lock
 
 # 安装依赖（不使用 --frozen-lockfile，允许更新 lockfile）
-RUN yarn install
+RUN yarn config set registry ${NPM_REGISTRY} && yarn install --network-timeout 600000
 
 # 复制项目源码和配置文件
 COPY index.html ./index.html
