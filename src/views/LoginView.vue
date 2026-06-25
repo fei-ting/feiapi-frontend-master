@@ -88,8 +88,10 @@ const handleSubmit = async () => {
     }
 
     await router.push('/home');
-  } catch {
-    showToast('登录失败，请重试', 'error');
+  } catch (error) {
+    // 显示后端返回的具体错误信息
+    const message = error instanceof Error ? error.message : '登录失败，请重试';
+    showToast(message, 'error');
   }
 };
 </script>
