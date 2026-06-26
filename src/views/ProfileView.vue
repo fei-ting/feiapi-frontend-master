@@ -130,8 +130,8 @@
               <!-- Access Key -->
               <div class="fei-key-card">
                 <span class="fei-key-label">Access Key</span>
-                <span class="fei-key-value">{{ loginUser.accessKey }}</span>
-                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(loginUser.accessKey || '')">
+                <span class="fei-key-value">{{ userKeys?.accessKey || keyPlaceholder }}</span>
+                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(userKeys?.accessKey || '')">
                   复制
                 </button>
               </div>
@@ -139,18 +139,23 @@
               <!-- Secret Key -->
               <div class="fei-key-card" style="margin-top: 12px">
                 <span class="fei-key-label">Secret Key</span>
-                <span class="fei-key-value">{{ showSecret ? loginUser.secretKey : maskedSecret }}</span>
+                <span class="fei-key-value">{{ showSecret ? (userKeys?.secretKey || keyPlaceholder) : maskedSecret }}</span>
                 <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="showSecret = !showSecret">
                   {{ showSecret ? '隐藏' : '显示' }}
                 </button>
-                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(loginUser.secretKey || '')">
+                <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(userKeys?.secretKey || '')">
                   复制
                 </button>
               </div>
 
               <!-- SDK 接入示例 -->
-              <div style="margin-top: 24px; padding: 20px; background: #f8fafc; border: 1px solid var(--fei-border); border-radius: 10px">
-                <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 600">Java SDK 快速接入</h3>
+              <div class="fei-sdk-snippet">
+                <div class="fei-sdk-snippet__header">
+                  <h3 class="fei-sdk-snippet__title">Java SDK 快速接入</h3>
+                  <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copySdkSnippet">
+                    复制
+                  </button>
+                </div>
                 <pre class="fei-code" style="margin: 0">{{ sdkSnippet }}</pre>
               </div>
             </div>
@@ -164,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
@@ -172,15 +177,18 @@ import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
 import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
-import type { UserInterfaceInfoVO, UserVO } from '@/types/api';
+import type { UserInterfaceInfoVO, UserKeyVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
 const activeTab = computed(() => (route.params.tab === 'keys' ? 'keys' : 'records'));
 const loginUser = ref<UserVO | null>(null);
+const userKeys = ref<UserKeyVO | null>(null);
 const records = ref<UserInterfaceInfoVO[]>([]);
 const showSecret = ref(false);
+const userKeysLoading = ref(false);
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
+const keyPlaceholder = '密钥加载中';
 
 const toast = reactive({
   visible: false,
@@ -196,25 +204,34 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 };
 
 const maskedSecret = computed(() => {
-  const secret = loginUser.value?.secretKey || '';
-  if (!secret) return '';
+  const secret = userKeys.value?.secretKey || '';
+  if (!secret) return keyPlaceholder;
   return `${secret.slice(0, 8)}${'•'.repeat(Math.max(secret.length - 12, 4))}${secret.slice(-4)}`;
 });
 
-const sdkSnippet = computed(() => {
-  const accessKey = loginUser.value?.accessKey || '<your-access-key>';
-  const secretKey = loginUser.value?.secretKey || '<your-secret-key>';
-  return `FeiApiClient client = new FeiApiClient(\n    "${accessKey}",\n    "${secretKey}"\n);\nString result = client.invoke(\n    "/api/love/random", "GET", null\n);`;
-});
+const sdkSnippet = `FeiApiClient client = new FeiApiClient(\n    "<your-access-key>",\n    "<your-secret-key>"\n);\nString result = client.invoke(\n    "/api/love/random", "GET", null\n);`;
 
 const switchTab = (tab: string) => {
   router.push(`/profile/${tab}`);
 };
 
 const copyKey = async (text: string) => {
+  if (!text) {
+    showToast('密钥暂未加载完成', 'error');
+    return;
+  }
   try {
     await navigator.clipboard.writeText(text);
     showToast('已复制到剪贴板', 'success');
+  } catch {
+    showToast('复制失败，请手动复制', 'error');
+  }
+};
+
+const copySdkSnippet = async () => {
+  try {
+    await navigator.clipboard.writeText(sdkSnippet);
+    showToast('SDK 示例已复制到剪贴板', 'success');
   } catch {
     showToast('复制失败，请手动复制', 'error');
   }
@@ -224,8 +241,10 @@ const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
     loginUser.value = res.data || null;
+    return Boolean(loginUser.value);
   } catch {
     loginUser.value = null;
+    return false;
   }
 };
 
@@ -238,13 +257,56 @@ const loadRecords = async () => {
   }
 };
 
+const loadUserKeys = async () => {
+  if (!loginUser.value || userKeys.value || userKeysLoading.value) {
+    return;
+  }
+  userKeysLoading.value = true;
+  try {
+    const res = await userService.getCurrentUserKeys();
+    userKeys.value = res.data || null;
+  } catch {
+    userKeys.value = null;
+    if (loginUser.value) {
+      showToast('密钥加载失败，请稍后重试', 'error');
+    }
+  } finally {
+    userKeysLoading.value = false;
+  }
+};
+
 const handleLogout = async () => {
-  await userService.logout();
-  loginUser.value = null;
+  try {
+    await userService.logout();
+    loginUser.value = null;
+    userKeys.value = null;
+    records.value = [];
+    await router.replace('/home');
+  } catch {
+    showToast('退出失败，请稍后重试', 'error');
+  }
 };
 
 onMounted(async () => {
-  await loadLoginUser();
+  const hasLoginUser = await loadLoginUser();
+  if (!hasLoginUser) {
+    await router.replace('/login');
+    return;
+  }
   await loadRecords();
+  if (activeTab.value === 'keys') {
+    await loadUserKeys();
+  }
+});
+
+watch(activeTab, async (tab) => {
+  if (tab !== 'keys') {
+    return;
+  }
+  if (!loginUser.value) {
+    await router.replace('/login');
+    return;
+  }
+  await loadUserKeys();
 });
 </script>

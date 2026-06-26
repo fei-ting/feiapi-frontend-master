@@ -15,6 +15,11 @@ export interface UserVO {
   createTime?: string;
 }
 
+export interface UserKeyVO {
+  accessKey?: string;
+  secretKey?: string;
+}
+
 export interface InterfaceInfoVO {
   id: number;
   name: string;

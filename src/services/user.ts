@@ -1,5 +1,5 @@
 import http from './http';
-import type { LoginRequest, RegisterRequest, ResponseData, UserVO } from '@/types/api';
+import type { LoginRequest, RegisterRequest, ResponseData, UserKeyVO, UserVO } from '@/types/api';
 
 export const userService = {
   login(data: LoginRequest) {
@@ -13,5 +13,8 @@ export const userService = {
   },
   getLoginUser() {
     return http.get<ResponseData<UserVO>>('/user/get/login').then((response) => response.data);
+  },
+  getCurrentUserKeys() {
+    return http.get<ResponseData<UserKeyVO>>('/user/get/keys').then((response) => response.data);
   },
 };
