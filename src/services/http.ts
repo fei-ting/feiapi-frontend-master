@@ -14,7 +14,9 @@ http.interceptors.response.use(
     // 检查业务错误码，code !== 0 表示业务失败
     const { data } = response;
     if (data.code !== 0) {
-      return Promise.reject(new Error(data.message || '请求失败'));
+      const err = new Error(data.message || '请求失败') as Error & { code: number };
+      err.code = data.code;
+      return Promise.reject(err);
     }
     return response;
   },
