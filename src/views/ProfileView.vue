@@ -335,7 +335,11 @@ const handleLogout = async () => {
     loginUser.value = null;
     userKeys.value = null;
     records.value = [];
-    await router.replace('/home');
+    showToast('已安全退出', 'success');
+    // 延迟跳转到首页，让用户看到提示
+    setTimeout(() => {
+      router.replace('/home');
+    }, 1000);
   } catch {
     showToast('退出失败，请稍后重试', 'error');
   }

@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import PageContainer from '@/components/PageContainer.vue';
@@ -102,6 +102,7 @@ import { userService } from '@/services/user';
 import type { InterfaceInfoVO, UserVO } from '@/types/api';
 
 const route = useRoute();
+const router = useRouter();
 const loading = ref(true);
 const invokeLoading = ref(false);
 const detail = ref<InterfaceInfoVO | null>(null);
@@ -200,6 +201,10 @@ const handleLogout = async () => {
     await userService.logout();
     loginUser.value = null;
     showToast('已安全退出', 'success');
+    // 延迟跳转到首页，让用户看到提示
+    setTimeout(() => {
+      router.replace('/home');
+    }, 1000);
   } catch {
     showToast('退出失败', 'error');
   }

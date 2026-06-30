@@ -575,8 +575,17 @@ const submitQuotaConfig = async (quotaType: string) => {
 };
 
 const handleLogout = async () => {
-  await userService.logout();
-  loginUser.value = null;
+  try {
+    await userService.logout();
+    loginUser.value = null;
+    showToast('已安全退出', 'success');
+    // 延迟跳转到首页，让用户看到提示
+    setTimeout(() => {
+      router.replace('/home');
+    }, 1000);
+  } catch {
+    showToast('退出失败', 'error');
+  }
 };
 
 onMounted(async () => {

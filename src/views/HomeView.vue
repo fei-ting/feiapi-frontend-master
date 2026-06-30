@@ -147,6 +147,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import SectionHeader from '@/components/SectionHeader.vue';
@@ -157,6 +158,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import type { InterfaceInfoVO, UserVO } from '@/types/api';
 
+const router = useRouter();
 const loginUser = ref<UserVO | null>(null);
 const loading = ref(false);
 const list = ref<InterfaceInfoVO[]>([]);
@@ -303,6 +305,10 @@ const handleLogout = async () => {
     await userService.logout();
     loginUser.value = null;
     showToast('已安全退出', 'success');
+    // 延迟跳转到首页，让用户看到提示
+    setTimeout(() => {
+      router.replace('/home');
+    }, 1000);
   } catch {
     showToast('退出失败', 'error');
   }
