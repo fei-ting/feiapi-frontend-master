@@ -83,13 +83,17 @@
             @click="goDetail(item.id)"
           >
             <div class="fei-api-card__header">
-              <div>
-                <h3 class="fei-api-card__title">{{ item.name }}</h3>
+              <div class="fei-api-card__heading">
+                <div class="fei-api-card__title-row">
+                  <StatusTag :status="item.status" />
+                  <h3 class="fei-api-card__title">{{ interfaceDisplayName(item) }}</h3>
+                </div>
                 <span class="fei-method-badge">{{ item.method }}</span>
               </div>
-              <StatusTag :status="item.status" />
+              <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
+                {{ quotaTypeText(item) }}
+              </span>
             </div>
-            <p class="fei-api-card__desc">{{ item.description }}</p>
             <div class="fei-api-card__meta">
               <span class="fei-api-card__meta-item">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
@@ -220,6 +224,21 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
     toast.visible = false;
   }, 2400);
 };
+
+const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
+
+const quotaTagClass = (quotaType?: string) => {
+  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
+  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
+  return 'fei-tag--quota-basic';
+};
+
+const quotaTypeText = (item: InterfaceInfoVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '免费无限';
+  return item.quotaTypeText || '基础额度接口';
+};
+
+const interfaceDisplayName = (item: InterfaceInfoVO) => item.description || item.name;
 
 const loadLoginUser = async () => {
   try {

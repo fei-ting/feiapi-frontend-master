@@ -33,7 +33,7 @@
                 href="#/profile/records"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                我的调用
+                我的额度/调用
               </a>
               <a
                 class="fei-admin-nav-link"
@@ -56,7 +56,7 @@
               :class="{ 'is-active': activeTab === 'records' }"
               @click="switchTab('records')"
             >
-              我的调用
+              我的额度/调用
             </button>
             <button
               class="fei-admin-tab"
@@ -67,45 +67,73 @@
             </button>
           </div>
 
-          <!-- 我的调用记录 -->
+          <!-- 我的额度与调用记录 -->
           <div v-if="activeTab === 'records'" class="fei-card">
             <div class="fei-card-header">
-              <h2 class="fei-section-title">我的调用记录</h2>
+              <div>
+                <h2 class="fei-section-title">我的额度/调用</h2>
+                <p class="fei-section-desc" style="margin-top: 6px">按接口展示已获得额度、剩余额度和累计调用次数</p>
+              </div>
             </div>
             <div class="fei-table-wrap" style="border: none; border-radius: 0">
               <table class="fei-table">
                 <thead>
                   <tr>
                     <th>接口名称</th>
+                    <th>接口路径</th>
+                    <th>配额类型</th>
+                    <th>剩余额度</th>
                     <th>总调用次数</th>
-                    <th>剩余次数</th>
-                    <th>状态</th>
+                    <th>接口状态</th>
                     <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in records" :key="item.id">
-                    <td>{{ item.interfaceName }}</td>
-                    <td>{{ item.totalNum }}</td>
-                    <td>{{ item.leftNum }}</td>
+                  <tr v-for="item in records" :key="item.interfaceInfoId || item.id">
+                    <td>
+                      <div class="fei-quota-name">{{ item.interfaceName || '未命名接口' }}</div>
+                      <MethodTag :method="item.method" />
+                    </td>
+                    <td>
+                      <span class="fei-code-inline">{{ item.interfacePath || '-' }}</span>
+                    </td>
+                    <td>
+                      <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
+                        {{ quotaTypeText(item) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="fei-quota-value">{{ quotaLeftText(item) }}</span>
+                    </td>
+                    <td>{{ item.totalNum ?? 0 }}</td>
                     <td>
                       <span
                         class="fei-tag"
-                        :class="item.status === 0 ? 'fei-tag--online' : 'fei-tag--offline'"
+                        :class="{
+                          'fei-tag--online': item.interfaceStatus === 1,
+                          'fei-tag--publishing': item.interfaceStatus === 2,
+                          'fei-tag--offline': item.interfaceStatus !== 1 && item.interfaceStatus !== 2,
+                        }"
                       >
-                        {{ item.status === 0 ? '正常' : '停用' }}
+                        {{ interfaceStatusText(item.interfaceStatus) }}
                       </span>
                     </td>
                     <td>
                       <div class="fei-table-actions">
-                        <a :href="`#/interface/${item.interfaceInfoId}`">去调用</a>
+                        <a
+                          v-if="item.interfaceStatus === 1 && item.interfaceInfoId"
+                          :href="`#/interface/${item.interfaceInfoId}`"
+                        >
+                          去调用
+                        </a>
+                        <span v-else class="fei-muted-action">暂不可调用</span>
                       </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <div v-if="!records.length" class="fei-empty">暂无调用记录</div>
+            <div v-if="!records.length" class="fei-empty">暂无可展示额度</div>
           </div>
 
           <!-- 密钥管理 -->
@@ -175,6 +203,7 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
+import MethodTag from '@/components/MethodTag.vue';
 import { userService } from '@/services/user';
 import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
 import type { UserInterfaceInfoVO, UserKeyVO, UserVO } from '@/types/api';
@@ -213,6 +242,31 @@ const sdkSnippet = `FeiApiClient client = new FeiApiClient(\n    "<your-access-k
 
 const switchTab = (tab: string) => {
   router.push(`/profile/${tab}`);
+};
+
+const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
+
+const quotaTypeText = (item: UserInterfaceInfoVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '免费无限';
+  return item.quotaTypeText || '基础额度接口';
+};
+
+const quotaLeftText = (item: UserInterfaceInfoVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '无限次';
+  if (item.quotaType === 'ADVANCED_TRIAL') return `${item.leftNum ?? 0} 次体验`;
+  return `${item.leftNum ?? 0} 次`;
+};
+
+const quotaTagClass = (quotaType?: string) => {
+  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
+  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
+  return 'fei-tag--quota-basic';
+};
+
+const interfaceStatusText = (status?: number) => {
+  if (status === 1) return '可调用';
+  if (status === 2) return '发布验证中';
+  return '暂不可调用';
 };
 
 const copyKey = async (text: string) => {

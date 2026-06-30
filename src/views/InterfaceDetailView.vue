@@ -20,16 +20,22 @@
               <MethodTag :method="detail.method" />
             </div>
             <div class="fei-info-item">
+              <span class="fei-info-label">配额类型</span>
+              <span class="fei-tag" :class="quotaTagClass(detail.quotaType)">
+                {{ quotaTypeText(detail) }}
+              </span>
+            </div>
+            <div class="fei-info-item">
               <span class="fei-info-label">请求地址</span>
               <span class="fei-code-inline">{{ detail.url }}</span>
             </div>
             <div class="fei-info-item">
               <span class="fei-info-label">创建时间</span>
-              <span>{{ detail.createTime }}</span>
+              <span>{{ formatDateTime(detail.createTime) }}</span>
             </div>
             <div class="fei-info-item">
               <span class="fei-info-label">更新时间</span>
-              <span>{{ detail.updateTime }}</span>
+              <span>{{ formatDateTime(detail.updateTime) }}</span>
             </div>
           </div>
 
@@ -115,6 +121,30 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   window.setTimeout(() => {
     toast.visible = false;
   }, 2200);
+};
+
+const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
+
+const quotaTagClass = (quotaType?: string) => {
+  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
+  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
+  return 'fei-tag--quota-basic';
+};
+
+const quotaTypeText = (item: InterfaceInfoVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '免费无限';
+  return item.quotaTypeText || '基础额度接口';
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  const pad = (num: number) => String(num).padStart(2, '0');
+  return [
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`,
+  ].join(' ');
 };
 
 const loadLoginUser = async () => {
