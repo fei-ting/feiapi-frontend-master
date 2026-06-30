@@ -640,10 +640,37 @@ a {
   align-items: flex-start;
 }
 
+.fei-api-card__heading {
+  min-width: 0;
+}
+
+.fei-api-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fei-api-card__title-row > .fei-tag {
+  flex: 0 0 auto;
+  min-width: 46px;
+  justify-content: center;
+  white-space: nowrap;
+  word-break: keep-all;
+  writing-mode: horizontal-tb;
+}
+
+.fei-api-card__header > .fei-tag {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .fei-api-card__title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
+  line-height: 1.35;
+  min-width: 0;
 }
 
 .fei-api-card__desc {
@@ -651,6 +678,20 @@ a {
   color: var(--fei-text-secondary);
   line-height: 1.7;
   min-height: 54px;
+}
+
+.fei-api-card__quota {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.fei-api-card__quota-text {
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .fei-meta {
@@ -684,6 +725,37 @@ a {
 .fei-tag--publishing {
   color: #b45309;
   background: #fef3c7;
+}
+
+.fei-tag--quota-free {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+
+.fei-tag--quota-basic {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.fei-tag--quota-trial {
+  color: #7c2d12;
+  background: #ffedd5;
+}
+
+.fei-quota-value {
+  font-weight: 800;
+  color: var(--fei-text);
+}
+
+.fei-quota-name {
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--fei-text);
+}
+
+.fei-muted-action {
+  color: var(--fei-text-muted);
+  font-size: 13px;
 }
 
 .fei-method {
@@ -785,6 +857,13 @@ a {
   border-radius: 8px;
   background: #f8fafc;
   border: 1px solid var(--fei-border);
+}
+
+.fei-detail-quota-text {
+  margin-left: 8px;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .fei-empty {

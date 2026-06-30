@@ -23,6 +23,14 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 接口管理
               </a>
+              <a
+                class="fei-admin-nav-link"
+                :class="{ 'is-active': activeTab === 'quotas' }"
+                href="#/admin/quotas"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                配额策略
+              </a>
             </nav>
           </div>
         </aside>
@@ -44,6 +52,13 @@
               @click="switchTab('interfaces')"
             >
               接口管理
+            </button>
+            <button
+              class="fei-admin-tab"
+              :class="{ 'is-active': activeTab === 'quotas' }"
+              @click="switchTab('quotas')"
+            >
+              配额策略
             </button>
           </div>
 
@@ -67,7 +82,14 @@
                   <option :value="2">发布验证中</option>
                   <option :value="0">已下线</option>
                 </select>
+                <select v-model="interfaceQuotaType" class="fei-select">
+                  <option value="">全部配额</option>
+                  <option v-for="item in quotaTypeOptions" :key="item.value" :value="item.value">
+                    {{ item.label }}
+                  </option>
+                </select>
                 <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadInterfaces">查询</button>
+                <button class="fei-btn fei-btn--primary fei-btn--sm" @click="openAddModal">新增接口</button>
               </div>
             </div>
             <div class="fei-table-wrap" style="border: none; border-radius: 0">
@@ -78,6 +100,8 @@
                     <th>接口名称</th>
                     <th>请求方法</th>
                     <th>请求地址</th>
+                    <th>配额类型</th>
+                    <th>初始额度</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>
@@ -92,6 +116,14 @@
                       </span>
                     </td>
                     <td style="color: var(--fei-text-muted)">{{ item.url }}</td>
+                    <td>
+                      <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
+                        {{ quotaTypeText(item) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="fei-quota-value">{{ initialQuotaText(item) }}</span>
+                    </td>
                     <td>
                       <span
                         class="fei-tag"
@@ -118,18 +150,65 @@
             </div>
             <div v-if="!interfaces.length" class="fei-empty">暂无接口数据</div>
           </div>
+
+          <!-- 配额策略 -->
+          <div v-if="activeTab === 'quotas'" class="fei-card">
+            <div class="fei-card-header">
+              <div>
+                <h2 class="fei-section-title">配额策略配置</h2>
+                <p class="fei-section-desc" style="margin-top: 6px">
+                  修改后仅对后续新注册用户和后续首次初始化额度的用户生效
+                </p>
+              </div>
+              <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadQuotaConfigs">刷新</button>
+            </div>
+            <div class="fei-card-body">
+              <div class="fei-quota-config-grid">
+                <article v-for="item in quotaConfigs" :key="item.quotaType" class="fei-quota-config-card">
+                  <div class="fei-quota-config-card__head">
+                    <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
+                      {{ quotaConfigText(item) }}
+                    </span>
+                    <span class="fei-quota-config-card__time">{{ item.updateTime || '暂无更新时间' }}</span>
+                  </div>
+                  <p class="fei-section-desc">{{ item.description || quotaConfigText(item) }}</p>
+                  <div class="fei-quota-edit-row">
+                    <label class="fei-form-label">当前初始额度</label>
+                    <template v-if="item.limited">
+                      <input
+                        v-model.number="quotaEditMap[item.quotaType]"
+                        class="fei-input"
+                        type="number"
+                        min="1"
+                        step="1"
+                      />
+                      <button
+                        class="fei-btn fei-btn--primary fei-btn--sm"
+                        :disabled="quotaSavingType === item.quotaType"
+                        @click="submitQuotaConfig(item.quotaType)"
+                      >
+                        {{ quotaSavingType === item.quotaType ? '保存中...' : '保存' }}
+                      </button>
+                    </template>
+                    <span v-else class="fei-quota-infinite">无限次</span>
+                  </div>
+                </article>
+              </div>
+              <div v-if="!quotaConfigs.length" class="fei-empty">暂无配额策略配置</div>
+            </div>
+          </div>
         </div>
       </div>
     </PageContainer>
     <AppFooter />
     <ToastMessage :message="toast.message" :type="toast.type" :visible="toast.visible" />
 
-    <!-- 编辑接口弹窗 -->
+    <!-- 新增/编辑接口弹窗 -->
     <Teleport to="body">
       <div v-if="editModalVisible" class="fei-modal-overlay" @click.self="closeEditModal">
         <div class="fei-modal">
           <div class="fei-modal-header">
-            <h3>编辑接口</h3>
+            <h3>{{ modalMode === 'add' ? '新增接口' : '编辑接口' }}</h3>
             <button class="fei-modal-close" @click="closeEditModal">&times;</button>
           </div>
           <div class="fei-modal-body">
@@ -148,19 +227,27 @@
                 </select>
               </div>
               <div class="fei-form-group">
-                <label class="fei-form-label">接口展示地址</label>
-                <input v-model="editForm.url" class="fei-input" placeholder="展示给用户的地址" maxlength="512" />
+                <label class="fei-form-label">配额类型 <span class="fei-required">*</span></label>
+                <select v-model="editForm.quotaType" class="fei-select">
+                  <option v-for="item in quotaTypeOptions" :key="item.value" :value="item.value">
+                    {{ item.label }}
+                  </option>
+                </select>
               </div>
             </div>
             <div class="fei-form-row">
               <div class="fei-form-group">
-                <label class="fei-form-label">网关匹配路径</label>
+                <label class="fei-form-label">网关匹配路径 <span class="fei-required">*</span></label>
                 <input v-model="editForm.path" class="fei-input" placeholder="如：/api/xxx" maxlength="512" />
               </div>
               <div class="fei-form-group">
-                <label class="fei-form-label">真实后端地址</label>
+                <label class="fei-form-label">真实后端地址 <span class="fei-required">*</span></label>
                 <input v-model="editForm.targetHost" class="fei-input" placeholder="如：http://localhost:8080" maxlength="512" />
               </div>
+            </div>
+            <div class="fei-form-group">
+              <label class="fei-form-label">接口展示地址</label>
+              <input v-model="editForm.url" class="fei-input" placeholder="不填时后端按真实后端地址和路径生成" maxlength="512" />
             </div>
             <div class="fei-form-group">
               <label class="fei-form-label">接口描述</label>
@@ -182,7 +269,7 @@
           <div class="fei-modal-footer">
             <button class="fei-btn fei-btn--secondary" @click="closeEditModal">取消</button>
             <button class="fei-btn fei-btn--primary" :disabled="editSubmitting" @click="submitEdit">
-              {{ editSubmitting ? '保存中...' : '保存' }}
+              {{ editSubmitting ? '保存中...' : (modalMode === 'add' ? '新增' : '保存') }}
             </button>
           </div>
         </div>
@@ -192,7 +279,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import DashboardView from '@/views/admin/DashboardView.vue';
@@ -200,14 +287,21 @@ import AppFooter from '@/components/AppFooter.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
+import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { userService } from '@/services/user';
-import type { InterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
 
 /** 有效的后台 Tab 列表 */
-const VALID_TABS = ['dashboard', 'interfaces'] as const;
+const VALID_TABS = ['dashboard', 'interfaces', 'quotas'] as const;
+
+const quotaTypeOptions: { label: string; value: InterfaceQuotaType }[] = [
+  { label: '免费无限接口', value: 'FREE_UNLIMITED' },
+  { label: '基础额度接口', value: 'BASIC_QUOTA' },
+  { label: '高级体验接口', value: 'ADVANCED_TRIAL' },
+];
 
 /**
  * 计算当前激活的 Tab
@@ -224,10 +318,14 @@ const activeTab = computed(() => {
 });
 const loginUser = ref<UserVO | null>(null);
 const interfaces = ref<InterfaceInfoVO[]>([]);
+const quotaConfigs = ref<InterfaceQuotaConfigVO[]>([]);
+const quotaEditMap = reactive<Record<string, number>>({});
+const quotaSavingType = ref('');
 
 /** 接口管理筛选 */
 const interfaceSearch = ref('');
 const interfaceStatus = ref<string | number>('');
+const interfaceQuotaType = ref('');
 
 const toast = reactive({
   visible: false,
@@ -238,10 +336,12 @@ const toast = reactive({
 /** 编辑弹窗相关状态 */
 const editModalVisible = ref(false);
 const editSubmitting = ref(false);
+const modalMode = ref<'add' | 'edit'>('edit');
 const editForm = reactive({
   id: 0,
   name: '',
   method: 'GET',
+  quotaType: 'BASIC_QUOTA',
   url: '',
   path: '',
   targetHost: '',
@@ -264,6 +364,30 @@ const statusText = (status?: number) => {
   return '关闭';
 };
 
+const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
+
+const quotaTagClass = (quotaType?: string) => {
+  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
+  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
+  return 'fei-tag--quota-basic';
+};
+
+const quotaTypeText = (item: InterfaceInfoVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '免费无限';
+  return item.quotaTypeText || quotaTypeOptions.find((option) => option.value === item.quotaType)?.label || '基础额度接口';
+};
+
+const quotaConfigText = (item: InterfaceQuotaConfigVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '免费无限接口';
+  return item.quotaTypeText || quotaTypeOptions.find((option) => option.value === item.quotaType)?.label || item.quotaType;
+};
+
+const initialQuotaText = (item: InterfaceInfoVO) => {
+  if (isFreeUnlimited(item.quotaType)) return '无限次';
+  if (item.quotaType === 'ADVANCED_TRIAL') return `${item.initialQuota ?? 0} 次体验`;
+  return `${item.initialQuota ?? 0} 次`;
+};
+
 const switchTab = (tab: string) => {
   router.push(`/admin/${tab}`);
 };
@@ -281,11 +405,25 @@ const loadInterfaces = async () => {
   try {
     const params: Record<string, unknown> = { current: 1, pageSize: 10 };
     if (interfaceStatus.value !== '') params.status = interfaceStatus.value;
+    if (interfaceQuotaType.value) params.quotaType = interfaceQuotaType.value;
     if (interfaceSearch.value) params.name = interfaceSearch.value;
     const res = await interfaceService.listPage(params);
     interfaces.value = res.data?.records ?? [];
   } catch {
     interfaces.value = [];
+  }
+};
+
+const loadQuotaConfigs = async () => {
+  try {
+    const res = await interfaceQuotaConfigService.list();
+    quotaConfigs.value = res.data ?? [];
+    quotaConfigs.value.forEach((item) => {
+      quotaEditMap[item.quotaType] = item.initialQuota;
+    });
+  } catch {
+    quotaConfigs.value = [];
+    showToast('配额策略加载失败', 'error');
   }
 };
 
@@ -313,14 +451,36 @@ const deleteInterface = async (_id: number) => {
   showToast('删除功能暂未实现', 'info');
 };
 
+const resetEditForm = () => {
+  editForm.id = 0;
+  editForm.name = '';
+  editForm.method = 'GET';
+  editForm.quotaType = 'BASIC_QUOTA';
+  editForm.url = '';
+  editForm.path = '';
+  editForm.targetHost = '';
+  editForm.description = '';
+  editForm.requestParams = '';
+  editForm.requestHeader = '';
+  editForm.responseHeader = '';
+};
+
+const openAddModal = () => {
+  modalMode.value = 'add';
+  resetEditForm();
+  editModalVisible.value = true;
+};
+
 /**
  * 打开编辑弹窗，填充表单数据
  * @param item 接口信息
  */
 const openEditModal = (item: InterfaceInfoVO) => {
+  modalMode.value = 'edit';
   editForm.id = item.id;
   editForm.name = item.name || '';
   editForm.method = item.method || 'GET';
+  editForm.quotaType = item.quotaType || 'BASIC_QUOTA';
   editForm.url = item.url || '';
   editForm.path = item.path || '';
   editForm.targetHost = item.targetHost || '';
@@ -350,28 +510,67 @@ const submitEdit = async () => {
     showToast('请选择请求方法', 'error');
     return;
   }
+  if (!editForm.quotaType) {
+    showToast('请选择配额类型', 'error');
+    return;
+  }
+  if (!editForm.path.trim()) {
+    showToast('请输入网关匹配路径', 'error');
+    return;
+  }
+  if (!editForm.targetHost.trim()) {
+    showToast('请输入真实后端地址', 'error');
+    return;
+  }
 
   editSubmitting.value = true;
   try {
-    await interfaceService.update({
-      id: editForm.id,
+    const payload = {
       name: editForm.name.trim(),
       method: editForm.method,
+      quotaType: editForm.quotaType,
       url: editForm.url.trim() || undefined,
-      path: editForm.path.trim() || undefined,
-      targetHost: editForm.targetHost.trim() || undefined,
+      path: editForm.path.trim(),
+      targetHost: editForm.targetHost.trim(),
       description: editForm.description.trim() || undefined,
       requestParams: editForm.requestParams.trim() || undefined,
       requestHeader: editForm.requestHeader.trim() || undefined,
       responseHeader: editForm.responseHeader.trim() || undefined,
-    });
-    showToast('接口信息已更新', 'success');
+    };
+    if (modalMode.value === 'add') {
+      await interfaceService.add(payload);
+    } else {
+      await interfaceService.update({
+        id: editForm.id,
+        ...payload,
+      });
+    }
+    showToast(modalMode.value === 'add' ? '接口已新增' : '接口信息已更新', 'success');
     closeEditModal();
     await loadInterfaces();
   } catch {
-    showToast('更新失败', 'error');
+    showToast(modalMode.value === 'add' ? '新增失败' : '更新失败', 'error');
   } finally {
     editSubmitting.value = false;
+  }
+};
+
+const submitQuotaConfig = async (quotaType: string) => {
+  const initialQuota = Number(quotaEditMap[quotaType]);
+  if (!Number.isInteger(initialQuota) || initialQuota <= 0) {
+    showToast('初始额度必须是大于 0 的整数', 'error');
+    return;
+  }
+  quotaSavingType.value = quotaType;
+  try {
+    await interfaceQuotaConfigService.update({ quotaType, initialQuota });
+    showToast('配额策略已更新，仅对后续新注册用户和后续首次初始化额度的用户生效', 'success');
+    await loadQuotaConfigs();
+    await loadInterfaces();
+  } catch {
+    showToast('配额策略更新失败', 'error');
+  } finally {
+    quotaSavingType.value = '';
   }
 };
 
@@ -383,6 +582,18 @@ const handleLogout = async () => {
 onMounted(async () => {
   await loadLoginUser();
   await loadInterfaces();
+  if (activeTab.value === 'quotas') {
+    await loadQuotaConfigs();
+  }
+});
+
+watch(activeTab, async (tab) => {
+  if (tab === 'quotas' && !quotaConfigs.value.length) {
+    await loadQuotaConfigs();
+  }
+  if (tab === 'interfaces' && !interfaces.value.length) {
+    await loadInterfaces();
+  }
 });
 </script>
 
@@ -530,6 +741,53 @@ onMounted(async () => {
   box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
 }
 
+.fei-quota-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fei-quota-config-card {
+  padding: 18px;
+  border: 1px solid var(--fei-border);
+  border-radius: 12px;
+  background: var(--fei-surface-soft);
+}
+
+.fei-quota-config-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fei-quota-config-card__time {
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.fei-quota-edit-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.fei-quota-edit-row .fei-form-label {
+  grid-column: 1 / -1;
+  margin-bottom: -2px;
+}
+
+.fei-quota-infinite {
+  grid-column: 1 / -1;
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--fei-primary);
+}
+
 /* 响应式适配 */
 @media (max-width: 640px) {
   .fei-modal {
@@ -540,6 +798,10 @@ onMounted(async () => {
   .fei-form-row {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .fei-quota-config-grid {
+    grid-template-columns: 1fr;
   }
 
   .fei-form-row .fei-form-group {
