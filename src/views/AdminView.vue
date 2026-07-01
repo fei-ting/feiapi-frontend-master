@@ -321,10 +321,12 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { userService } from '@/services/user';
+import { useUserStore } from '@/stores/user';
 import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 /** 有效的后台 Tab 列表 */
 const VALID_TABS = ['dashboard', 'interfaces', 'quotas'] as const;
@@ -650,6 +652,7 @@ const handleLogout = async () => {
   try {
     await userService.logout();
     loginUser.value = null;
+    userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     // 延迟跳转到首页，让用户看到提示
     setTimeout(() => {

@@ -57,9 +57,11 @@ import AppFooter from '@/components/AppFooter.vue';
 import SectionHeader from '@/components/SectionHeader.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
+import { useUserStore } from '@/stores/user';
 import type { UserVO } from '@/types/api';
 
 const router = useRouter();
+const userStore = useUserStore();
 const loginUser = ref<UserVO | null>(null);
 const toast = reactive({
   visible: false,
@@ -103,6 +105,7 @@ const handleLogout = async () => {
   try {
     await userService.logout();
     loginUser.value = null;
+    userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     // 延迟跳转到首页，让用户看到提示
     setTimeout(() => {

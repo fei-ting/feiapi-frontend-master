@@ -142,9 +142,11 @@ import StatusTag from '@/components/StatusTag.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
+import { useUserStore } from '@/stores/user';
 import type { InterfaceInfoVO, UserVO } from '@/types/api';
 
 const router = useRouter();
+const userStore = useUserStore();
 const loginUser = ref<UserVO | null>(null);
 const loading = ref(false);
 const list = ref<InterfaceInfoVO[]>([]);
@@ -274,6 +276,7 @@ const handleLogout = async () => {
   try {
     await userService.logout();
     loginUser.value = null;
+    userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     setTimeout(() => {
       router.replace('/home');
