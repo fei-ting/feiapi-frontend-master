@@ -206,10 +206,12 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import MethodTag from '@/components/MethodTag.vue';
 import { userService } from '@/services/user';
 import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
+import { useUserStore } from '@/stores/user';
 import type { UserInterfaceInfoVO, UserKeyVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 const activeTab = computed(() => (route.params.tab === 'keys' ? 'keys' : 'records'));
 const loginUser = ref<UserVO | null>(null);
 const userKeys = ref<UserKeyVO | null>(null);
@@ -333,6 +335,7 @@ const handleLogout = async () => {
   try {
     await userService.logout();
     loginUser.value = null;
+    userStore.clearLoginUser();
     userKeys.value = null;
     records.value = [];
     showToast('已安全退出', 'success');
