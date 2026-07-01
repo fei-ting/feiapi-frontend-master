@@ -42,6 +42,13 @@ export const interfaceService = {
     return http.post<ResponseData<boolean>>('/interfaceInfo/offline', data).then((response) => response.data);
   },
   /**
+   * 删除接口信息
+   * @param data 接口删除请求数据，id 必填
+   */
+  delete(data: IdRequest) {
+    return http.post<ResponseData<boolean>>('/interfaceInfo/delete', data).then((response) => response.data);
+  },
+  /**
    * 更新接口信息
    * @param data 接口更新请求数据，id 必填，其余字段可选
    */

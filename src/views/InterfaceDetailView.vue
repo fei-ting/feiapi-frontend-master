@@ -99,10 +99,12 @@ import MethodTag from '@/components/MethodTag.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
+import { useUserStore } from '@/stores/user';
 import type { InterfaceInfoVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 const loading = ref(true);
 const invokeLoading = ref(false);
 const detail = ref<InterfaceInfoVO | null>(null);
@@ -200,6 +202,7 @@ const handleLogout = async () => {
   try {
     await userService.logout();
     loginUser.value = null;
+    userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     // 延迟跳转到首页，让用户看到提示
     setTimeout(() => {

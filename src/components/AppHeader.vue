@@ -21,6 +21,7 @@
 
       <nav class="fei-nav" aria-label="主导航">
         <a class="fei-nav__link" :class="{ 'is-active': active === 'home' }" href="#/home">主页</a>
+        <a class="fei-nav__link" :class="{ 'is-active': active === 'market' }" href="#/market">接口广场</a>
         <a
           v-if="loginUser?.userRole === 'admin'"
           class="fei-nav__link"
@@ -34,8 +35,13 @@
       <div class="fei-nav__actions">
         <!-- 已登录：头像 + 昵称 + 下拉菜单 -->
         <template v-if="loginUser">
-          <div class="fei-user-menu" @mouseenter="showDropdown = true" @mouseleave="showDropdown = false">
-            <button class="fei-user-trigger" type="button">
+          <div class="fei-user-menu" @mouseenter="openDropdown" @mouseleave="closeDropdown">
+            <button
+              class="fei-user-trigger"
+              type="button"
+              :aria-expanded="showDropdown"
+              @click="toggleDropdown"
+            >
               <img class="fei-avatar--sm" :src="loginUser.userAvatar || defaultAvatar" alt="" />
               <span>{{ loginUser.userName || '用户' }}</span>
               <svg
@@ -92,7 +98,7 @@
                 后台管理
               </a>
               <div class="fei-dropdown__divider"></div>
-              <button class="fei-dropdown__item fei-dropdown__item--danger" type="button" @click="$emit('logout')">
+              <button class="fei-dropdown__item fei-dropdown__item--danger" type="button" @click="handleLogoutClick">
                 <svg
                   width="16"
                   height="16"
@@ -147,16 +153,37 @@ import type { UserVO } from '@/types/api';
 
 defineProps<{
   loginUser: UserVO | null;
-  active: 'home' | 'profile' | 'admin' | 'login' | 'register' | 'detail' | 'notfound';
+  active: 'home' | 'market' | 'profile' | 'admin' | 'login' | 'register' | 'detail' | 'notfound';
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (event: 'logout'): void;
   (event: 'toggle-menu'): void;
 }>();
 
 /** 下拉菜单显示状态 */
 const showDropdown = ref(false);
+
+/** 展开用户下拉菜单 */
+const openDropdown = () => {
+  showDropdown.value = true;
+};
+
+/** 关闭用户下拉菜单 */
+const closeDropdown = () => {
+  showDropdown.value = false;
+};
+
+/** 点击头像区域切换下拉菜单，兼容触屏和自动化测试场景 */
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value;
+};
+
+/** 触发退出登录并关闭下拉菜单 */
+const handleLogoutClick = () => {
+  closeDropdown();
+  emit('logout');
+};
 
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
 </script>

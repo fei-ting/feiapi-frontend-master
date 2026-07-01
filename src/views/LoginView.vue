@@ -71,6 +71,7 @@ import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
+import { useUserStore } from '@/stores/user';
 
 /**
  * 账号格式正则：4-10 位，第一位必须是字母，只能包含大小写字母和数字
@@ -85,6 +86,7 @@ const LETTER_REGEX = /[a-zA-Z]/;
 const DIGIT_REGEX = /[0-9]/;
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const form = reactive({
   userAccount: '',
@@ -228,6 +230,7 @@ const handleSubmit = async () => {
     try {
       const res = await userService.getLoginUser();
       const user = res.data;
+      userStore.setLoginUser(user || null);
       if (user?.userRole === 'admin') {
         await router.push('/admin/dashboard');
         return;
@@ -239,10 +242,11 @@ const handleSubmit = async () => {
     await router.push('/home');
   } catch (error) {
     // 根据后端错误码映射用户友好的提示信息
-    const code = (error as Error & { code?: number }).code;
-    let message = '登录失败，请稍后重试';
-    if (code === 40000) {
-      message = '账号或密码格式不正确，请检查后重试';
+    const loginError = error as Error & { code?: number; message?: string };
+    const code = loginError.code;
+    let message = loginError.message || '登录失败，请稍后重试';
+    if (code === 40000 && !loginError.message) {
+      message = '账号或密码不正确，请检查后重试';
     } else if (code === 40300) {
       message = '登录失败次数过多，请稍后再试';
     }

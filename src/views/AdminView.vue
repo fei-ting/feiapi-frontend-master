@@ -141,7 +141,7 @@
                         <button class="fei-action-btn" @click="openEditModal(item)">编辑</button>
                         <button v-if="item.status !== 1" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
                         <button v-else class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
-                        <button class="fei-action-btn fei-action-btn--danger" @click="deleteInterface(item.id)">删除</button>
+                        <button class="fei-action-btn fei-action-btn--danger" @click="openDeleteModal(item)">删除</button>
                       </div>
                     </td>
                   </tr>
@@ -275,6 +275,38 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 删除接口确认弹窗 -->
+    <Teleport to="body">
+      <div v-if="deleteModalVisible" class="fei-modal-overlay" @click.self="closeDeleteModal">
+        <div class="fei-delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+          <div class="fei-delete-modal__head">
+            <div class="fei-delete-modal__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M10.3 4.4 2.7 17.6A2 2 0 0 0 4.4 20h15.2a2 2 0 0 0 1.7-2.4L13.7 4.4a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <div class="fei-delete-modal__title-wrap">
+              <h3 id="deleteModalTitle">确认删除接口</h3>
+              <p>该操作会移除接口配置，删除后不可恢复。</p>
+            </div>
+          </div>
+          <div class="fei-delete-modal__body">
+            <span class="fei-delete-modal__label">即将删除</span>
+            <strong>{{ deleteTarget?.name || `接口 #${deleteTarget?.id ?? ''}` }}</strong>
+            <span v-if="deleteTarget?.url" class="fei-delete-modal__url">{{ deleteTarget.url }}</span>
+          </div>
+          <div class="fei-delete-modal__footer">
+            <button class="fei-btn fei-btn--secondary" :disabled="deleteSubmitting" @click="closeDeleteModal">取消</button>
+            <button class="fei-btn fei-btn--danger" :disabled="deleteSubmitting" @click="confirmDeleteInterface">
+              {{ deleteSubmitting ? '删除中...' : '确认删除' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -289,10 +321,12 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { userService } from '@/services/user';
+import { useUserStore } from '@/stores/user';
 import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 /** 有效的后台 Tab 列表 */
 const VALID_TABS = ['dashboard', 'interfaces', 'quotas'] as const;
@@ -350,6 +384,11 @@ const editForm = reactive({
   requestHeader: '',
   responseHeader: '',
 });
+
+/** 删除确认弹窗相关状态 */
+const deleteModalVisible = ref(false);
+const deleteSubmitting = ref(false);
+const deleteTarget = ref<InterfaceInfoVO | null>(null);
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -447,8 +486,43 @@ const offlineInterface = async (id: number) => {
   }
 };
 
-const deleteInterface = async (_id: number) => {
-  showToast('删除功能暂未实现', 'info');
+/**
+ * 打开删除确认弹窗
+ * @param item 待删除的接口信息
+ */
+const openDeleteModal = (item: InterfaceInfoVO) => {
+  deleteTarget.value = item;
+  deleteModalVisible.value = true;
+};
+
+/** 关闭删除确认弹窗 */
+const closeDeleteModal = () => {
+  if (deleteSubmitting.value) {
+    return;
+  }
+  deleteModalVisible.value = false;
+  deleteTarget.value = null;
+};
+
+/** 确认删除接口 */
+const confirmDeleteInterface = async () => {
+  if (!deleteTarget.value?.id) {
+    showToast('请选择要删除的接口', 'error');
+    return;
+  }
+
+  deleteSubmitting.value = true;
+  try {
+    await interfaceService.delete({ id: deleteTarget.value.id });
+    showToast('接口已删除', 'success');
+    deleteModalVisible.value = false;
+    deleteTarget.value = null;
+    await loadInterfaces();
+  } catch {
+    showToast('删除失败', 'error');
+  } finally {
+    deleteSubmitting.value = false;
+  }
 };
 
 const resetEditForm = () => {
@@ -578,6 +652,7 @@ const handleLogout = async () => {
   try {
     await userService.logout();
     loginUser.value = null;
+    userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     // 延迟跳转到首页，让用户看到提示
     setTimeout(() => {
@@ -645,10 +720,12 @@ watch(activeTab, async (tab) => {
 .fei-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.46);
+  backdrop-filter: blur(4px);
   z-index: 1000;
 }
 
@@ -703,6 +780,123 @@ watch(activeTab, async (tab) => {
   gap: 12px;
   padding: 16px 20px;
   border-top: 1px solid var(--fei-border-color, #eee);
+}
+
+.fei-btn--danger {
+  color: #fff;
+  background: var(--fei-error);
+  border-color: var(--fei-error);
+}
+
+.fei-btn--danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.fei-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.fei-delete-modal {
+  width: min(420px, 100%);
+  overflow: hidden;
+  background: var(--fei-surface);
+  border: 1px solid rgba(228, 231, 236, 0.92);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: 0 24px 70px rgba(16, 24, 40, 0.22);
+  animation: feiModalEnter 0.18s ease-out;
+}
+
+.fei-delete-modal__head {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 24px 24px 18px;
+}
+
+.fei-delete-modal__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--fei-error);
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 12px;
+}
+
+.fei-delete-modal__title-wrap {
+  min-width: 0;
+}
+
+.fei-delete-modal__title-wrap h3 {
+  margin: 0;
+  color: var(--fei-text);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.fei-delete-modal__title-wrap p {
+  margin: 6px 0 0;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.fei-delete-modal__body {
+  display: grid;
+  gap: 6px;
+  margin: 0 24px;
+  padding: 14px 16px;
+  background: var(--fei-surface-soft);
+  border: 1px solid var(--fei-border);
+  border-radius: 12px;
+}
+
+.fei-delete-modal__label {
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fei-delete-modal__body strong {
+  min-width: 0;
+  color: var(--fei-text);
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.fei-delete-modal__url {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fei-delete-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px 24px 24px;
+}
+
+@keyframes feiModalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* 表单样式 */
@@ -802,6 +996,18 @@ watch(activeTab, async (tab) => {
   .fei-modal {
     width: 95%;
     max-height: 90vh;
+  }
+
+  .fei-delete-modal__head {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-delete-modal__footer {
+    flex-direction: column-reverse;
+  }
+
+  .fei-delete-modal__footer .fei-btn {
+    width: 100%;
   }
 
   .fei-form-row {
