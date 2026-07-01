@@ -447,8 +447,19 @@ const offlineInterface = async (id: number) => {
   }
 };
 
-const deleteInterface = async (_id: number) => {
-  showToast('删除功能暂未实现', 'info');
+const deleteInterface = async (id: number) => {
+  const confirmed = window.confirm('确定要删除该接口吗？删除后不可恢复。');
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await interfaceService.delete({ id });
+    showToast('接口已删除', 'success');
+    await loadInterfaces();
+  } catch {
+    showToast('删除失败', 'error');
+  }
 };
 
 const resetEditForm = () => {
