@@ -477,25 +477,61 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+  align-items: stretch;
 }
 
 .fei-api-card--v2 {
-  padding: 22px;
+  position: relative;
+  display: flex;
+  min-height: 210px;
+  padding: 20px;
+  flex-direction: column;
+  overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.fei-api-card--v2:hover {
+.fei-api-card--v2::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(47, 109, 246, 0.9), rgba(22, 163, 74, 0.78));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fei-api-card--v2:hover,
+.fei-api-card--v2:focus-visible {
   transform: translateY(-3px);
   box-shadow: var(--fei-shadow);
   border-color: var(--fei-primary-light);
+  outline: none;
+}
+
+.fei-api-card--v2:hover::before,
+.fei-api-card--v2:focus-visible::before {
+  opacity: 1;
+}
+
+.fei-api-card--v2:hover .fei-api-card__action,
+.fei-api-card--v2:focus-visible .fei-api-card__action {
+  color: var(--fei-primary);
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fei-api-card--v2:hover .fei-api-card__action svg,
+.fei-api-card--v2:focus-visible .fei-api-card__action svg {
+  transform: translateX(3px);
 }
 
 /* 方法标签（v2 蓝底蓝字） */
 .fei-method-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
@@ -509,16 +545,19 @@ a {
 .fei-api-card__meta {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 16px;
+  gap: 10px;
+  min-width: 0;
   font-size: 13px;
   color: var(--fei-text-muted);
+  flex-wrap: wrap;
 }
 
 .fei-api-card__meta-item {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 /* ========== 分页 ========== */
@@ -636,12 +675,47 @@ a {
 .fei-api-card__header {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
 }
 
-.fei-api-card__heading {
+.fei-api-card__identity {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
   min-width: 0;
+  gap: 12px;
+}
+
+.fei-api-card__icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--fei-primary);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)),
+    var(--fei-primary-light);
+  box-shadow: inset 0 0 0 1px rgba(47, 109, 246, 0.08);
+}
+
+.fei-api-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fei-api-card__tag-stack {
+  display: flex;
+  align-items: flex-end;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 128px;
 }
 
 .fei-api-card__title-row {
@@ -660,24 +734,106 @@ a {
   writing-mode: horizontal-tb;
 }
 
-.fei-api-card__header > .fei-tag {
+.fei-api-card__header > .fei-tag,
+.fei-api-card__tag-stack > .fei-tag {
   flex: 0 0 auto;
   white-space: nowrap;
+  max-width: 128px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fei-api-card__title {
+  display: -webkit-box;
+  min-height: 24px;
   margin: 0;
+  overflow: hidden;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
-  min-width: 0;
+  color: var(--fei-text);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .fei-api-card__desc {
-  margin: 12px 0 18px;
+  display: -webkit-box;
+  min-height: 42px;
+  margin: 10px 0 0;
+  overflow: hidden;
   color: var(--fei-text-secondary);
-  line-height: 1.7;
-  min-height: 54px;
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.fei-api-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 18px 0 18px 58px;
+  min-width: 0;
+}
+
+.fei-api-card__path {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-top: 18px;
+  padding: 10px 12px;
+  color: #667085;
+  background: #f8fafc;
+  border: 1px solid rgba(228, 231, 236, 0.86);
+  border-radius: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+}
+
+.fei-api-card__path svg {
+  flex: 0 0 auto;
+  color: #8aa2cf;
+}
+
+.fei-api-card__path span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fei-api-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(228, 231, 236, 0.72);
+}
+
+.fei-api-card__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  color: var(--fei-text-secondary);
+  background: var(--fei-primary-light);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fei-api-card__action svg {
+  transition: transform 0.2s ease;
 }
 
 .fei-api-card__quota {
@@ -1371,7 +1527,6 @@ a {
 @media (max-width: 1100px) {
   .fei-grid-4,
   .fei-grid-3,
-  .fei-card-grid,
   .fei-layout-detail {
     grid-template-columns: 1fr;
   }
@@ -1430,5 +1585,40 @@ a {
 
   .fei-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .fei-api-card--v2 {
+    min-height: 0;
+  }
+
+  .fei-api-card__header,
+  .fei-api-card__footer {
+    align-items: flex-start;
+  }
+
+  .fei-api-card__header {
+    flex-wrap: wrap;
+  }
+
+  .fei-api-card__tag-stack {
+    align-items: flex-start;
+    max-width: 100%;
+  }
+
+  .fei-api-card__header > .fei-tag,
+  .fei-api-card__tag-stack > .fei-tag {
+    max-width: 100%;
+  }
+
+  .fei-api-card__body {
+    padding-left: 0;
+  }
+
+  .fei-api-card__footer {
+    flex-direction: column;
+  }
+
+  .fei-api-card__action {
+    align-self: flex-end;
   }
 }

@@ -21,6 +21,7 @@
 
       <nav class="fei-nav" aria-label="主导航">
         <a class="fei-nav__link" :class="{ 'is-active': active === 'home' }" href="#/home">主页</a>
+        <a class="fei-nav__link" :class="{ 'is-active': active === 'market' }" href="#/market">接口广场</a>
         <a
           v-if="loginUser?.userRole === 'admin'"
           class="fei-nav__link"
@@ -147,7 +148,7 @@ import type { UserVO } from '@/types/api';
 
 defineProps<{
   loginUser: UserVO | null;
-  active: 'home' | 'profile' | 'admin' | 'login' | 'register' | 'detail' | 'notfound';
+  active: 'home' | 'market' | 'profile' | 'admin' | 'login' | 'register' | 'detail' | 'notfound';
 }>();
 
 defineEmits<{
