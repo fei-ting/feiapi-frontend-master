@@ -87,8 +87,7 @@
           <div v-if="activeTab === 'info'" class="fei-card">
             <div class="fei-card-header">
               <div>
-                <h2 class="fei-section-title">个人信息</h2>
-                <p class="fei-section-desc" style="margin-top: 6px">维护昵称、性别和登录密码</p>
+                <h2 class="fei-section-title">修改个人信息</h2>
               </div>
             </div>
             <div class="fei-card-body">
@@ -101,10 +100,12 @@
                       <input
                         v-model.trim="profileForm.userName"
                         class="fei-input"
-                        maxlength="256"
+                        :class="{ 'fei-input--error': Boolean(nicknameError) }"
+                        maxlength="16"
                         placeholder="请输入昵称"
                         autocomplete="nickname"
                       />
+                      <span v-if="nicknameError" class="fei-field-error">{{ nicknameError }}</span>
                     </label>
                     <label class="fei-field">
                       <span class="fei-label">性别</span>
@@ -114,8 +115,12 @@
                       </select>
                     </label>
                     <div class="fei-toolbar">
-                      <button class="fei-btn fei-btn--primary" type="submit" :disabled="profileSubmitting">
-                        {{ profileSubmitting ? '保存中' : '保存资料' }}
+                      <button
+                        class="fei-btn fei-btn--primary"
+                        type="submit"
+                        :disabled="profileSubmitting || Boolean(nicknameError)"
+                      >
+                        {{ profileSubmitting ? '修改中' : '修改资料' }}
                       </button>
                     </div>
                   </form>
@@ -329,6 +334,19 @@ const passwordSubmitting = ref(false);
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
 const keyPlaceholder = '密钥加载中';
 const passwordPattern = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]{8,16}$/;
+const nicknamePattern = /^[\u4e00-\u9fffA-Za-z0-9]{2,16}$/;
+const nicknameSensitiveWords = [
+  'admin',
+  'root',
+  '管理员',
+  '系统',
+  '官方',
+  '客服',
+  'feiapi',
+  '色情',
+  '赌博',
+  '毒品',
+];
 
 const profileForm = reactive({
   userName: '',
@@ -364,6 +382,24 @@ const genderText = computed(() => {
   if (loginUser.value?.gender === 0) return '男';
   if (loginUser.value?.gender === 1) return '女';
   return '未设置';
+});
+
+const nicknameError = computed(() => {
+  const userName = profileForm.userName.trim();
+  const normalizedUserName = userName.toLowerCase();
+  if (!userName) {
+    return '请输入昵称';
+  }
+  if (userName.length < 2 || userName.length > 16) {
+    return '昵称需为 2-16 位';
+  }
+  if (!nicknamePattern.test(userName)) {
+    return '昵称只能包含中文、英文和数字';
+  }
+  if (nicknameSensitiveWords.some((word) => normalizedUserName.includes(word))) {
+    return '昵称包含不允许使用的内容';
+  }
+  return '';
 });
 
 const sdkSnippet = `FeiApiClient client = new FeiApiClient(\n    "<your-access-key>",\n    "<your-secret-key>"\n);\nString result = client.invoke(\n    "/api/love/random", "GET", null\n);`;
@@ -448,8 +484,8 @@ const loadLoginUser = async () => {
 
 const handleProfileSubmit = async () => {
   const userName = profileForm.userName.trim();
-  if (!userName) {
-    showToast('请输入昵称', 'error');
+  if (nicknameError.value) {
+    showToast(nicknameError.value, 'error');
     return;
   }
   if (![0, 1].includes(profileForm.gender)) {
@@ -595,6 +631,21 @@ watch(activeTab, async (tab) => {
 .fei-profile-form-section + .fei-profile-form-section {
   padding-left: 28px;
   border-left: 1px solid var(--fei-border);
+}
+
+.fei-input--error {
+  border-color: var(--fei-error);
+}
+
+.fei-input--error:focus {
+  border-color: var(--fei-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+.fei-field-error {
+  color: var(--fei-error);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .fei-btn:disabled {
