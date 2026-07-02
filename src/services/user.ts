@@ -1,5 +1,13 @@
 import http from './http';
-import type { LoginRequest, RegisterRequest, ResponseData, UserKeyVO, UserVO } from '@/types/api';
+import type {
+  CurrentUserPasswordUpdateRequest,
+  CurrentUserProfileUpdateRequest,
+  LoginRequest,
+  RegisterRequest,
+  ResponseData,
+  UserKeyVO,
+  UserVO,
+} from '@/types/api';
 
 export const userService = {
   login(data: LoginRequest) {
@@ -16,5 +24,11 @@ export const userService = {
   },
   getCurrentUserKeys() {
     return http.get<ResponseData<UserKeyVO>>('/user/get/keys').then((response) => response.data);
+  },
+  updateCurrentUserProfile(data: CurrentUserProfileUpdateRequest) {
+    return http.post<ResponseData<boolean>>('/user/update/my/profile', data).then((response) => response.data);
+  },
+  updateCurrentUserPassword(data: CurrentUserPasswordUpdateRequest) {
+    return http.post<ResponseData<boolean>>('/user/update/my/password', data).then((response) => response.data);
   },
 };

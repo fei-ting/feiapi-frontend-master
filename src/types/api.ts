@@ -9,6 +9,7 @@ export interface UserVO {
   userName?: string;
   userAccount?: string;
   userAvatar?: string;
+  gender?: number;
   userRole?: string;
   accessKey?: string;
   secretKey?: string;
@@ -86,6 +87,17 @@ export interface LoginRequest {
 export interface RegisterRequest {
   userAccount: string;
   userPassword: string;
+  checkPassword: string;
+}
+
+export interface CurrentUserProfileUpdateRequest {
+  userName: string;
+  gender: number;
+}
+
+export interface CurrentUserPasswordUpdateRequest {
+  oldPassword: string;
+  newPassword: string;
   checkPassword: string;
 }
 
