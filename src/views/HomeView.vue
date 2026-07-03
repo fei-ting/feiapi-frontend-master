@@ -56,9 +56,11 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import SectionHeader from '@/components/SectionHeader.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
+import { homeStatsService } from '@/services/homeStats';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import type { UserVO } from '@/types/api';
+import type { HomeStats } from '@/types/home';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -69,12 +71,12 @@ const toast = reactive({
   message: '',
 });
 
-const stats = [
-  { value: '6', label: '平台接口' },
-  { value: '12k+', label: '今日调用' },
-  { value: '99.9%', label: '服务可用性' },
-  { value: '<50ms', label: '平均响应' },
-];
+const stats = ref([
+  { value: '--', label: '平台接口' },
+  { value: '--', label: '今日调用' },
+  { value: '--', label: '服务可用性' },
+  { value: '--', label: '平均响应' },
+]);
 
 const features = [
   { icon: '∎', title: '接口广场', desc: '统一浏览已上线接口，查看请求方法、地址、参数与状态，快速发现所需能力。' },
@@ -101,6 +103,58 @@ const loadLoginUser = async () => {
   }
 };
 
+const formatCount = (num: number | null | undefined): string => {
+  if (num == null) {
+    return '--';
+  }
+  if (num >= 10000) {
+    return `${(num / 10000).toFixed(1).replace(/\.0$/, '')}万`;
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+  }
+  return String(num);
+};
+
+const formatRate = (rate: number | null | undefined): string => {
+  if (rate == null) {
+    return '--';
+  }
+  return `${rate.toFixed(1).replace(/\.0$/, '')}%`;
+};
+
+const formatResponseTime = (responseTimeMs: number | null | undefined): string => {
+  if (responseTimeMs == null) {
+    return '--';
+  }
+  return `${Math.round(responseTimeMs)}ms`;
+};
+
+const updateStats = (homeStats: HomeStats) => {
+  stats.value = [
+    { value: formatCount(homeStats.platformInterfaceCount), label: '平台接口' },
+    { value: formatCount(homeStats.todayInvocations), label: '今日调用' },
+    { value: formatRate(homeStats.availabilityRate), label: '服务可用性' },
+    { value: formatResponseTime(homeStats.averageResponseTimeMs), label: '平均响应' },
+  ];
+};
+
+const loadHomeStats = async () => {
+  try {
+    const res = await homeStatsService.getHomeStats();
+    if (res.data) {
+      updateStats(res.data);
+    }
+  } catch {
+    stats.value = [
+      { value: '--', label: '平台接口' },
+      { value: '--', label: '今日调用' },
+      { value: '--', label: '服务可用性' },
+      { value: '--', label: '平均响应' },
+    ];
+  }
+};
+
 const handleLogout = async () => {
   try {
     await userService.logout();
@@ -121,6 +175,6 @@ const toggleMenu = () => {
 };
 
 onMounted(async () => {
-  await loadLoginUser();
+  await Promise.all([loadLoginUser(), loadHomeStats()]);
 });
 </script>
