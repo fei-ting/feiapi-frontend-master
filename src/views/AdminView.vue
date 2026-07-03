@@ -103,7 +103,21 @@
                     <th>初始额度</th>
                     <th>状态</th>
                     <th>操作</th>
-                    <th>调用总数</th>
+                    <th>
+                      <button
+                        class="fei-sort-header"
+                        :class="{ 'is-active': totalNumSortOrder !== '' }"
+                        type="button"
+                        :aria-label="totalNumSortLabel"
+                        @click="toggleTotalNumSort"
+                      >
+                        <span>调用总数</span>
+                        <span class="fei-sort-indicator" aria-hidden="true">
+                          <span class="fei-sort-caret fei-sort-caret--up" :class="{ 'is-active': totalNumSortOrder === 'ascend' }"></span>
+                          <span class="fei-sort-caret fei-sort-caret--down" :class="{ 'is-active': totalNumSortOrder === 'descend' }"></span>
+                        </span>
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -318,7 +332,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, UserVO } from '@/types/api';
+import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, InterfaceQuery, SortOrder, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -356,6 +370,8 @@ const quotaSavingType = ref('');
 const interfaceSearch = ref('');
 const interfaceStatus = ref<string | number>('');
 const interfaceQuotaType = ref('');
+/** 调用总数字段排序方向 */
+const totalNumSortOrder = ref<SortOrder | ''>('');
 
 const toast = reactive({
   visible: false,
@@ -423,6 +439,13 @@ const initialQuotaText = (item: InterfaceInfoVO) => {
   return `${item.initialQuota ?? 0} 次`;
 };
 
+/** 调用总数排序按钮的无障碍说明 */
+const totalNumSortLabel = computed(() => {
+  if (totalNumSortOrder.value === 'descend') return '调用总数当前按降序排序，点击切换为升序';
+  if (totalNumSortOrder.value === 'ascend') return '调用总数当前按升序排序，点击恢复默认排序';
+  return '点击按调用总数降序排序';
+});
+
 /**
  * 格式化时间显示
  * @param time 时间字符串
@@ -447,6 +470,18 @@ const switchTab = (tab: string) => {
   router.push(`/admin/${tab}`);
 };
 
+/** 切换调用总数排序方向 */
+const toggleTotalNumSort = async () => {
+  if (!totalNumSortOrder.value) {
+    totalNumSortOrder.value = 'descend';
+  } else if (totalNumSortOrder.value === 'descend') {
+    totalNumSortOrder.value = 'ascend';
+  } else {
+    totalNumSortOrder.value = '';
+  }
+  await loadInterfaces();
+};
+
 const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
@@ -458,10 +493,14 @@ const loadLoginUser = async () => {
 
 const loadInterfaces = async () => {
   try {
-    const params: Record<string, unknown> = { current: 1, pageSize: 10 };
+    const params: InterfaceQuery = { current: 1, pageSize: 10 };
     if (interfaceStatus.value !== '') params.status = interfaceStatus.value;
     if (interfaceQuotaType.value) params.quotaType = interfaceQuotaType.value;
     if (interfaceSearch.value) params.name = interfaceSearch.value;
+    if (totalNumSortOrder.value) {
+      params.sortField = 'totalNum';
+      params.sortOrder = totalNumSortOrder.value;
+    }
     const res = await interfaceService.listPage(params);
     interfaces.value = res.data?.records ?? [];
   } catch {
@@ -756,6 +795,54 @@ watch(activeTab, async (tab) => {
 .fei-table td:nth-child(8) {
   width: 80px;
   white-space: nowrap;
+}
+
+.fei-sort-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 74px;
+  height: 24px;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.fei-sort-header:hover,
+.fei-sort-header.is-active {
+  color: var(--fei-primary);
+}
+
+.fei-sort-indicator {
+  display: inline-grid;
+  gap: 2px;
+  width: 8px;
+}
+
+.fei-sort-caret {
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  opacity: 0.34;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+
+.fei-sort-caret--up {
+  border-bottom: 5px solid currentColor;
+}
+
+.fei-sort-caret--down {
+  border-top: 5px solid currentColor;
+}
+
+.fei-sort-caret.is-active {
+  opacity: 1;
 }
 
 .fei-action-btn {
