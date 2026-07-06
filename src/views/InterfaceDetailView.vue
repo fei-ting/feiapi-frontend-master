@@ -55,7 +55,7 @@
           </div>
         </section>
 
-        <aside class="fei-panel">
+        <aside class="fei-panel fei-debug-panel">
           <h2 class="fei-section-title" style="margin-bottom: 18px">在线调试</h2>
           <div v-if="!loginUser" class="fei-empty" style="padding: 26px 10px">
             登录后即可在线调用接口
@@ -63,19 +63,34 @@
               <a class="fei-btn fei-btn--primary" href="#/login">去登录</a>
             </div>
           </div>
-          <div v-else class="fei-form">
+          <div v-else class="fei-form fei-debug-form">
             <div class="fei-field">
               <label class="fei-label" for="requestParams">请求参数（JSON）</label>
               <textarea id="requestParams" v-model="requestParams" class="fei-textarea" placeholder='{"key":"value"}' />
             </div>
-            <div class="fei-toolbar">
+            <div class="fei-toolbar fei-debug-toolbar">
               <button class="fei-btn fei-btn--primary" type="button" @click="invokeApi" :disabled="invokeLoading">
                 {{ invokeLoading ? '调用中...' : '发送请求' }}
               </button>
               <button class="fei-btn fei-btn--secondary" type="button" @click="fillExample">填充示例</button>
             </div>
-            <div class="fei-card" style="padding: 16px; background: #fafcff">
-              <pre class="fei-code" style="margin: 0">{{ invokeResult || '响应结果将显示在这里' }}</pre>
+            <div class="fei-debug-output" :class="{ 'fei-debug-output--empty': !invokeResult }">
+              <button
+                class="fei-debug-copy"
+                type="button"
+                aria-label="复制"
+                data-tooltip="复制"
+                :disabled="!invokeResult"
+                @click="copyInvokeResult"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M8 8.5C8 7.67 8.67 7 9.5 7h8C18.33 7 19 7.67 19 8.5v8c0 .83-.67 1.5-1.5 1.5h-8C8.67 18 8 17.33 8 16.5v-8Z"
+                  />
+                  <path d="M5 14.5v-8C5 5.67 5.67 5 6.5 5h8" />
+                </svg>
+              </button>
+              <pre class="fei-debug-output__content">{{ invokeResult || '响应结果将显示在这里' }}</pre>
             </div>
           </div>
         </aside>
@@ -109,7 +124,7 @@ const loading = ref(true);
 const invokeLoading = ref(false);
 const detail = ref<InterfaceInfoVO | null>(null);
 const loginUser = ref<UserVO | null>(null);
-const requestParams = ref('{"ip":"8.8.8.8"}');
+const requestParams = ref('');
 const invokeResult = ref('');
 const toast = reactive({
   visible: false,
@@ -124,6 +139,48 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   window.setTimeout(() => {
     toast.visible = false;
   }, 2200);
+};
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return '调用失败，请稍后重试';
+};
+
+const validateRequestParamsJson = () => {
+  const trimmedParams = requestParams.value.trim();
+  if (!trimmedParams) {
+    return true;
+  }
+  try {
+    JSON.parse(trimmedParams);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const formatInvokeResponse = (data: unknown) => {
+  if (data === null || data === undefined) {
+    return '接口返回为空';
+  }
+  if (typeof data === 'string') {
+    return data;
+  }
+  return JSON.stringify(data, null, 2);
+};
+
+const getRequestParamsExample = (item: InterfaceInfoVO | null) => {
+  const params = item?.requestParams?.trim();
+  if (!params) {
+    return '';
+  }
+  try {
+    return JSON.stringify(JSON.parse(params), null, 2);
+  } catch {
+    return params;
+  }
 };
 
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
@@ -169,6 +226,7 @@ const loadDetail = async () => {
   try {
     const res = await interfaceService.getById(id);
     detail.value = res.data || null;
+    requestParams.value = getRequestParamsExample(detail.value);
   } catch {
     detail.value = null;
   } finally {
@@ -178,24 +236,43 @@ const loadDetail = async () => {
 
 const invokeApi = async () => {
   if (!detail.value?.id) return;
+  if (!validateRequestParamsJson()) {
+    const message = '请求参数必须是合法 JSON';
+    invokeResult.value = message;
+    showToast(message, 'error');
+    return;
+  }
   invokeLoading.value = true;
   try {
     const res = await interfaceService.invoke({
       id: detail.value.id,
       userRequestParams: requestParams.value,
     });
-    invokeResult.value = JSON.stringify(res.data, null, 2);
+    invokeResult.value = formatInvokeResponse(res.data);
     showToast('调用成功', 'success');
-  } catch {
-    invokeResult.value = '调用失败';
-    showToast('调用失败', 'error');
+  } catch (error) {
+    const message = getErrorMessage(error);
+    invokeResult.value = message;
+    showToast(message, 'error');
   } finally {
     invokeLoading.value = false;
   }
 };
 
 const fillExample = () => {
-  requestParams.value = '{"ip":"8.8.8.8"}';
+  requestParams.value = getRequestParamsExample(detail.value);
+};
+
+const copyInvokeResult = async () => {
+  if (!invokeResult.value) {
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(invokeResult.value);
+    showToast('复制成功', 'success');
+  } catch {
+    showToast('复制失败，请手动选择内容复制', 'error');
+  }
 };
 
 const handleLogout = async () => {

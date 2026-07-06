@@ -950,8 +950,9 @@ a {
 
 .fei-layout-detail {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
-  gap: 16px;
+  grid-template-columns: minmax(420px, 0.95fr) minmax(520px, 1.05fr);
+  gap: 18px;
+  align-items: stretch;
 }
 
 .fei-panel {
@@ -1006,6 +1007,152 @@ a {
   background: #f8fafc;
   font-size: 13px;
   line-height: 1.7;
+}
+
+.fei-debug-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  min-height: 600px;
+  max-height: 820px;
+}
+
+.fei-debug-form {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.fei-debug-toolbar {
+  flex: 0 0 auto;
+}
+
+.fei-debug-output {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--fei-border);
+  border-radius: 12px;
+  background: #fafcff;
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-debug-output__content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 18px 18px 18px 18px;
+  overflow: auto;
+  color: var(--fei-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.fei-debug-output--empty .fei-debug-output__content {
+  color: var(--fei-text-muted);
+}
+
+.fei-debug-output__content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.fei-debug-output__content::-webkit-scrollbar-track {
+  background: #eef4ff;
+  border-radius: 999px;
+}
+
+.fei-debug-output__content::-webkit-scrollbar-thumb {
+  background: #bfcee6;
+  border: 2px solid #eef4ff;
+  border-radius: 999px;
+}
+
+.fei-debug-output__content::-webkit-scrollbar-thumb:hover {
+  background: #91a6c9;
+}
+
+.fei-debug-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--fei-text-secondary);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  box-shadow: var(--fei-shadow-soft);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.fei-debug-output:hover .fei-debug-copy,
+.fei-debug-copy:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fei-debug-copy:hover {
+  color: var(--fei-primary);
+  border-color: var(--fei-primary-light);
+  transform: translateY(-1px);
+}
+
+.fei-debug-copy:disabled {
+  color: var(--fei-text-muted);
+  cursor: not-allowed;
+}
+
+.fei-debug-copy svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fei-debug-copy::after {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  padding: 5px 8px;
+  color: #fff;
+  background: #111827;
+  border-radius: 6px;
+  content: attr(data-tooltip);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px) translateY(-50%);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.fei-debug-copy:hover::after,
+.fei-debug-copy:focus-visible::after {
+  opacity: 1;
+  transform: translateX(0) translateY(-50%);
 }
 
 .fei-code-inline {
@@ -1124,6 +1271,29 @@ a {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.fei-form.fei-debug-form {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+  flex-direction: column;
+}
+
+.fei-debug-form .fei-field {
+  flex: 0 0 auto;
+}
+
+.fei-debug-form .fei-textarea {
+  min-height: 120px;
+  max-height: 150px;
+  resize: vertical;
+}
+
+.fei-toolbar.fei-debug-toolbar {
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 .fei-footer {
@@ -1539,6 +1709,10 @@ a {
   .fei-grid-3,
   .fei-layout-detail {
     grid-template-columns: 1fr;
+  }
+
+  .fei-debug-panel {
+    min-height: 560px;
   }
 
   .fei-hero__title {
