@@ -98,23 +98,32 @@
                   <tr>
                     <th>ID</th>
                     <th>接口名称</th>
-                    <th>请求方法</th>
                     <th>请求地址</th>
                     <th>配额类型</th>
                     <th>初始额度</th>
                     <th>状态</th>
                     <th>操作</th>
+                    <th>
+                      <button
+                        class="fei-sort-header"
+                        :class="{ 'is-active': totalNumSortOrder !== '' }"
+                        type="button"
+                        :aria-label="totalNumSortLabel"
+                        @click="toggleTotalNumSort"
+                      >
+                        <span>调用总数</span>
+                        <span class="fei-sort-indicator" aria-hidden="true">
+                          <span class="fei-sort-caret fei-sort-caret--up" :class="{ 'is-active': totalNumSortOrder === 'ascend' }"></span>
+                          <span class="fei-sort-caret fei-sort-caret--down" :class="{ 'is-active': totalNumSortOrder === 'descend' }"></span>
+                        </span>
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="item in interfaces" :key="item.id">
                     <td>{{ item.id }}</td>
                     <td>{{ item.name }}</td>
-                    <td>
-                      <span class="fei-method" :class="item.method === 'GET' ? 'fei-method--get' : 'fei-method--post'">
-                        {{ item.method }}
-                      </span>
-                    </td>
                     <td style="color: var(--fei-text-muted)">{{ item.url }}</td>
                     <td>
                       <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
@@ -144,6 +153,7 @@
                         <button class="fei-action-btn fei-action-btn--danger" @click="openDeleteModal(item)">删除</button>
                       </div>
                     </td>
+                    <td>{{ item.totalNum ?? 0 }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -154,13 +164,13 @@
           <!-- 配额策略 -->
           <div v-if="activeTab === 'quotas'" class="fei-card">
             <div class="fei-card-header">
-              <div>
-                <h2 class="fei-section-title">配额策略配置</h2>
-                <p class="fei-section-desc" style="margin-top: 6px">
-                  修改后仅对后续新注册用户和后续首次初始化额度的用户生效
-                </p>
-              </div>
-              <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadQuotaConfigs">刷新</button>
+              <h2 class="fei-section-title">配额策略配置</h2>
+              <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadQuotaConfigs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                </svg>
+                刷新
+              </button>
             </div>
             <div class="fei-card-body">
               <div class="fei-quota-config-grid">
@@ -169,15 +179,15 @@
                     <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
                       {{ quotaConfigText(item) }}
                     </span>
-                    <span class="fei-quota-config-card__time">{{ item.updateTime || '暂无更新时间' }}</span>
+                    <span class="fei-quota-config-card__time">{{ formatTime(item.updateTime) }}</span>
                   </div>
-                  <p class="fei-section-desc">{{ item.description || quotaConfigText(item) }}</p>
-                  <div class="fei-quota-edit-row">
-                    <label class="fei-form-label">当前初始额度</label>
+                  <div class="fei-quota-config-card__spacer" aria-hidden="true"></div>
+                  <div class="fei-quota-edit-row-inline">
+                    <span class="fei-quota-edit-label">当前初始额度：</span>
                     <template v-if="item.limited">
                       <input
                         v-model.number="quotaEditMap[item.quotaType]"
-                        class="fei-input"
+                        class="fei-input fei-input--compact"
                         type="number"
                         min="1"
                         step="1"
@@ -190,7 +200,7 @@
                         {{ quotaSavingType === item.quotaType ? '保存中...' : '保存' }}
                       </button>
                     </template>
-                    <span v-else class="fei-quota-infinite">无限次</span>
+                    <span v-else class="fei-quota-infinite-text">无限次</span>
                   </div>
                 </article>
               </div>
@@ -322,7 +332,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, UserVO } from '@/types/api';
+import type { InterfaceInfoVO, InterfaceQuotaConfigVO, InterfaceQuotaType, InterfaceQuery, SortOrder, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -360,6 +370,8 @@ const quotaSavingType = ref('');
 const interfaceSearch = ref('');
 const interfaceStatus = ref<string | number>('');
 const interfaceQuotaType = ref('');
+/** 调用总数字段排序方向 */
+const totalNumSortOrder = ref<SortOrder | ''>('');
 
 const toast = reactive({
   visible: false,
@@ -427,8 +439,47 @@ const initialQuotaText = (item: InterfaceInfoVO) => {
   return `${item.initialQuota ?? 0} 次`;
 };
 
+/** 调用总数排序按钮的无障碍说明 */
+const totalNumSortLabel = computed(() => {
+  if (totalNumSortOrder.value === 'descend') return '调用总数当前按降序排序，点击切换为升序';
+  if (totalNumSortOrder.value === 'ascend') return '调用总数当前按升序排序，点击恢复默认排序';
+  return '点击按调用总数降序排序';
+});
+
+/**
+ * 格式化时间显示
+ * @param time 时间字符串
+ * @returns 格式化后的时间
+ */
+const formatTime = (time?: string) => {
+  if (!time) return '暂无更新时间';
+  try {
+    const date = new Date(time);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  } catch {
+    return time;
+  }
+};
+
 const switchTab = (tab: string) => {
   router.push(`/admin/${tab}`);
+};
+
+/** 切换调用总数排序方向 */
+const toggleTotalNumSort = async () => {
+  if (!totalNumSortOrder.value) {
+    totalNumSortOrder.value = 'descend';
+  } else if (totalNumSortOrder.value === 'descend') {
+    totalNumSortOrder.value = 'ascend';
+  } else {
+    totalNumSortOrder.value = '';
+  }
+  await loadInterfaces();
 };
 
 const loadLoginUser = async () => {
@@ -442,10 +493,14 @@ const loadLoginUser = async () => {
 
 const loadInterfaces = async () => {
   try {
-    const params: Record<string, unknown> = { current: 1, pageSize: 10 };
+    const params: InterfaceQuery = { current: 1, pageSize: 10 };
     if (interfaceStatus.value !== '') params.status = interfaceStatus.value;
     if (interfaceQuotaType.value) params.quotaType = interfaceQuotaType.value;
     if (interfaceSearch.value) params.name = interfaceSearch.value;
+    if (totalNumSortOrder.value) {
+      params.sortField = 'totalNum';
+      params.sortOrder = totalNumSortOrder.value;
+    }
     const res = await interfaceService.listPage(params);
     interfaces.value = res.data?.records ?? [];
   } catch {
@@ -687,6 +742,107 @@ watch(activeTab, async (tab) => {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* 表格列宽优化 */
+.fei-table th:nth-child(1),
+.fei-table td:nth-child(1) {
+  width: 50px;
+}
+
+.fei-table th:nth-child(2),
+.fei-table td:nth-child(2) {
+  width: 100px;
+  font-size: 14px;
+}
+
+.fei-table th:nth-child(3),
+.fei-table td:nth-child(3) {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+}
+
+.fei-table th:nth-child(4),
+.fei-table td:nth-child(4) {
+  width: 90px;
+  white-space: nowrap;
+}
+
+.fei-table th:nth-child(5),
+.fei-table td:nth-child(5) {
+  width: 80px;
+  white-space: nowrap;
+}
+
+.fei-table th:nth-child(6),
+.fei-table td:nth-child(6) {
+  width: 70px;
+  white-space: nowrap;
+}
+
+.fei-table th:nth-child(7),
+.fei-table td:nth-child(7) {
+  width: 150px;
+}
+
+.fei-table th:nth-child(8),
+.fei-table td:nth-child(8) {
+  width: 80px;
+  white-space: nowrap;
+}
+
+.fei-sort-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 74px;
+  height: 24px;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.fei-sort-header:hover,
+.fei-sort-header.is-active {
+  color: var(--fei-primary);
+}
+
+.fei-sort-indicator {
+  display: inline-grid;
+  gap: 2px;
+  width: 8px;
+}
+
+.fei-sort-caret {
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  opacity: 0.34;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+
+.fei-sort-caret--up {
+  border-bottom: 5px solid currentColor;
+}
+
+.fei-sort-caret--down {
+  border-top: 5px solid currentColor;
+}
+
+.fei-sort-caret.is-active {
+  opacity: 1;
 }
 
 .fei-action-btn {
@@ -714,6 +870,34 @@ watch(activeTab, async (tab) => {
 
 .fei-action-btn--danger:hover {
   background: rgba(227, 62, 51, 0.15);
+}
+
+/* 配额策略卡片样式 */
+
+.fei-quota-edit-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.fei-quota-edit-label {
+  font-size: 14px;
+  color: var(--fei-text-secondary);
+  white-space: nowrap;
+}
+
+.fei-input--compact {
+  width: 80px;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.fei-quota-infinite-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fei-primary);
 }
 
 /* 弹窗遮罩层 */
@@ -948,9 +1132,13 @@ watch(activeTab, async (tab) => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
 }
 
 .fei-quota-config-card {
+  display: grid;
+  grid-template-rows: 24px 32px 36px;
+  row-gap: 16px;
   padding: 18px;
   border: 1px solid var(--fei-border);
   border-radius: 12px;
@@ -959,16 +1147,20 @@ watch(activeTab, async (tab) => {
 
 .fei-quota-config-card__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  min-height: 24px;
 }
 
 .fei-quota-config-card__time {
   color: var(--fei-text-muted);
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: right;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.fei-quota-config-card__spacer {
+  min-height: 32px;
 }
 
 .fei-quota-edit-row {

@@ -17,6 +17,7 @@
               {{ loginUser.userRole === 'admin' ? '管理员' : '普通用户' }}
             </span>
             <span>ID: {{ loginUser.id }}</span>
+            <span>性别：{{ genderText }}</span>
           </div>
         </div>
       </div>
@@ -27,6 +28,14 @@
         <aside class="fei-admin-sidebar">
           <div class="fei-card">
             <nav class="fei-admin-sidebar-nav" style="padding: 8px">
+              <a
+                class="fei-admin-nav-link"
+                :class="{ 'is-active': activeTab === 'info' }"
+                href="#/profile/info"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                个人信息
+              </a>
               <a
                 class="fei-admin-nav-link"
                 :class="{ 'is-active': activeTab === 'records' }"
@@ -53,6 +62,13 @@
           <div class="fei-admin-tabs">
             <button
               class="fei-admin-tab"
+              :class="{ 'is-active': activeTab === 'info' }"
+              @click="switchTab('info')"
+            >
+              个人信息
+            </button>
+            <button
+              class="fei-admin-tab"
               :class="{ 'is-active': activeTab === 'records' }"
               @click="switchTab('records')"
             >
@@ -67,8 +83,95 @@
             </button>
           </div>
 
+          <!-- 个人信息 -->
+          <div v-if="activeTab === 'info'" class="fei-card">
+            <div class="fei-card-header">
+              <div>
+                <h2 class="fei-section-title">修改个人信息</h2>
+              </div>
+            </div>
+            <div class="fei-card-body">
+              <div class="fei-profile-form-grid">
+                <section class="fei-profile-form-section">
+                  <h3 class="fei-profile-form-title">基础资料</h3>
+                  <form class="fei-form" @submit.prevent="handleProfileSubmit">
+                    <label class="fei-field">
+                      <span class="fei-label">昵称</span>
+                      <input
+                        v-model.trim="profileForm.userName"
+                        class="fei-input"
+                        :class="{ 'fei-input--error': Boolean(nicknameError) }"
+                        maxlength="16"
+                        placeholder="请输入昵称"
+                        autocomplete="nickname"
+                      />
+                      <span v-if="nicknameError" class="fei-field-error">{{ nicknameError }}</span>
+                    </label>
+                    <label class="fei-field">
+                      <span class="fei-label">性别</span>
+                      <select v-model.number="profileForm.gender" class="fei-select">
+                        <option :value="0">男</option>
+                        <option :value="1">女</option>
+                      </select>
+                    </label>
+                    <div class="fei-toolbar">
+                      <button
+                        class="fei-btn fei-btn--primary"
+                        type="submit"
+                        :disabled="profileSubmitting || Boolean(nicknameError)"
+                      >
+                        {{ profileSubmitting ? '修改中' : '修改资料' }}
+                      </button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="fei-profile-form-section">
+                  <h3 class="fei-profile-form-title">修改密码</h3>
+                  <form class="fei-form" @submit.prevent="handlePasswordSubmit">
+                    <label class="fei-field">
+                      <span class="fei-label">旧密码</span>
+                      <input
+                        v-model="passwordForm.oldPassword"
+                        class="fei-input"
+                        type="password"
+                        placeholder="请输入旧密码"
+                        autocomplete="current-password"
+                      />
+                    </label>
+                    <label class="fei-field">
+                      <span class="fei-label">新密码</span>
+                      <input
+                        v-model="passwordForm.newPassword"
+                        class="fei-input"
+                        type="password"
+                        placeholder="8-16位字母和数字"
+                        autocomplete="new-password"
+                      />
+                    </label>
+                    <label class="fei-field">
+                      <span class="fei-label">确认密码</span>
+                      <input
+                        v-model="passwordForm.checkPassword"
+                        class="fei-input"
+                        type="password"
+                        placeholder="请再次输入新密码"
+                        autocomplete="new-password"
+                      />
+                    </label>
+                    <div class="fei-toolbar">
+                      <button class="fei-btn fei-btn--primary" type="submit" :disabled="passwordSubmitting">
+                        {{ passwordSubmitting ? '修改中' : '修改密码' }}
+                      </button>
+                    </div>
+                  </form>
+                </section>
+              </div>
+            </div>
+          </div>
+
           <!-- 我的额度与调用记录 -->
-          <div v-if="activeTab === 'records'" class="fei-card">
+          <div v-else-if="activeTab === 'records'" class="fei-card">
             <div class="fei-card-header">
               <div>
                 <h2 class="fei-section-title">我的额度/调用</h2>
@@ -209,17 +312,52 @@ import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
 import { useUserStore } from '@/stores/user';
 import type { UserInterfaceInfoVO, UserKeyVO, UserVO } from '@/types/api';
 
+type ProfileTab = 'info' | 'records' | 'keys';
+
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
-const activeTab = computed(() => (route.params.tab === 'keys' ? 'keys' : 'records'));
+const activeTab = computed<ProfileTab>(() => {
+  const tab = route.params.tab;
+  if (tab === 'info' || tab === 'keys' || tab === 'records') {
+    return tab;
+  }
+  return 'records';
+});
 const loginUser = ref<UserVO | null>(null);
 const userKeys = ref<UserKeyVO | null>(null);
 const records = ref<UserInterfaceInfoVO[]>([]);
 const showSecret = ref(false);
 const userKeysLoading = ref(false);
+const profileSubmitting = ref(false);
+const passwordSubmitting = ref(false);
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
 const keyPlaceholder = '密钥加载中';
+const passwordPattern = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]{8,16}$/;
+const nicknamePattern = /^[\u4e00-\u9fffA-Za-z0-9]{2,16}$/;
+const nicknameSensitiveWords = [
+  'admin',
+  'root',
+  '管理员',
+  '系统',
+  '官方',
+  '客服',
+  'feiapi',
+  '色情',
+  '赌博',
+  '毒品',
+];
+
+const profileForm = reactive({
+  userName: '',
+  gender: 0,
+});
+
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  checkPassword: '',
+});
 
 const toast = reactive({
   visible: false,
@@ -240,10 +378,46 @@ const maskedSecret = computed(() => {
   return `${secret.slice(0, 8)}${'•'.repeat(Math.max(secret.length - 12, 4))}${secret.slice(-4)}`;
 });
 
+const genderText = computed(() => {
+  if (loginUser.value?.gender === 0) return '男';
+  if (loginUser.value?.gender === 1) return '女';
+  return '未设置';
+});
+
+const nicknameError = computed(() => {
+  const userName = profileForm.userName.trim();
+  const normalizedUserName = userName.toLowerCase();
+  if (!userName) {
+    return '请输入昵称';
+  }
+  if (userName.length < 2 || userName.length > 16) {
+    return '昵称需为 2-16 位';
+  }
+  if (!nicknamePattern.test(userName)) {
+    return '昵称只能包含中文、英文和数字';
+  }
+  if (nicknameSensitiveWords.some((word) => normalizedUserName.includes(word))) {
+    return '昵称包含不允许使用的内容';
+  }
+  return '';
+});
+
 const sdkSnippet = `FeiApiClient client = new FeiApiClient(\n    "<your-access-key>",\n    "<your-secret-key>"\n);\nString result = client.invoke(\n    "/api/love/random", "GET", null\n);`;
 
-const switchTab = (tab: string) => {
+const switchTab = (tab: ProfileTab) => {
   router.push(`/profile/${tab}`);
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+};
+
+const syncProfileForm = (user: UserVO | null) => {
+  profileForm.userName = user?.userName || '';
+  profileForm.gender = user?.gender === 1 ? 1 : 0;
 };
 
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
@@ -297,10 +471,74 @@ const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
     loginUser.value = res.data || null;
+    userStore.setLoginUser(loginUser.value);
+    syncProfileForm(loginUser.value);
     return Boolean(loginUser.value);
   } catch {
     loginUser.value = null;
+    userStore.clearLoginUser();
+    syncProfileForm(null);
     return false;
+  }
+};
+
+const handleProfileSubmit = async () => {
+  const userName = profileForm.userName.trim();
+  if (nicknameError.value) {
+    showToast(nicknameError.value, 'error');
+    return;
+  }
+  if (![0, 1].includes(profileForm.gender)) {
+    showToast('请选择正确的性别', 'error');
+    return;
+  }
+  profileSubmitting.value = true;
+  try {
+    await userService.updateCurrentUserProfile({
+      userName,
+      gender: profileForm.gender,
+    });
+    showToast('个人信息已更新', 'success');
+    await loadLoginUser();
+  } catch (error) {
+    showToast(getErrorMessage(error, '个人信息更新失败'), 'error');
+  } finally {
+    profileSubmitting.value = false;
+  }
+};
+
+const clearPasswordForm = () => {
+  passwordForm.oldPassword = '';
+  passwordForm.newPassword = '';
+  passwordForm.checkPassword = '';
+};
+
+const handlePasswordSubmit = async () => {
+  if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.checkPassword) {
+    showToast('请完整填写密码信息', 'error');
+    return;
+  }
+  if (!passwordPattern.test(passwordForm.newPassword)) {
+    showToast('新密码需为 8-16 位字母和数字组合', 'error');
+    return;
+  }
+  if (passwordForm.newPassword !== passwordForm.checkPassword) {
+    showToast('两次输入的新密码不一致', 'error');
+    return;
+  }
+  if (passwordForm.oldPassword === passwordForm.newPassword) {
+    showToast('新密码不能与旧密码相同', 'error');
+    return;
+  }
+  passwordSubmitting.value = true;
+  try {
+    await userService.updateCurrentUserPassword({ ...passwordForm });
+    clearPasswordForm();
+    showToast('密码已修改', 'success');
+  } catch (error) {
+    showToast(getErrorMessage(error, '密码修改失败'), 'error');
+  } finally {
+    passwordSubmitting.value = false;
   }
 };
 
@@ -371,3 +609,60 @@ watch(activeTab, async (tab) => {
   await loadUserKeys();
 });
 </script>
+
+<style scoped>
+.fei-profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.fei-profile-form-section {
+  min-width: 0;
+}
+
+.fei-profile-form-title {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fei-text);
+}
+
+.fei-profile-form-section + .fei-profile-form-section {
+  padding-left: 28px;
+  border-left: 1px solid var(--fei-border);
+}
+
+.fei-input--error {
+  border-color: var(--fei-error);
+}
+
+.fei-input--error:focus {
+  border-color: var(--fei-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+.fei-field-error {
+  color: var(--fei-error);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fei-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .fei-profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-profile-form-section + .fei-profile-form-section {
+    padding-top: 24px;
+    padding-left: 0;
+    border-top: 1px solid var(--fei-border);
+    border-left: none;
+  }
+}
+</style>

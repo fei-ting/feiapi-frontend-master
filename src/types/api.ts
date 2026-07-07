@@ -9,6 +9,7 @@ export interface UserVO {
   userName?: string;
   userAccount?: string;
   userAvatar?: string;
+  gender?: number;
   userRole?: string;
   accessKey?: string;
   secretKey?: string;
@@ -78,6 +79,8 @@ export interface PageResult<T> {
   current: number;
 }
 
+export type SortOrder = 'ascend' | 'descend';
+
 export interface LoginRequest {
   userAccount: string;
   userPassword: string;
@@ -86,6 +89,17 @@ export interface LoginRequest {
 export interface RegisterRequest {
   userAccount: string;
   userPassword: string;
+  checkPassword: string;
+}
+
+export interface CurrentUserProfileUpdateRequest {
+  userName: string;
+  gender: number;
+}
+
+export interface CurrentUserPasswordUpdateRequest {
+  oldPassword: string;
+  newPassword: string;
   checkPassword: string;
 }
 
@@ -104,6 +118,8 @@ export interface InterfaceQuery {
   name?: string;
   status?: number | string;
   quotaType?: InterfaceQuotaType | string;
+  sortField?: string;
+  sortOrder?: SortOrder;
   /** 接口描述，用于模糊搜索 */
   description?: string;
 }
