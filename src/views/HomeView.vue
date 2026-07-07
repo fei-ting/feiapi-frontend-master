@@ -73,9 +73,9 @@ const toast = reactive({
 
 const stats = ref([
   { value: '--', label: '平台接口' },
-  { value: '--', label: '今日调用' },
-  { value: '--', label: '服务可用性' },
-  { value: '--', label: '平均响应' },
+  { value: '--', label: '累计调用' },
+  { value: '--', label: '成功率' },
+  { value: '--', label: '平均耗时' },
 ]);
 
 const features = [
@@ -133,9 +133,9 @@ const formatResponseTime = (responseTimeMs: number | null | undefined): string =
 const updateStats = (homeStats: HomeStats) => {
   stats.value = [
     { value: formatCount(homeStats.platformInterfaceCount), label: '平台接口' },
-    { value: formatCount(homeStats.todayInvocations), label: '今日调用' },
-    { value: formatRate(homeStats.availabilityRate), label: '服务可用性' },
-    { value: formatResponseTime(homeStats.averageResponseTimeMs), label: '平均响应' },
+    { value: formatCount(homeStats.totalInvocations), label: '累计调用' },
+    { value: formatRate(homeStats.successRate), label: '成功率' },
+    { value: formatResponseTime(homeStats.averageResponseTimeMs), label: '平均耗时' },
   ];
 };
 
@@ -148,9 +148,9 @@ const loadHomeStats = async () => {
   } catch {
     stats.value = [
       { value: '--', label: '平台接口' },
-      { value: '--', label: '今日调用' },
-      { value: '--', label: '服务可用性' },
-      { value: '--', label: '平均响应' },
+      { value: '--', label: '累计调用' },
+      { value: '--', label: '成功率' },
+      { value: '--', label: '平均耗时' },
     ];
   }
 };
