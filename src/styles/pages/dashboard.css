@@ -1,0 +1,31 @@
+/* ========== 分析统计 ========== */
+
+.fei-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.fei-stat-card {
+  padding: 20px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-stat-card-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--fei-primary);
+  line-height: 1.2;
+}
+
+.fei-stat-card-label {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--fei-text-secondary);
+}
+

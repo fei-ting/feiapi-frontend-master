@@ -1,0 +1,351 @@
+.fei-debug-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  min-height: 600px;
+  max-height: 820px;
+}
+
+.fei-debug-form {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.fei-debug-toolbar {
+  flex: 0 0 auto;
+}
+
+.fei-debug-output {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--fei-border);
+  border-radius: 12px;
+  background: #fafcff;
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-debug-output__content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 18px 18px 18px 18px;
+  overflow: auto;
+  color: var(--fei-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.fei-debug-output--empty .fei-debug-output__content {
+  color: var(--fei-text-muted);
+}
+
+.fei-debug-output__content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.fei-debug-output__content::-webkit-scrollbar-track {
+  background: #eef4ff;
+  border-radius: 999px;
+}
+
+.fei-debug-output__content::-webkit-scrollbar-thumb {
+  background: #bfcee6;
+  border: 2px solid #eef4ff;
+  border-radius: 999px;
+}
+
+.fei-debug-output__content::-webkit-scrollbar-thumb:hover {
+  background: #91a6c9;
+}
+
+.fei-debug-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--fei-text-secondary);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  box-shadow: var(--fei-shadow-soft);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.fei-debug-output:hover .fei-debug-copy,
+.fei-debug-copy:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fei-debug-copy:hover {
+  color: var(--fei-primary);
+  border-color: var(--fei-primary-light);
+  transform: translateY(-1px);
+}
+
+.fei-debug-copy:disabled {
+  color: var(--fei-text-muted);
+  cursor: not-allowed;
+}
+
+.fei-debug-copy svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fei-debug-copy::after {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  padding: 5px 8px;
+  color: #fff;
+  background: #111827;
+  border-radius: 6px;
+  content: attr(data-tooltip);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px) translateY(-50%);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.fei-debug-copy:hover::after,
+.fei-debug-copy:focus-visible::after {
+  opacity: 1;
+  transform: translateX(0) translateY(-50%);
+}
+
+.fei-code-inline {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--fei-border);
+}
+
+.fei-code-inline--block {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fei-detail-quota-text {
+  margin-left: 8px;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fei-invoke-layout {
+  display: grid;
+  grid-template-columns: minmax(420px, 0.96fr) minmax(420px, 1.04fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.fei-invoke-main {
+  min-width: 0;
+}
+
+.fei-invoke-request {
+  min-height: 620px;
+}
+
+.fei-invoke-request__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-invoke-meta {
+  display: grid;
+  gap: 18px;
+}
+
+.fei-invoke-form {
+  margin-top: 28px;
+}
+
+.fei-invoke-params {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--fei-border);
+}
+
+.fei-invoke-params__head {
+  display: grid;
+  gap: 8px;
+}
+
+.fei-invoke-params__head h2 {
+  margin: 0;
+  color: var(--fei-text);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.fei-invoke-params__hint {
+  color: var(--fei-error);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fei-invoke-param-list {
+  display: grid;
+  gap: 16px;
+}
+
+.fei-invoke-param {
+  display: grid;
+  gap: 8px;
+}
+
+.fei-invoke-param .fei-input {
+  min-height: 54px;
+  padding: 0 18px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.fei-invoke-param__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--fei-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.fei-invoke-param__label small {
+  margin-left: 6px;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fei-invoke-toolbar {
+  margin-top: 22px;
+}
+
+.fei-invoke-textarea {
+  min-height: 220px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  line-height: 1.7;
+}
+
+.fei-invoke-login-tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 18px;
+  color: var(--fei-text-secondary);
+  background: #f8fafc;
+  border: 1px solid var(--fei-border);
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.fei-invoke-result {
+  display: flex;
+  min-width: 0;
+  height: clamp(520px, calc(100vh - 180px), 760px);
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fei-invoke-output {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  margin-top: 0;
+}
+
+.fei-invoke-doc {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 18px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.fei-modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(3px);
+}
+
+.fei-confirm-dialog {
+  width: min(420px, 100%);
+  padding: 24px;
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow);
+}
+
+.fei-confirm-dialog h2 {
+  margin: 0;
+  color: var(--fei-text);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fei-confirm-dialog p {
+  margin: 12px 0 0;
+  color: var(--fei-text-secondary);
+  line-height: 1.8;
+}
+
+.fei-confirm-dialog__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+

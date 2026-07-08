@@ -1,0 +1,193 @@
+.fei-empty {
+  padding: 56px 20px;
+  text-align: center;
+  color: var(--fei-text-secondary);
+}
+
+.fei-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fei-table th,
+.fei-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--fei-border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.fei-table th {
+  color: var(--fei-text-muted);
+  background: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fei-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--fei-border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.fei-tabbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.fei-tab {
+  padding: 10px 14px;
+  border: 1px solid var(--fei-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--fei-text-secondary);
+  font-weight: 600;
+}
+
+.fei-tab.is-active {
+  color: var(--fei-primary);
+  border-color: var(--fei-primary-light);
+  background: var(--fei-primary-light);
+}
+
+.fei-form {
+  display: grid;
+  gap: 16px;
+}
+
+.fei-field {
+  display: grid;
+  gap: 8px;
+}
+
+.fei-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fei-text);
+}
+
+.fei-input,
+.fei-textarea,
+.fei-select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--fei-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--fei-text);
+  outline: none;
+}
+
+.fei-textarea {
+  min-height: 140px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.fei-input:focus,
+.fei-textarea:focus,
+.fei-select:focus {
+  border-color: var(--fei-primary);
+  box-shadow: 0 0 0 3px rgba(47, 109, 246, 0.14);
+}
+
+.fei-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fei-form.fei-debug-form {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+  flex-direction: column;
+}
+
+.fei-debug-form .fei-field {
+  flex: 0 0 auto;
+}
+
+.fei-debug-form .fei-textarea {
+  min-height: 120px;
+  max-height: 150px;
+  resize: vertical;
+}
+
+.fei-toolbar.fei-debug-toolbar {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.fei-footer {
+  flex-shrink: 0;
+  padding: 28px 0 38px;
+  border-top: 1px solid rgba(228, 231, 236, 0.9);
+  margin-top: 28px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.fei-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--fei-text-secondary);
+}
+
+.fei-toast {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  z-index: 50;
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: #fff;
+  background: #101828;
+  box-shadow: var(--fei-shadow);
+  opacity: 0;
+  transform: translate(-50%, -10px);
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.fei-toast.is-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.fei-toast.is-success {
+  background: var(--fei-success);
+}
+
+.fei-toast.is-error {
+  background: var(--fei-error);
+}
+
+.fei-modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.fei-modal {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: var(--fei-shadow);
+}
+

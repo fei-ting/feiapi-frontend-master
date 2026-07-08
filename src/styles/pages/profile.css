@@ -1,0 +1,144 @@
+/* ========== 个人信息头部 ========== */
+
+.fei-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--fei-primary-light);
+}
+
+.fei-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fei-profile-name {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fei-text);
+}
+
+.fei-profile-account {
+  margin: 0;
+  font-size: 14px;
+  color: var(--fei-text-secondary);
+}
+
+.fei-profile-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--fei-text-muted);
+}
+
+.fei-user-role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--fei-primary-light);
+  color: var(--fei-primary);
+}
+
+/* ========== 密钥卡片 ========== */
+
+.fei-key-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--fei-surface-soft);
+  border: 1px solid var(--fei-border);
+  border-radius: 10px;
+}
+
+.fei-key-label {
+  flex-shrink: 0;
+  width: 90px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fei-text-muted);
+}
+
+.fei-key-value {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  color: var(--fei-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fei-sdk-snippet {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid var(--fei-border);
+  border-radius: 10px;
+}
+
+.fei-sdk-snippet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fei-sdk-snippet__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fei-text);
+}
+
+/* ========== 安全提示 ========== */
+
+.fei-security-notice {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+
+.fei-security-notice-icon {
+  color: var(--fei-primary);
+  flex-shrink: 0;
+}
+
+.fei-security-notice-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.fei-security-notice-text {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #1d4ed8;
+  line-height: 1.6;
+}
+

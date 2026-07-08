@@ -1,0 +1,230 @@
+.fei-section {
+  padding: 34px 0 0;
+}
+
+.fei-section--compact {
+  padding-top: 18px;
+}
+
+.fei-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--fei-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fei-breadcrumb a {
+  color: var(--fei-text-secondary);
+  text-decoration: none;
+}
+
+.fei-breadcrumb a:hover {
+  color: var(--fei-primary);
+}
+
+.fei-layout-detail {
+  display: grid;
+  grid-template-columns: minmax(420px, 0.95fr) minmax(520px, 1.05fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.fei-panel {
+  padding: 24px;
+  background: var(--fei-surface);
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-detail__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-detail__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.fei-detail-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: center;
+}
+
+.fei-detail-hero__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 78px;
+  height: 78px;
+  color: var(--fei-primary);
+  background: linear-gradient(135deg, rgba(47, 109, 246, 0.12), rgba(47, 109, 246, 0.04));
+  border: 1px solid rgba(47, 109, 246, 0.18);
+  border-radius: 18px;
+}
+
+.fei-detail-hero__icon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.fei-detail-hero__content {
+  min-width: 0;
+}
+
+.fei-detail-hero__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fei-detail-hero__desc {
+  max-width: 820px;
+  margin-top: 10px;
+}
+
+.fei-detail-hero__meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+}
+
+.fei-detail-hero__meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  background: #f8fafc;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+}
+
+.fei-detail-hero__meta strong {
+  margin-right: 4px;
+  color: var(--fei-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.fei-detail-hero__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fei-doc-panel {
+  margin-top: 18px;
+}
+
+.fei-doc-tabs {
+  display: flex;
+  gap: 28px;
+  padding-bottom: 12px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-doc-tabs--flush {
+  margin: -4px -4px 18px;
+  padding: 0 4px 12px;
+}
+
+.fei-doc-tab {
+  position: relative;
+  padding: 8px 0;
+  color: var(--fei-text-secondary);
+  background: transparent;
+  border: 0;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fei-doc-tab.is-active {
+  color: var(--fei-primary);
+}
+
+.fei-doc-tab.is-active::after {
+  position: absolute;
+  right: 0;
+  bottom: -13px;
+  left: 0;
+  height: 2px;
+  background: var(--fei-primary);
+  border-radius: 999px;
+  content: '';
+}
+
+.fei-doc-section {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.fei-doc-section:first-of-type {
+  margin-top: 0;
+}
+
+.fei-doc-heading {
+  margin: 0;
+  color: var(--fei-text);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.fei-doc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 16px;
+}
+
+.fei-doc-item {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fei-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fei-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fei-info-label {
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.fei-code {
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--fei-border);
+  background: #f8fafc;
+  font-size: 13px;
+  line-height: 1.7;
+}
+

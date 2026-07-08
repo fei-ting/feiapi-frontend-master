@@ -1,0 +1,21 @@
+:root {
+  --fei-primary: #2f6df6;
+  --fei-primary-dark: #2458c9;
+  --fei-primary-light: #dce9ff;
+  --fei-success: #16a34a;
+  --fei-warning: #d97706;
+  --fei-error: #ef4444;
+  --fei-text: #101828;
+  --fei-text-secondary: #475467;
+  --fei-text-muted: #98a2b3;
+  --fei-border: #e4e7ec;
+  --fei-surface: #ffffff;
+  --fei-surface-soft: #f8fafc;
+  --fei-bg: #f3f6fb;
+  --fei-radius-sm: 6px;
+  --fei-radius-md: 10px;
+  --fei-radius-lg: 16px;
+  --fei-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+  --fei-shadow-soft: 0 4px 12px rgba(16, 24, 40, 0.06);
+  --fei-header-height: 64px;
+}

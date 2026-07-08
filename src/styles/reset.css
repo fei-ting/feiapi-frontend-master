@@ -1,0 +1,25 @@
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  color: var(--fei-text);
+  background:
+    radial-gradient(circle at top left, rgba(47, 109, 246, 0.08), transparent 28%),
+    linear-gradient(180deg, #f7f9fd 0%, #eef3fb 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
