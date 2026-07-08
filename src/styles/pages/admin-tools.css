@@ -1,0 +1,53 @@
+/* ========== 后台筛选组 ========== */
+
+.fei-admin-filter-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.fei-admin-filter-group .fei-input {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.fei-admin-filter-group .fei-select {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+/* ========== 表格操作 ========== */
+
+.fei-table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fei-table-actions a,
+.fei-table-actions button {
+  font-size: 13px;
+  color: var(--fei-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.fei-table-actions a:hover,
+.fei-table-actions button:hover {
+  text-decoration: underline;
+}
+
+.fei-table-actions .fei-action--danger {
+  color: var(--fei-error);
+}
+

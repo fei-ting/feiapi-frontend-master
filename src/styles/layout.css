@@ -1,0 +1,134 @@
+.fei-app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding-top: var(--fei-header-height);
+}
+
+.fei-container {
+  width: min(1200px, calc(100vw - 32px));
+  margin: 0 auto;
+}
+
+.fei-page {
+  flex: 1 0 auto;
+  padding: 32px 0 48px;
+}
+
+.fei-card {
+  background: var(--fei-surface);
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fei-text);
+}
+
+.fei-section-desc {
+  margin: 8px 0 0;
+  color: var(--fei-text-secondary);
+  line-height: 1.7;
+}
+
+.fei-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
+  height: var(--fei-header-height);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(228, 231, 236, 0.9);
+}
+
+.fei-header .fei-container {
+  width: min(1590px, calc(100vw - 80px));
+}
+
+.fei-header__inner {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fei-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fei-text);
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.fei-brand__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--fei-primary), #4f7df8);
+  box-shadow: 0 10px 18px rgba(47, 109, 246, 0.25);
+}
+
+.fei-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fei-nav__link {
+  padding: 8px 14px;
+  border-radius: 10px;
+  color: var(--fei-text-secondary);
+  transition: 0.2s ease;
+}
+
+.fei-nav__link:hover,
+.fei-nav__link.is-active {
+  color: var(--fei-primary);
+  background: var(--fei-primary-light);
+}
+
+.fei-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.fei-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fei-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
+}
+
+.fei-btn.fei-mobile-toggle {
+  display: none;
+  flex: 0 0 auto;
+}
+
