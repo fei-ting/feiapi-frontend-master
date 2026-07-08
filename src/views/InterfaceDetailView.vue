@@ -4,97 +4,73 @@
 
     <PageContainer>
       <div v-if="loading" class="fei-empty fei-card">正在加载接口详情...</div>
-      <div v-else-if="detail" class="fei-layout-detail">
-        <section class="fei-panel">
-          <div class="fei-detail__head">
-            <div>
+      <template v-else-if="detail">
+        <nav class="fei-breadcrumb" aria-label="接口详情路径">
+          <a href="#/market">接口广场</a>
+          <span>/</span>
+          <span>{{ detail.name }}</span>
+        </nav>
+
+        <section class="fei-detail-hero fei-panel">
+          <div class="fei-detail-hero__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 17.5 10 20l10-8-6-2.5"></path>
+              <path d="M4 12.5 10 15l10-8-10-3-6 4.5 6 2.5"></path>
+            </svg>
+          </div>
+          <div class="fei-detail-hero__content">
+            <div class="fei-detail-hero__title-row">
               <h1 class="fei-detail__title">{{ detail.name }}</h1>
-              <p class="fei-section-desc" style="margin-top: 10px">{{ detail.description }}</p>
+              <StatusTag :status="detail.status" />
             </div>
-            <StatusTag :status="detail.status" />
-          </div>
-
-          <div class="fei-info-grid">
-            <div class="fei-info-item">
-              <span class="fei-info-label">请求方法</span>
-              <MethodTag :method="detail.method" />
-            </div>
-            <div class="fei-info-item">
-              <span class="fei-info-label">配额类型</span>
-              <span class="fei-tag" :class="quotaTagClass(detail.quotaType)">
-                {{ quotaTypeText(detail) }}
-              </span>
-            </div>
-            <div class="fei-info-item">
-              <span class="fei-info-label">请求地址</span>
-              <span class="fei-code-inline">{{ detail.url }}</span>
-            </div>
-            <div class="fei-info-item">
-              <span class="fei-info-label">创建时间</span>
-              <span>{{ formatDateTime(detail.createTime) }}</span>
-            </div>
-            <div class="fei-info-item">
-              <span class="fei-info-label">更新时间</span>
-              <span>{{ formatDateTime(detail.updateTime) }}</span>
+            <p class="fei-section-desc fei-detail-hero__desc">{{ interfaceSummary(detail) }}</p>
+            <div class="fei-detail-hero__meta" aria-label="接口摘要">
+              <span><strong>{{ methodText(detail) }}</strong> 请求方式</span>
+              <span>{{ quotaTypeText(detail) }}</span>
+              <span>调用 {{ detail.totalNum ?? 0 }} 次</span>
+              <span>更新于 {{ formatDateTime(detail.updateTime) }}</span>
             </div>
           </div>
-
-          <div style="margin-top: 18px">
-            <div class="fei-info-item">
-              <span class="fei-info-label">请求参数</span>
-              <pre class="fei-code">{{ detail.requestParams || '[]' }}</pre>
-            </div>
-            <div class="fei-info-item" style="margin-top: 16px">
-              <span class="fei-info-label">请求头</span>
-              <pre class="fei-code">{{ detail.requestHeader || '{}' }}</pre>
-            </div>
-            <div class="fei-info-item" style="margin-top: 16px">
-              <span class="fei-info-label">响应头</span>
-              <pre class="fei-code">{{ detail.responseHeader || '{}' }}</pre>
-            </div>
+          <div class="fei-detail-hero__action">
+            <button class="fei-btn fei-btn--primary" type="button" @click="goInvoke">
+              免费调用
+            </button>
           </div>
         </section>
 
-        <aside class="fei-panel fei-debug-panel">
-          <h2 class="fei-section-title" style="margin-bottom: 18px">在线调试</h2>
-          <div v-if="!loginUser" class="fei-empty" style="padding: 26px 10px">
-            登录后即可在线调用接口
-            <div style="margin-top: 14px">
-              <a class="fei-btn fei-btn--primary" href="#/login">去登录</a>
+        <section class="fei-doc-panel fei-panel" aria-labelledby="interface-doc-title">
+          <div class="fei-doc-tabs" role="tablist" aria-label="接口详情标签">
+            <button class="fei-doc-tab is-active" type="button" role="tab" aria-selected="true">接口文档</button>
+          </div>
+
+          <div class="fei-doc-section">
+            <h2 id="interface-doc-title" class="fei-section-title">接口文档</h2>
+            <div class="fei-doc-grid">
+              <div class="fei-doc-item">
+                <span class="fei-info-label">请求地址</span>
+                <span class="fei-code-inline fei-code-inline--block">{{ detail.url || '-' }}</span>
+              </div>
+              <div class="fei-doc-item">
+                <span class="fei-info-label">请求方法</span>
+                <MethodTag :method="detail.method" />
+              </div>
             </div>
           </div>
-          <div v-else class="fei-form fei-debug-form">
-            <div class="fei-field">
-              <label class="fei-label" for="requestParams">请求参数（JSON）</label>
-              <textarea id="requestParams" v-model="requestParams" class="fei-textarea" placeholder='{"key":"value"}' />
-            </div>
-            <div class="fei-toolbar fei-debug-toolbar">
-              <button class="fei-btn fei-btn--primary" type="button" @click="invokeApi" :disabled="invokeLoading">
-                {{ invokeLoading ? '调用中...' : '发送请求' }}
-              </button>
-              <button class="fei-btn fei-btn--secondary" type="button" @click="fillExample">填充示例</button>
-            </div>
-            <div class="fei-debug-output" :class="{ 'fei-debug-output--empty': !invokeResult }">
-              <button
-                class="fei-debug-copy"
-                type="button"
-                aria-label="复制"
-                data-tooltip="复制"
-                :disabled="!invokeResult"
-                @click="copyInvokeResult"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path
-                    d="M8 8.5C8 7.67 8.67 7 9.5 7h8C18.33 7 19 7.67 19 8.5v8c0 .83-.67 1.5-1.5 1.5h-8C8.67 18 8 17.33 8 16.5v-8Z"
-                  />
-                  <path d="M5 14.5v-8C5 5.67 5.67 5 6.5 5h8" />
-                </svg>
-              </button>
-              <pre class="fei-debug-output__content">{{ invokeResult || '响应结果将显示在这里' }}</pre>
-            </div>
+
+          <div class="fei-doc-section">
+            <h3 class="fei-doc-heading">请求参数</h3>
+            <pre class="fei-code">{{ prettyJson(detail.requestParams, '[]') }}</pre>
           </div>
-        </aside>
-      </div>
+          <div class="fei-doc-section">
+            <h3 class="fei-doc-heading">请求头</h3>
+            <pre class="fei-code">{{ prettyJson(detail.requestHeader, '{}') }}</pre>
+          </div>
+          <div class="fei-doc-section">
+            <h3 class="fei-doc-heading">响应头</h3>
+            <pre class="fei-code">{{ prettyJson(detail.responseHeader, '{}') }}</pre>
+          </div>
+        </section>
+      </template>
       <div v-else class="fei-empty fei-card">接口不存在</div>
     </PageContainer>
 
@@ -121,11 +97,8 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(true);
-const invokeLoading = ref(false);
 const detail = ref<InterfaceInfoVO | null>(null);
 const loginUser = ref<UserVO | null>(null);
-const requestParams = ref('');
-const invokeResult = ref('');
 const toast = reactive({
   visible: false,
   type: 'info' as 'success' | 'error' | 'info',
@@ -141,59 +114,27 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   }, 2200);
 };
 
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return '调用失败，请稍后重试';
-};
-
-const validateRequestParamsJson = () => {
-  const trimmedParams = requestParams.value.trim();
-  if (!trimmedParams) {
-    return true;
-  }
-  try {
-    JSON.parse(trimmedParams);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const formatInvokeResponse = (data: unknown) => {
-  if (data === null || data === undefined) {
-    return '接口返回为空';
-  }
-  if (typeof data === 'string') {
-    return data;
-  }
-  return JSON.stringify(data, null, 2);
-};
-
-const getRequestParamsExample = (item: InterfaceInfoVO | null) => {
-  const params = item?.requestParams?.trim();
-  if (!params) {
-    return '';
-  }
-  try {
-    return JSON.stringify(JSON.parse(params), null, 2);
-  } catch {
-    return params;
-  }
-};
-
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
-
-const quotaTagClass = (quotaType?: string) => {
-  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
-  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
-  return 'fei-tag--quota-basic';
-};
 
 const quotaTypeText = (item: InterfaceInfoVO) => {
   if (isFreeUnlimited(item.quotaType)) return '免费无限';
   return item.quotaTypeText || '基础额度接口';
+};
+
+const interfaceSummary = (item: InterfaceInfoVO) => item.description || '暂无接口描述';
+
+const methodText = (item: InterfaceInfoVO) => (item.method || 'GET').toUpperCase();
+
+const prettyJson = (value: string | undefined, fallback: string) => {
+  const content = value?.trim();
+  if (!content) {
+    return fallback;
+  }
+  try {
+    return JSON.stringify(JSON.parse(content), null, 2);
+  } catch {
+    return content;
+  }
 };
 
 const formatDateTime = (value?: string) => {
@@ -226,7 +167,6 @@ const loadDetail = async () => {
   try {
     const res = await interfaceService.getById(id);
     detail.value = res.data || null;
-    requestParams.value = getRequestParamsExample(detail.value);
   } catch {
     detail.value = null;
   } finally {
@@ -234,45 +174,9 @@ const loadDetail = async () => {
   }
 };
 
-const invokeApi = async () => {
+const goInvoke = () => {
   if (!detail.value?.id) return;
-  if (!validateRequestParamsJson()) {
-    const message = '请求参数必须是合法 JSON';
-    invokeResult.value = message;
-    showToast(message, 'error');
-    return;
-  }
-  invokeLoading.value = true;
-  try {
-    const res = await interfaceService.invoke({
-      id: detail.value.id,
-      userRequestParams: requestParams.value,
-    });
-    invokeResult.value = formatInvokeResponse(res.data);
-    showToast('调用成功', 'success');
-  } catch (error) {
-    const message = getErrorMessage(error);
-    invokeResult.value = message;
-    showToast(message, 'error');
-  } finally {
-    invokeLoading.value = false;
-  }
-};
-
-const fillExample = () => {
-  requestParams.value = getRequestParamsExample(detail.value);
-};
-
-const copyInvokeResult = async () => {
-  if (!invokeResult.value) {
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(invokeResult.value);
-    showToast('复制成功', 'success');
-  } catch {
-    showToast('复制失败，请手动选择内容复制', 'error');
-  }
+  router.push(`/interface/${detail.value.id}/invoke`);
 };
 
 const handleLogout = async () => {
@@ -281,7 +185,6 @@ const handleLogout = async () => {
     loginUser.value = null;
     userStore.clearLoginUser();
     showToast('已安全退出', 'success');
-    // 延迟跳转到首页，让用户看到提示
     setTimeout(() => {
       router.replace('/home');
     }, 1000);

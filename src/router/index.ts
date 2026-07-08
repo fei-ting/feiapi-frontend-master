@@ -8,6 +8,7 @@ const router = createRouter({
     { path: '/home', component: () => import('@/views/HomeView.vue') },
     { path: '/market', component: () => import('@/views/InterfaceMarketView.vue') },
     { path: '/interface/:id', component: () => import('@/views/InterfaceDetailView.vue') },
+    { path: '/interface/:id/invoke', component: () => import('@/views/InterfaceInvokeView.vue') },
     { path: '/login', component: () => import('@/views/LoginView.vue'), meta: { guestOnly: true } },
     { path: '/register', component: () => import('@/views/RegisterView.vue'), meta: { guestOnly: true } },
     {
