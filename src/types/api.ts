@@ -131,7 +131,7 @@ export interface InterfaceDocDetailVO {
   doc?: InterfaceDocVO;
   /** 网关调用地址 */
   gatewayUrl?: string;
-  /** 是否旧字段兜底 */
+  /** 是否缺少结构化文档 */
   legacyFallback?: boolean;
   /** 请求 Header 列表 */
   requestHeaders?: InterfaceDocParamVO[];
