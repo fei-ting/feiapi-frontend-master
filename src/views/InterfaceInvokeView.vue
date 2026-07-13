@@ -70,17 +70,7 @@
                   </label>
                 </div>
 
-                <div v-else-if="allowRawRequestParams" class="fei-field">
-                  <label class="fei-label" for="invokeRequestParams">请求参数（JSON）</label>
-                  <textarea
-                    id="invokeRequestParams"
-                    v-model="requestParams"
-                    class="fei-textarea fei-invoke-textarea"
-                    placeholder='{"key":"value"}'
-                  />
-                </div>
-
-                <div v-else class="fei-doc-empty">此接口无需请求参数</div>
+                <div v-else class="fei-doc-empty">{{ emptyParamText }}</div>
               </section>
 
               <div class="fei-toolbar fei-invoke-toolbar">
@@ -307,9 +297,9 @@ const loginHref = computed(() => `#/login?redirect=${encodeURIComponent(route.fu
 
 const detail = computed<InterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
 
-const allowRawRequestParams = computed(() => !docDetail.value && !structuredParams.value.length);
-
 const canFillExample = computed(() => structuredParams.value.length > 0 || Boolean(requestParams.value.trim()));
+
+const emptyParamText = computed(() => (docDetail.value?.legacyFallback ? '暂无结构化请求参数' : '此接口无需请求参数'));
 
 const invokeHeaderText = computed(() => {
   const headers = docDetail.value?.requestHeaders || [];
@@ -348,17 +338,22 @@ const resolveParamType = (value: unknown) => {
   return typeof value;
 };
 
-const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => (doc?.requestParams || [])
-  .filter((param) => param.name)
-  .map((param) => ({
-    name: param.name as string,
-    type: param.type || 'string',
-    example: param.exampleValue || param.defaultValue || '',
-    required: param.required !== false,
-    defaultValue: param.defaultValue,
-    description: param.description,
-    validationRule: param.validationRule,
-  }));
+const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => {
+  if (!doc || doc.legacyFallback) {
+    return [];
+  }
+  return (doc.requestParams || [])
+    .filter((param) => param.name)
+    .map((param) => ({
+      name: param.name as string,
+      type: param.type || 'string',
+      example: param.exampleValue || param.defaultValue || '',
+      required: param.required !== false,
+      defaultValue: param.defaultValue,
+      description: param.description,
+      validationRule: param.validationRule,
+    }));
+};
 
 const parseParamValue = (param: RequestParamField, rawValue: string) => {
   const trimmedValue = rawValue.trim();
