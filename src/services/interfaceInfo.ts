@@ -2,6 +2,7 @@ import http from './http';
 import type {
   IdRequest,
   InterfaceInfoAddRequest,
+  InterfaceDocDetailVO,
   InterfaceInfoUpdateRequest,
   InterfaceInfoVO,
   InterfaceQuery,
@@ -22,6 +23,13 @@ export const interfaceService = {
     return http
       .get<ResponseData<InterfaceInfoVO>>('/interfaceInfo/get', {
         params: { id },
+      })
+      .then((response) => response.data);
+  },
+  getDocDetail(interfaceInfoId: number) {
+    return http
+      .get<ResponseData<InterfaceDocDetailVO>>('/interfaceDoc/get', {
+        params: { interfaceInfoId },
       })
       .then((response) => response.data);
   },

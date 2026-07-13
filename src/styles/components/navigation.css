@@ -1,0 +1,144 @@
+/* ========== 用户下拉菜单 ========== */
+
+.fei-user-menu {
+  position: relative;
+}
+
+.fei-user-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--fei-border);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--fei-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fei-user-trigger:hover {
+  border-color: var(--fei-primary-light);
+  box-shadow: 0 0 0 3px rgba(47, 109, 246, 0.08);
+}
+
+.fei-avatar--sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.fei-user-trigger .fei-user-arrow {
+  color: var(--fei-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.fei-user-menu:hover .fei-user-arrow {
+  transform: rotate(180deg);
+}
+
+.fei-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-md);
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
+  z-index: 30;
+}
+
+/* 桥接触发按钮与下拉面板之间的间隙，防止鼠标移动时触发 mouseleave */
+.fei-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 6px;
+}
+
+.fei-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fei-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-decoration: none;
+}
+
+.fei-dropdown__item:hover {
+  background: var(--fei-surface-soft);
+}
+
+.fei-dropdown__item svg {
+  color: var(--fei-text-muted);
+  flex-shrink: 0;
+}
+
+.fei-dropdown__item--danger:hover {
+  background: #fef2f2;
+  color: var(--fei-error);
+}
+
+.fei-dropdown__item--danger:hover svg {
+  color: var(--fei-error);
+}
+
+.fei-dropdown__divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--fei-border);
+}
+
+/* ========== 搜索框 ========== */
+
+.fei-search-bar {
+  max-width: 640px;
+  margin: 24px auto 32px;
+  position: relative;
+}
+
+.fei-search-bar input {
+  width: 100%;
+  padding: 14px 18px 14px 44px;
+  border: 1px solid var(--fei-border);
+  border-radius: 999px;
+  background: var(--fei-surface);
+  box-shadow: var(--fei-shadow-soft);
+  font-size: 15px;
+  color: var(--fei-text);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.fei-search-bar input::placeholder {
+  color: var(--fei-text-muted);
+}
+
+.fei-search-bar input:focus {
+  border-color: var(--fei-primary-light);
+  box-shadow: 0 0 0 4px rgba(47, 109, 246, 0.1);
+}
+
+.fei-search-bar svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fei-text-muted);
+  pointer-events: none;
+}
+

@@ -1,0 +1,136 @@
+.fei-hero {
+  position: relative;
+  padding: 78px 0 90px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(238, 243, 251, 0.96) 0%, rgba(250, 252, 255, 0.92) 100%);
+}
+
+.fei-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(47, 109, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(47, 109, 246, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, #000 34%, transparent 72%);
+}
+
+.fei-hero__inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.fei-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  margin-bottom: 22px;
+  color: var(--fei-primary);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--fei-primary-light);
+  border-radius: 999px;
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-hero__title {
+  margin: 0;
+  font-size: 64px;
+  line-height: 1.08;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.fei-hero__title strong {
+  color: var(--fei-primary);
+}
+
+.fei-hero__desc {
+  max-width: 780px;
+  margin: 18px auto 0;
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--fei-text-secondary);
+}
+
+.fei-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.fei-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-sizing: border-box;
+}
+
+.fei-nav__actions .fei-btn {
+  min-width: 88px;
+  padding-inline: 20px;
+}
+
+/* 首页 Hero 区域按钮 - 加大尺寸使其更醒目 */
+.fei-actions .fei-btn {
+  min-width: 140px;
+  height: 50px;
+  padding: 0 32px;
+  font-size: 15px;
+}
+
+.fei-btn--primary {
+  color: #fff;
+  background: var(--fei-primary);
+  border-color: var(--fei-primary);
+}
+
+.fei-btn--primary:hover {
+  background: var(--fei-primary-dark);
+}
+
+.fei-btn--secondary {
+  color: var(--fei-text);
+  background: #fff;
+  border-color: var(--fei-border);
+}
+
+.fei-btn--secondary:hover {
+  border-color: var(--fei-primary-light);
+  color: var(--fei-primary);
+}
+
+.fei-btn--ghost {
+  color: var(--fei-text-secondary);
+  background: transparent;
+  border-color: var(--fei-border);
+}
+
+.fei-btn--ghost:hover {
+  background: var(--fei-surface-soft);
+  border-color: var(--fei-primary-light);
+  color: var(--fei-primary);
+}
+
+.fei-btn--sm {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+

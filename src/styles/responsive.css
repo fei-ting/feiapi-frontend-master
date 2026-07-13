@@ -1,0 +1,175 @@
+/* ========== 响应式 ========== */
+
+@media (min-width: 1024px) {
+  .fei-admin-layout {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .fei-admin-sidebar {
+    display: block;
+  }
+
+  .fei-admin-tabs {
+    display: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .fei-analysis-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .fei-grid-4,
+  .fei-grid-3,
+  .fei-layout-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-invoke-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-debug-panel {
+    min-height: 560px;
+  }
+
+  .fei-hero__title {
+    font-size: 52px;
+  }
+}
+
+@media (max-width: 900px) {
+  .fei-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .fei-header .fei-container {
+    width: min(100%, calc(100vw - 32px));
+  }
+
+  .fei-header__inner {
+    gap: 12px;
+  }
+
+  .fei-nav,
+  .fei-nav__actions {
+    display: none;
+  }
+
+  .fei-btn.fei-mobile-toggle {
+    display: inline-flex;
+  }
+
+  .fei-hero {
+    padding: 56px 0 78px;
+  }
+
+  .fei-hero__title {
+    font-size: 40px;
+  }
+
+  .fei-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: -24px;
+  }
+
+  .fei-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-detail-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .fei-detail-hero__action {
+    justify-content: flex-start;
+  }
+
+  .fei-doc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-doc-info-grid,
+  .fei-doc-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-doc-info-item--wide {
+    grid-column: auto;
+  }
+
+  .fei-doc-section__head {
+    align-items: flex-start;
+  }
+
+  .fei-invoke-request,
+  .fei-invoke-result {
+    height: auto;
+    min-height: 0;
+  }
+
+  .fei-invoke-output {
+    height: 360px;
+    min-height: 360px;
+  }
+
+  .fei-invoke-request__head,
+  .fei-invoke-login-tip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fei-market-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fei-search-bar--compact {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .fei-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-api-card--v2 {
+    min-height: 0;
+  }
+
+  .fei-api-card__header,
+  .fei-api-card__footer {
+    align-items: flex-start;
+  }
+
+  .fei-api-card__header {
+    flex-wrap: wrap;
+  }
+
+  .fei-api-card__tag-stack {
+    align-items: flex-start;
+    max-width: 100%;
+  }
+
+  .fei-api-card__header > .fei-tag,
+  .fei-api-card__tag-stack > .fei-tag {
+    max-width: 100%;
+  }
+
+  .fei-api-card__body {
+    padding-left: 0;
+  }
+
+  .fei-api-card__footer {
+    flex-direction: column;
+  }
+
+  .fei-api-card__action {
+    align-self: flex-end;
+  }
+}
