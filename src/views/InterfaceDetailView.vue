@@ -47,7 +47,7 @@
             <div class="fei-doc-section__head">
               <div>
                 <h2 id="interface-doc-title" class="fei-section-title">基础信息</h2>
-                <p v-if="docDetail.legacyFallback" class="fei-section-desc">当前接口尚未维护完整的结构化文档。</p>
+                <p v-if="docDetail.structuredDocMissing" class="fei-section-desc">当前接口尚未维护完整的结构化文档。</p>
               </div>
               <span class="fei-doc-version">{{ docDetail.doc?.docVersion || 'v1' }}</span>
             </div>
@@ -158,7 +158,7 @@
                   <tr v-for="param in docDetail.responseParams" :key="rowKey(param)">
                     <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
                     <td>{{ param.type || '-' }}</td>
-                    <td>{{ nullableText(param.required) }}</td>
+                    <td>{{ nullableText(param.nullable) }}</td>
                     <td>{{ parentFieldText(param) }}</td>
                     <td>{{ param.description || param.exampleValue || '-' }}</td>
                   </tr>
@@ -264,7 +264,7 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocParamVO, InterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -279,7 +279,7 @@ const toast = reactive({
   message: '',
 });
 
-const detail = computed<InterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
+const detail = computed<InterfaceDocInterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
 
 const showTargetHost = computed(() => loginUser.value?.userRole === 'admin' && Boolean(detail.value?.targetHost));
 
@@ -319,14 +319,14 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
 
-const quotaTypeText = (item: InterfaceInfoVO) => {
+const quotaTypeText = (item: InterfaceDocInterfaceInfoVO) => {
   if (isFreeUnlimited(item.quotaType)) return '免费无限';
   return item.quotaTypeText || '基础额度接口';
 };
 
-const interfaceSummary = (item: InterfaceInfoVO) => item.description || '暂无接口描述';
+const interfaceSummary = (item: InterfaceDocInterfaceInfoVO) => item.description || '暂无接口描述';
 
-const methodText = (item: InterfaceInfoVO) => (item.method || 'GET').toUpperCase();
+const methodText = (item: InterfaceDocInterfaceInfoVO) => (item.method || 'GET').toUpperCase();
 
 const prettyJson = (value: string | undefined, fallback: string) => {
   const content = value?.trim();
@@ -357,7 +357,7 @@ const hasText = (value?: string) => Boolean(value?.trim());
 
 const requiredText = (required?: boolean) => (required ? '是' : '否');
 
-const nullableText = (required?: boolean) => (required ? '否' : '是');
+const nullableText = (nullable?: boolean) => (nullable ? '是' : '否');
 
 /** 将参数位置转换为面向使用者的名称。 */
 const paramSceneText = (paramScene?: string) => {

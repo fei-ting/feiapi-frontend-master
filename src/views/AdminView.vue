@@ -654,6 +654,7 @@ const submitEdit = async () => {
 
   editSubmitting.value = true;
   try {
+    const requestParamsText = editForm.requestParams.trim();
     const payload = {
       name: editForm.name.trim(),
       method: editForm.method,
@@ -662,7 +663,7 @@ const submitEdit = async () => {
       path: editForm.path.trim(),
       targetHost: editForm.targetHost.trim(),
       description: editForm.description.trim() || undefined,
-      requestParams: editForm.requestParams.trim() || undefined,
+      requestParams: modalMode.value === 'edit' ? requestParamsText : requestParamsText || undefined,
       requestHeader: editForm.requestHeader.trim() || undefined,
       responseHeader: editForm.responseHeader.trim() || undefined,
     };
