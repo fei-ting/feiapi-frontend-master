@@ -228,3 +228,125 @@
   line-height: 1.7;
 }
 
+.fei-doc-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+}
+
+.fei-doc-version {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  color: #155eef;
+  background: #eff4ff;
+  border: 1px solid #d1e0ff;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.fei-doc-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.fei-doc-info-item {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  padding: 14px;
+  color: var(--fei-text-secondary);
+  line-height: 1.6;
+  background: #f8fafc;
+  border: 1px solid rgba(228, 231, 236, 0.92);
+  border-radius: 8px;
+}
+
+.fei-doc-info-item--wide {
+  grid-column: span 2;
+}
+
+.fei-doc-table-wrap {
+  border-radius: 8px;
+}
+
+.fei-doc-table {
+  min-width: 680px;
+}
+
+.fei-doc-table th,
+.fei-doc-table td {
+  text-align: left;
+}
+
+.fei-doc-table td {
+  color: var(--fei-text-secondary);
+  line-height: 1.55;
+}
+
+.fei-doc-param-name {
+  color: var(--fei-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.fei-doc-example {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.fei-doc-empty {
+  padding: 18px;
+  color: var(--fei-text-muted);
+  text-align: center;
+  background: #f8fafc;
+  border: 1px dashed #d0d5dd;
+  border-radius: 8px;
+}
+
+.fei-doc-two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.fei-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--fei-text-secondary);
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.fei-icon-btn:hover {
+  color: var(--fei-primary);
+  border-color: var(--fei-primary-light);
+  transform: translateY(-1px);
+}
+
+.fei-icon-btn:disabled {
+  color: var(--fei-text-muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.fei-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+

@@ -94,6 +94,19 @@
     grid-template-columns: 1fr;
   }
 
+  .fei-doc-info-grid,
+  .fei-doc-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-doc-info-item--wide {
+    grid-column: auto;
+  }
+
+  .fei-doc-section__head {
+    align-items: flex-start;
+  }
+
   .fei-invoke-request,
   .fei-invoke-result {
     height: auto;

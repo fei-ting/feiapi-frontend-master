@@ -4,7 +4,7 @@
 
     <PageContainer>
       <div v-if="loading" class="fei-empty fei-card">正在加载接口详情...</div>
-      <template v-else-if="detail">
+      <template v-else-if="detail && docDetail">
         <nav class="fei-breadcrumb" aria-label="接口详情路径">
           <a href="#/market">接口广场</a>
           <span>/</span>
@@ -44,30 +44,178 @@
           </div>
 
           <div class="fei-doc-section">
-            <h2 id="interface-doc-title" class="fei-section-title">接口文档</h2>
-            <div class="fei-doc-grid">
-              <div class="fei-doc-item">
-                <span class="fei-info-label">请求地址</span>
-                <span class="fei-code-inline fei-code-inline--block">{{ detail.url || '-' }}</span>
+            <div class="fei-doc-section__head">
+              <div>
+                <h2 id="interface-doc-title" class="fei-section-title">基础信息</h2>
+                <p v-if="docDetail.legacyFallback" class="fei-section-desc">当前接口使用旧字段生成基础文档。</p>
               </div>
-              <div class="fei-doc-item">
+              <span class="fei-doc-version">{{ docDetail.doc?.docVersion || 'v1' }}</span>
+            </div>
+            <div class="fei-doc-info-grid">
+              <div class="fei-doc-info-item fei-doc-info-item--wide">
+                <span class="fei-info-label">接口地址</span>
+                <span class="fei-code-inline fei-code-inline--block">{{ docDetail.gatewayUrl || '-' }}</span>
+              </div>
+              <div class="fei-doc-info-item">
                 <span class="fei-info-label">请求方法</span>
                 <MethodTag :method="detail.method" />
+              </div>
+              <div class="fei-doc-info-item">
+                <span class="fei-info-label">请求格式</span>
+                <span>{{ docDetail.doc?.requestContentType || '-' }}</span>
+              </div>
+              <div class="fei-doc-info-item">
+                <span class="fei-info-label">响应格式</span>
+                <span>{{ docDetail.doc?.responseContentType || '-' }}</span>
+              </div>
+              <div class="fei-doc-info-item">
+                <span class="fei-info-label">配额类型</span>
+                <span>{{ quotaTypeText(detail) }}</span>
+              </div>
+              <div class="fei-doc-info-item">
+                <span class="fei-info-label">更新时间</span>
+                <span>{{ formatDateTime(detail.updateTime) }}</span>
+              </div>
+              <div v-if="showTargetHost" class="fei-doc-info-item fei-doc-info-item--wide">
+                <span class="fei-info-label">真实后端地址</span>
+                <span class="fei-code-inline fei-code-inline--block">{{ detail.targetHost }}</span>
+              </div>
+              <div class="fei-doc-info-item fei-doc-info-item--wide">
+                <span class="fei-info-label">鉴权说明</span>
+                <span>{{ docDetail.doc?.authDescription || '通过平台签名鉴权，由网关统一校验。' }}</span>
               </div>
             </div>
           </div>
 
           <div class="fei-doc-section">
+            <h3 class="fei-doc-heading">请求 Header</h3>
+            <div v-if="hasRows(docDetail.requestHeaders)" class="fei-table-wrap fei-doc-table-wrap">
+              <table class="fei-table fei-doc-table">
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>必填</th>
+                    <th>值</th>
+                    <th>说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="param in docDetail.requestHeaders" :key="rowKey(param)">
+                    <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                    <td>{{ headerRequiredText(param) }}</td>
+                    <td><span class="fei-doc-example">{{ paramValue(param) }}</span></td>
+                    <td>{{ headerDescription(param) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="fei-doc-empty">无请求 Header</div>
+          </div>
+
+          <div class="fei-doc-section">
             <h3 class="fei-doc-heading">请求参数</h3>
-            <pre class="fei-code">{{ prettyJson(detail.requestParams, '[]') }}</pre>
+            <div v-if="hasRows(docDetail.requestParams)" class="fei-table-wrap fei-doc-table-wrap">
+              <table class="fei-table fei-doc-table">
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>必填</th>
+                    <th>类型</th>
+                    <th>说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="param in docDetail.requestParams" :key="rowKey(param)">
+                    <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                    <td>{{ requiredText(param.required) }}</td>
+                    <td>{{ param.type || '-' }}</td>
+                    <td>{{ requestParamDescription(param) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="fei-doc-empty">无请求参数</div>
           </div>
+
           <div class="fei-doc-section">
-            <h3 class="fei-doc-heading">请求头</h3>
-            <pre class="fei-code">{{ prettyJson(detail.requestHeader, '{}') }}</pre>
+            <h3 class="fei-doc-heading">响应参数</h3>
+            <div v-if="hasRows(docDetail.responseParams)" class="fei-table-wrap fei-doc-table-wrap">
+              <table class="fei-table fei-doc-table">
+                <thead>
+                  <tr>
+                    <th>字段名</th>
+                    <th>类型</th>
+                    <th>可能为空</th>
+                    <th>父级字段</th>
+                    <th>说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="param in docDetail.responseParams" :key="rowKey(param)">
+                    <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                    <td>{{ param.type || '-' }}</td>
+                    <td>{{ nullableText(param.required) }}</td>
+                    <td>{{ param.parentId || '-' }}</td>
+                    <td>{{ param.description || param.exampleValue || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="fei-doc-empty">暂无响应字段说明</div>
           </div>
+
           <div class="fei-doc-section">
-            <h3 class="fei-doc-heading">响应头</h3>
-            <pre class="fei-code">{{ prettyJson(detail.responseHeader, '{}') }}</pre>
+            <div>
+              <div class="fei-doc-section__head">
+                <h3 class="fei-doc-heading">JSON 返回示例</h3>
+                <button
+                  class="fei-icon-btn"
+                  type="button"
+                  title="复制返回示例"
+                  :disabled="!hasText(docDetail.doc?.successExample)"
+                  @click="copyText(docDetail.doc?.successExample || '')"
+                >
+                  <CopyOutlined />
+                </button>
+              </div>
+              <pre v-if="hasText(docDetail.doc?.successExample)" class="fei-code">{{ prettyJson(docDetail.doc?.successExample, '{}') }}</pre>
+              <div v-else class="fei-doc-empty">暂无 JSON 返回示例</div>
+            </div>
+          </div>
+
+          <div class="fei-doc-section">
+            <h3 class="fei-doc-heading">错误码</h3>
+            <div v-if="hasRows(docDetail.errorCodes)" class="fei-table-wrap fei-doc-table-wrap">
+              <table class="fei-table fei-doc-table">
+                <thead>
+                  <tr>
+                    <th>错误码</th>
+                    <th>错误信息</th>
+                    <th>说明</th>
+                    <th>解决建议</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="errorCode in docDetail.errorCodes" :key="errorCode.id || errorCode.errorCode">
+                    <td><span class="fei-doc-param-name">{{ errorCode.errorCode || '-' }}</span></td>
+                    <td>{{ errorCode.errorMessage || '-' }}</td>
+                    <td>{{ errorCode.description || '-' }}</td>
+                    <td>{{ errorCode.solution || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="fei-doc-empty">暂无接口级错误码</div>
+          </div>
+
+          <div class="fei-doc-section">
+            <div class="fei-doc-section__head">
+              <h3 class="fei-doc-heading">curl 调用示例</h3>
+              <button class="fei-icon-btn" type="button" title="复制 curl 示例" @click="copyText(docDetail.curlExample || '')">
+                <CopyOutlined />
+              </button>
+            </div>
+            <pre class="fei-code">{{ docDetail.curlExample || '暂无调用示例' }}</pre>
           </div>
         </section>
       </template>
@@ -80,8 +228,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { CopyOutlined } from '@ant-design/icons-vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import PageContainer from '@/components/PageContainer.vue';
@@ -91,19 +240,23 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocParamVO, InterfaceInfoVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(true);
-const detail = ref<InterfaceInfoVO | null>(null);
+const docDetail = ref<InterfaceDocDetailVO | null>(null);
 const loginUser = ref<UserVO | null>(null);
 const toast = reactive({
   visible: false,
   type: 'info' as 'success' | 'error' | 'info',
   message: '',
 });
+
+const detail = computed<InterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
+
+const showTargetHost = computed(() => loginUser.value?.userRole === 'admin' && Boolean(detail.value?.targetHost));
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -148,6 +301,57 @@ const formatDateTime = (value?: string) => {
   ].join(' ');
 };
 
+const hasRows = <T>(rows?: T[]) => Boolean(rows?.length);
+
+const hasText = (value?: string) => Boolean(value?.trim());
+
+const requiredText = (required?: boolean) => (required ? '是' : '否');
+
+const nullableText = (required?: boolean) => (required ? '否' : '是');
+
+const rowKey = (param: InterfaceDocParamVO) => `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
+
+const paramValue = (param: InterfaceDocParamVO) => param.exampleValue || param.defaultValue || '-';
+
+const headerRequiredText = (param: InterfaceDocParamVO) => {
+  if (param.required) return '是';
+  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) !== '-') return '是';
+  return '否';
+};
+
+const headerDescription = (param: InterfaceDocParamVO) => {
+  if (param.description && !param.description.includes('旧请求头字段自动转换')) {
+    return param.description;
+  }
+  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) === 'application/json') {
+    return '请求体为 JSON 格式时必须设置';
+  }
+  return param.description || '-';
+};
+
+const requestParamDescription = (param: InterfaceDocParamVO) => {
+  const parts = [
+    param.description && !param.description.includes('旧字段自动转换') ? param.description : '',
+    param.exampleValue ? `例如：${param.exampleValue}` : '',
+    param.defaultValue ? `默认值：${param.defaultValue}` : '',
+    param.validationRule ? param.validationRule : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join('。') : '-';
+};
+
+const copyText = async (text: string) => {
+  if (!text.trim()) {
+    showToast('暂无可复制内容', 'info');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('已复制', 'success');
+  } catch {
+    showToast('复制失败', 'error');
+  }
+};
+
 const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
@@ -160,15 +364,15 @@ const loadLoginUser = async () => {
 const loadDetail = async () => {
   const id = Number(route.params.id);
   if (!id) {
-    detail.value = null;
+    docDetail.value = null;
     loading.value = false;
     return;
   }
   try {
-    const res = await interfaceService.getById(id);
-    detail.value = res.data || null;
+    const res = await interfaceService.getDocDetail(id);
+    docDetail.value = res.data || null;
   } catch {
-    detail.value = null;
+    docDetail.value = null;
   } finally {
     loading.value = false;
   }

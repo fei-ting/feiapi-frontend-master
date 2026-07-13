@@ -27,7 +27,7 @@
               <div class="fei-invoke-meta">
                 <div class="fei-doc-item">
                   <span class="fei-info-label">请求地址</span>
-                  <span class="fei-code-inline fei-code-inline--block">{{ detail.url || '-' }}</span>
+                  <span class="fei-code-inline fei-code-inline--block">{{ docDetail?.gatewayUrl || '-' }}</span>
                 </div>
                 <div class="fei-doc-item">
                   <span class="fei-info-label">请求方式</span>
@@ -35,7 +35,7 @@
                 </div>
                 <div class="fei-doc-item">
                   <span class="fei-info-label">请求 Header</span>
-                  <span class="fei-code-inline fei-code-inline--block">Content-Type：application/json</span>
+                  <span class="fei-code-inline fei-code-inline--block">{{ invokeHeaderText }}</span>
                 </div>
               </div>
 
@@ -70,7 +70,7 @@
                   </label>
                 </div>
 
-                <div v-else class="fei-field">
+                <div v-else-if="allowRawRequestParams" class="fei-field">
                   <label class="fei-label" for="invokeRequestParams">请求参数（JSON）</label>
                   <textarea
                     id="invokeRequestParams"
@@ -79,13 +79,22 @@
                     placeholder='{"key":"value"}'
                   />
                 </div>
+
+                <div v-else class="fei-doc-empty">此接口无需请求参数</div>
               </section>
 
               <div class="fei-toolbar fei-invoke-toolbar">
                 <button class="fei-btn fei-btn--primary" type="button" @click="handleInvokeClick" :disabled="invokeLoading">
                   {{ invokeLoading ? '调用中...' : '发送请求' }}
                 </button>
-                <button class="fei-btn fei-btn--secondary" type="button" @click="fillExample">填充示例</button>
+                <button
+                  v-if="canFillExample"
+                  class="fei-btn fei-btn--secondary"
+                  type="button"
+                  @click="fillExample"
+                >
+                  填充示例
+                </button>
               </div>
             </section>
           </main>
@@ -133,16 +142,85 @@
 
             <div v-else class="fei-invoke-doc">
               <div class="fei-doc-section">
+                <h3 class="fei-doc-heading">请求 Header</h3>
+                <div v-if="hasRows(docDetail?.requestHeaders)" class="fei-table-wrap fei-doc-table-wrap">
+                  <table class="fei-table fei-doc-table">
+                    <thead>
+                      <tr>
+                        <th>名称</th>
+                        <th>必填</th>
+                        <th>值</th>
+                        <th>说明</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="param in docDetail?.requestHeaders" :key="rowKey(param)">
+                        <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                        <td>{{ headerRequiredText(param) }}</td>
+                        <td><span class="fei-doc-example">{{ paramValue(param) }}</span></td>
+                        <td>{{ headerDescription(param) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else class="fei-doc-empty">无请求 Header</div>
+              </div>
+              <div class="fei-doc-section">
                 <h3 class="fei-doc-heading">请求参数</h3>
-                <pre class="fei-code">{{ prettyJson(detail.requestParams, '[]') }}</pre>
+                <div v-if="hasRows(docDetail?.requestParams)" class="fei-table-wrap fei-doc-table-wrap">
+                  <table class="fei-table fei-doc-table">
+                    <thead>
+                      <tr>
+                        <th>名称</th>
+                        <th>必填</th>
+                        <th>类型</th>
+                        <th>说明</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="param in docDetail?.requestParams" :key="rowKey(param)">
+                        <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                        <td>{{ requiredText(param.required) }}</td>
+                        <td>{{ param.type || '-' }}</td>
+                        <td>{{ requestParamDescription(param) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else class="fei-doc-empty">无请求参数</div>
               </div>
               <div class="fei-doc-section">
-                <h3 class="fei-doc-heading">请求头</h3>
-                <pre class="fei-code">{{ prettyJson(detail.requestHeader, '{}') }}</pre>
+                <h3 class="fei-doc-heading">响应参数</h3>
+                <div v-if="hasRows(docDetail?.responseParams)" class="fei-table-wrap fei-doc-table-wrap">
+                  <table class="fei-table fei-doc-table">
+                    <thead>
+                      <tr>
+                        <th>字段名</th>
+                        <th>类型</th>
+                        <th>可能为空</th>
+                        <th>说明</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="param in docDetail?.responseParams" :key="rowKey(param)">
+                        <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                        <td>{{ param.type || '-' }}</td>
+                        <td>{{ nullableText(param.required) }}</td>
+                        <td>{{ param.description || param.exampleValue || '-' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else class="fei-doc-empty">暂无响应字段说明</div>
               </div>
               <div class="fei-doc-section">
-                <h3 class="fei-doc-heading">响应头</h3>
-                <pre class="fei-code">{{ prettyJson(detail.responseHeader, '{}') }}</pre>
+                <h3 class="fei-doc-heading">JSON 返回示例</h3>
+                <pre v-if="hasText(docDetail?.doc?.successExample)" class="fei-code">{{ prettyJson(docDetail?.doc?.successExample, '{}') }}</pre>
+                <div v-else class="fei-doc-empty">暂无 JSON 返回示例</div>
+              </div>
+              <div class="fei-doc-section">
+                <h3 class="fei-doc-heading">curl 调用示例</h3>
+                <pre class="fei-code">{{ docDetail?.curlExample || '暂无调用示例' }}</pre>
               </div>
             </div>
           </aside>
@@ -183,7 +261,7 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocParamVO, InterfaceInfoVO, UserVO } from '@/types/api';
 
 type InvokeTab = 'result' | 'doc';
 type DialogAction = 'login' | 'invoke';
@@ -193,6 +271,10 @@ interface RequestParamField {
   name: string;
   type: string;
   example: unknown;
+  required: boolean;
+  defaultValue?: string;
+  description?: string;
+  validationRule?: string;
 }
 
 const route = useRoute();
@@ -200,7 +282,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(true);
 const invokeLoading = ref(false);
-const detail = ref<InterfaceInfoVO | null>(null);
+const docDetail = ref<InterfaceDocDetailVO | null>(null);
 const loginUser = ref<UserVO | null>(null);
 const requestParams = ref('');
 const invokeResult = ref('');
@@ -222,6 +304,20 @@ const toast = reactive({
 });
 
 const loginHref = computed(() => `#/login?redirect=${encodeURIComponent(route.fullPath)}`);
+
+const detail = computed<InterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
+
+const allowRawRequestParams = computed(() => !docDetail.value && !structuredParams.value.length);
+
+const canFillExample = computed(() => structuredParams.value.length > 0 || Boolean(requestParams.value.trim()));
+
+const invokeHeaderText = computed(() => {
+  const headers = docDetail.value?.requestHeaders || [];
+  if (!headers.length) {
+    return '无请求 Header';
+  }
+  return headers.map((param) => `${param.name || '-'}: ${paramValue(param)}`).join('\n');
+});
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -252,34 +348,29 @@ const resolveParamType = (value: unknown) => {
   return typeof value;
 };
 
-const parseStructuredParams = (item: InterfaceInfoVO | null) => {
-  const params = item?.requestParams?.trim();
-  if (!params) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(params);
-    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
-      return [];
-    }
-    return Object.entries(parsed).map(([name, value]) => ({
-      name,
-      type: resolveParamType(value),
-      example: value,
-    }));
-  } catch {
-    return [];
-  }
-};
+const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => (doc?.requestParams || [])
+  .filter((param) => param.name)
+  .map((param) => ({
+    name: param.name as string,
+    type: param.type || 'string',
+    example: param.exampleValue || param.defaultValue || '',
+    required: param.required !== false,
+    defaultValue: param.defaultValue,
+    description: param.description,
+    validationRule: param.validationRule,
+  }));
 
 const parseParamValue = (param: RequestParamField, rawValue: string) => {
   const trimmedValue = rawValue.trim();
-  if (!trimmedValue) {
+  if (!trimmedValue && param.required) {
     return {
       valid: false,
       message: `请求参数缺少必填字段：${param.name}`,
       value: undefined,
     };
+  }
+  if (!trimmedValue) {
+    return { valid: true, value: undefined };
   }
   if (param.type === 'number') {
     const numberValue = Number(trimmedValue);
@@ -330,7 +421,9 @@ const syncRequestParamsFromFields = () => {
     if (!parsedValue.valid) {
       return parsedValue.message || '请求参数格式错误';
     }
-    params[param.name] = parsedValue.value as RequestParamValue;
+    if (parsedValue.value !== undefined) {
+      params[param.name] = parsedValue.value as RequestParamValue;
+    }
   }
   requestParams.value = JSON.stringify(params);
   return '';
@@ -378,18 +471,6 @@ const prettyJson = (value: string | undefined, fallback: string) => {
   }
 };
 
-const getRequestParamsExample = (item: InterfaceInfoVO | null) => {
-  const params = item?.requestParams?.trim();
-  if (!params) {
-    return '';
-  }
-  try {
-    return JSON.stringify(JSON.parse(params), null, 2);
-  } catch {
-    return params;
-  }
-};
-
 const fillStructuredExample = () => {
   structuredParams.value.forEach((param) => {
     if (param.example === null || param.example === undefined) {
@@ -407,6 +488,44 @@ const fillStructuredExample = () => {
 
 const interfaceSummary = (item: InterfaceInfoVO) => item.description || '暂无接口描述';
 
+const hasRows = <T>(rows?: T[]) => Boolean(rows?.length);
+
+const hasText = (value?: string) => Boolean(value?.trim());
+
+const requiredText = (required?: boolean) => (required ? '是' : '否');
+
+const nullableText = (required?: boolean) => (required ? '否' : '是');
+
+const rowKey = (param: InterfaceDocParamVO) => `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
+
+const paramValue = (param: InterfaceDocParamVO) => param.exampleValue || param.defaultValue || '-';
+
+const headerRequiredText = (param: InterfaceDocParamVO) => {
+  if (param.required) return '是';
+  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) !== '-') return '是';
+  return '否';
+};
+
+const headerDescription = (param: InterfaceDocParamVO) => {
+  if (param.description && !param.description.includes('旧请求头字段自动转换')) {
+    return param.description;
+  }
+  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) === 'application/json') {
+    return '请求体为 JSON 格式时必须设置';
+  }
+  return param.description || '-';
+};
+
+const requestParamDescription = (param: InterfaceDocParamVO) => {
+  const parts = [
+    param.description && !param.description.includes('旧字段自动转换') ? param.description : '',
+    param.exampleValue ? `例如：${param.exampleValue}` : '',
+    param.defaultValue ? `默认值：${param.defaultValue}` : '',
+    param.validationRule ? param.validationRule : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join('。') : '-';
+};
+
 const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
@@ -419,21 +538,21 @@ const loadLoginUser = async () => {
 const loadDetail = async () => {
   const id = Number(route.params.id);
   if (!id) {
-    detail.value = null;
+    docDetail.value = null;
     loading.value = false;
     return;
   }
   try {
-    const res = await interfaceService.getById(id);
-    detail.value = res.data || null;
-    structuredParams.value = parseStructuredParams(detail.value);
+    const res = await interfaceService.getDocDetail(id);
+    docDetail.value = res.data || null;
+    structuredParams.value = parseStructuredParams(docDetail.value);
     if (structuredParams.value.length) {
       fillStructuredExample();
     } else {
-      requestParams.value = getRequestParamsExample(detail.value);
+      requestParams.value = '';
     }
   } catch {
-    detail.value = null;
+    docDetail.value = null;
   } finally {
     loading.value = false;
   }
@@ -508,7 +627,6 @@ const fillExample = () => {
     fillStructuredExample();
     return;
   }
-  requestParams.value = getRequestParamsExample(detail.value);
 };
 
 const copyInvokeResult = async () => {
