@@ -47,7 +47,7 @@
             <div class="fei-doc-section__head">
               <div>
                 <h2 id="interface-doc-title" class="fei-section-title">基础信息</h2>
-                <p v-if="docDetail.legacyFallback" class="fei-section-desc">当前接口使用旧字段生成基础文档。</p>
+                <p v-if="docDetail.structuredDocMissing" class="fei-section-desc">当前接口尚未维护完整的结构化文档。</p>
               </div>
               <span class="fei-doc-version">{{ docDetail.doc?.docVersion || 'v1' }}</span>
             </div>
@@ -95,6 +95,7 @@
                   <tr>
                     <th>名称</th>
                     <th>必填</th>
+                    <th>类型</th>
                     <th>值</th>
                     <th>说明</th>
                   </tr>
@@ -103,6 +104,7 @@
                   <tr v-for="param in docDetail.requestHeaders" :key="rowKey(param)">
                     <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
                     <td>{{ headerRequiredText(param) }}</td>
+                    <td>{{ param.type || '-' }}</td>
                     <td><span class="fei-doc-example">{{ paramValue(param) }}</span></td>
                     <td>{{ headerDescription(param) }}</td>
                   </tr>
@@ -119,6 +121,7 @@
                 <thead>
                   <tr>
                     <th>名称</th>
+                    <th>位置</th>
                     <th>必填</th>
                     <th>类型</th>
                     <th>说明</th>
@@ -127,6 +130,7 @@
                 <tbody>
                   <tr v-for="param in docDetail.requestParams" :key="rowKey(param)">
                     <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
+                    <td>{{ paramSceneText(param.paramScene) }}</td>
                     <td>{{ requiredText(param.required) }}</td>
                     <td>{{ param.type || '-' }}</td>
                     <td>{{ requestParamDescription(param) }}</td>
@@ -154,8 +158,8 @@
                   <tr v-for="param in docDetail.responseParams" :key="rowKey(param)">
                     <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
                     <td>{{ param.type || '-' }}</td>
-                    <td>{{ nullableText(param.required) }}</td>
-                    <td>{{ param.parentId || '-' }}</td>
+                    <td>{{ nullableText(param.nullable) }}</td>
+                    <td>{{ parentFieldText(param) }}</td>
                     <td>{{ param.description || param.exampleValue || '-' }}</td>
                   </tr>
                 </tbody>
@@ -165,22 +169,42 @@
           </div>
 
           <div class="fei-doc-section">
-            <div>
-              <div class="fei-doc-section__head">
-                <h3 class="fei-doc-heading">JSON 返回示例</h3>
-                <button
-                  class="fei-icon-btn"
-                  type="button"
-                  title="复制返回示例"
-                  :disabled="!hasText(docDetail.doc?.successExample)"
-                  @click="copyText(docDetail.doc?.successExample || '')"
-                >
-                  <CopyOutlined />
-                </button>
-              </div>
-              <pre v-if="hasText(docDetail.doc?.successExample)" class="fei-code">{{ prettyJson(docDetail.doc?.successExample, '{}') }}</pre>
-              <div v-else class="fei-doc-empty">暂无 JSON 返回示例</div>
+            <div class="fei-doc-section__head">
+              <h3 class="fei-doc-heading">JSON 返回示例</h3>
+              <button
+                class="fei-icon-btn"
+                type="button"
+                :title="activeExampleCopyTitle"
+                :disabled="!hasText(activeExampleText)"
+                @click="copyText(activeExampleText)"
+              >
+                <CopyOutlined />
+              </button>
             </div>
+            <div class="fei-example-switch" role="tablist" aria-label="返回示例类型">
+              <button
+                class="fei-example-switch__button"
+                :class="{ 'is-active': exampleTab === 'success' }"
+                type="button"
+                role="tab"
+                :aria-selected="exampleTab === 'success'"
+                @click="exampleTab = 'success'"
+              >
+                成功示例
+              </button>
+              <button
+                class="fei-example-switch__button"
+                :class="{ 'is-active': exampleTab === 'fail' }"
+                type="button"
+                role="tab"
+                :aria-selected="exampleTab === 'fail'"
+                @click="exampleTab = 'fail'"
+              >
+                失败示例
+              </button>
+            </div>
+            <pre v-if="hasText(activeExampleText)" class="fei-code">{{ prettyJson(activeExampleText, '{}') }}</pre>
+            <div v-else class="fei-doc-empty">{{ activeExampleEmptyText }}</div>
           </div>
 
           <div class="fei-doc-section">
@@ -240,7 +264,7 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocParamVO, InterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -248,15 +272,41 @@ const userStore = useUserStore();
 const loading = ref(true);
 const docDetail = ref<InterfaceDocDetailVO | null>(null);
 const loginUser = ref<UserVO | null>(null);
+const exampleTab = ref<'success' | 'fail'>('success');
 const toast = reactive({
   visible: false,
   type: 'info' as 'success' | 'error' | 'info',
   message: '',
 });
 
-const detail = computed<InterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
+const detail = computed<InterfaceDocInterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
 
 const showTargetHost = computed(() => loginUser.value?.userRole === 'admin' && Boolean(detail.value?.targetHost));
+
+/** 当前选中的 JSON 返回示例。 */
+const activeExampleText = computed(() => {
+  if (exampleTab.value === 'fail') {
+    return docDetail.value?.doc?.failExample || '';
+  }
+  return docDetail.value?.doc?.successExample || '';
+});
+
+/** 当前返回示例为空时的提示。 */
+const activeExampleEmptyText = computed(() => (
+  exampleTab.value === 'fail' ? '暂无失败 JSON 示例' : '暂无成功 JSON 示例'
+));
+
+/** 当前返回示例复制按钮说明。 */
+const activeExampleCopyTitle = computed(() => (
+  exampleTab.value === 'fail' ? '复制失败示例' : '复制成功示例'
+));
+
+/** 响应参数 ID 与字段名映射。 */
+const responseParamNameMap = computed(() => new Map(
+  (docDetail.value?.responseParams || [])
+    .filter((param) => param.id && param.name)
+    .map((param) => [param.id as number, param.name as string]),
+));
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -269,14 +319,14 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
 
-const quotaTypeText = (item: InterfaceInfoVO) => {
+const quotaTypeText = (item: InterfaceDocInterfaceInfoVO) => {
   if (isFreeUnlimited(item.quotaType)) return '免费无限';
   return item.quotaTypeText || '基础额度接口';
 };
 
-const interfaceSummary = (item: InterfaceInfoVO) => item.description || '暂无接口描述';
+const interfaceSummary = (item: InterfaceDocInterfaceInfoVO) => item.description || '暂无接口描述';
 
-const methodText = (item: InterfaceInfoVO) => (item.method || 'GET').toUpperCase();
+const methodText = (item: InterfaceDocInterfaceInfoVO) => (item.method || 'GET').toUpperCase();
 
 const prettyJson = (value: string | undefined, fallback: string) => {
   const content = value?.trim();
@@ -307,7 +357,20 @@ const hasText = (value?: string) => Boolean(value?.trim());
 
 const requiredText = (required?: boolean) => (required ? '是' : '否');
 
-const nullableText = (required?: boolean) => (required ? '否' : '是');
+const nullableText = (nullable?: boolean) => (nullable ? '是' : '否');
+
+/** 将参数位置转换为面向使用者的名称。 */
+const paramSceneText = (paramScene?: string) => {
+  if (paramScene === 'QUERY') return '查询参数';
+  if (paramScene === 'BODY') return '请求体';
+  return paramScene || '-';
+};
+
+/** 将响应参数父级 ID 转换为父级字段名。 */
+const parentFieldText = (param: InterfaceDocParamVO) => {
+  if (!param.parentId) return '-';
+  return responseParamNameMap.value.get(param.parentId) || `未知字段（ID：${param.parentId}）`;
+};
 
 const rowKey = (param: InterfaceDocParamVO) => `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
 

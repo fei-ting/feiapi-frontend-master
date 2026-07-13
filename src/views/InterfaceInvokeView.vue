@@ -70,17 +70,7 @@
                   </label>
                 </div>
 
-                <div v-else-if="allowRawRequestParams" class="fei-field">
-                  <label class="fei-label" for="invokeRequestParams">请求参数（JSON）</label>
-                  <textarea
-                    id="invokeRequestParams"
-                    v-model="requestParams"
-                    class="fei-textarea fei-invoke-textarea"
-                    placeholder='{"key":"value"}'
-                  />
-                </div>
-
-                <div v-else class="fei-doc-empty">此接口无需请求参数</div>
+                <div v-else class="fei-doc-empty">{{ emptyParamText }}</div>
               </section>
 
               <div class="fei-toolbar fei-invoke-toolbar">
@@ -205,7 +195,7 @@
                       <tr v-for="param in docDetail?.responseParams" :key="rowKey(param)">
                         <td><span class="fei-doc-param-name">{{ param.name || '-' }}</span></td>
                         <td>{{ param.type || '-' }}</td>
-                        <td>{{ nullableText(param.required) }}</td>
+                        <td>{{ nullableText(param.nullable) }}</td>
                         <td>{{ param.description || param.exampleValue || '-' }}</td>
                       </tr>
                     </tbody>
@@ -261,7 +251,7 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocParamVO, InterfaceInfoVO, UserVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
 type InvokeTab = 'result' | 'doc';
 type DialogAction = 'login' | 'invoke';
@@ -305,11 +295,11 @@ const toast = reactive({
 
 const loginHref = computed(() => `#/login?redirect=${encodeURIComponent(route.fullPath)}`);
 
-const detail = computed<InterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
-
-const allowRawRequestParams = computed(() => !docDetail.value && !structuredParams.value.length);
+const detail = computed<InterfaceDocInterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
 
 const canFillExample = computed(() => structuredParams.value.length > 0 || Boolean(requestParams.value.trim()));
+
+const emptyParamText = computed(() => (docDetail.value?.structuredDocMissing ? '暂无结构化请求参数' : '此接口无需请求参数'));
 
 const invokeHeaderText = computed(() => {
   const headers = docDetail.value?.requestHeaders || [];
@@ -348,17 +338,22 @@ const resolveParamType = (value: unknown) => {
   return typeof value;
 };
 
-const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => (doc?.requestParams || [])
-  .filter((param) => param.name)
-  .map((param) => ({
-    name: param.name as string,
-    type: param.type || 'string',
-    example: param.exampleValue || param.defaultValue || '',
-    required: param.required !== false,
-    defaultValue: param.defaultValue,
-    description: param.description,
-    validationRule: param.validationRule,
-  }));
+const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => {
+  if (!doc || doc.structuredDocMissing) {
+    return [];
+  }
+  return (doc.requestParams || [])
+    .filter((param) => param.name)
+    .map((param) => ({
+      name: param.name as string,
+      type: param.type || 'string',
+      example: param.exampleValue || param.defaultValue || '',
+      required: param.required !== false,
+      defaultValue: param.defaultValue,
+      description: param.description,
+      validationRule: param.validationRule,
+    }));
+};
 
 const parseParamValue = (param: RequestParamField, rawValue: string) => {
   const trimmedValue = rawValue.trim();
@@ -486,7 +481,7 @@ const fillStructuredExample = () => {
   syncRequestParamsFromFields();
 };
 
-const interfaceSummary = (item: InterfaceInfoVO) => item.description || '暂无接口描述';
+const interfaceSummary = (item: InterfaceDocInterfaceInfoVO) => item.description || '暂无接口描述';
 
 const hasRows = <T>(rows?: T[]) => Boolean(rows?.length);
 
@@ -494,7 +489,7 @@ const hasText = (value?: string) => Boolean(value?.trim());
 
 const requiredText = (required?: boolean) => (required ? '是' : '否');
 
-const nullableText = (required?: boolean) => (required ? '否' : '是');
+const nullableText = (nullable?: boolean) => (nullable ? '是' : '否');
 
 const rowKey = (param: InterfaceDocParamVO) => `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
 

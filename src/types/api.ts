@@ -44,6 +44,40 @@ export interface InterfaceInfoVO {
 }
 
 /**
+ * 接口文档页面使用的接口基础信息
+ */
+export interface InterfaceDocInterfaceInfoVO {
+  /** 主键 */
+  id: number;
+  /** 接口名称 */
+  name: string;
+  /** 接口描述 */
+  description?: string;
+  /** 接口展示地址，仅管理员可见 */
+  url?: string;
+  /** 网关匹配路径 */
+  path?: string;
+  /** 真实后端服务地址，仅管理员可见 */
+  targetHost?: string;
+  /** 接口状态 */
+  status?: number;
+  /** HTTP 请求方法 */
+  method?: string;
+  /** 配额类型 */
+  quotaType?: InterfaceQuotaType | string;
+  /** 配额类型说明 */
+  quotaTypeText?: string;
+  /** 初始额度 */
+  initialQuota?: number;
+  /** 创建时间 */
+  createTime?: string;
+  /** 更新时间 */
+  updateTime?: string;
+  /** 累计调用次数 */
+  totalNum?: number;
+}
+
+/**
  * 接口文档主信息
  */
 export interface InterfaceDocVO {
@@ -89,6 +123,8 @@ export interface InterfaceDocParamVO {
   type?: string;
   /** 是否必填 */
   required?: boolean;
+  /** 是否允许为空 */
+  nullable?: boolean;
   /** 默认值 */
   defaultValue?: string;
   /** 示例值 */
@@ -126,13 +162,13 @@ export interface InterfaceDocErrorCodeVO {
  */
 export interface InterfaceDocDetailVO {
   /** 接口基础信息 */
-  interfaceInfo: InterfaceInfoVO;
+  interfaceInfo: InterfaceDocInterfaceInfoVO;
   /** 文档主信息 */
   doc?: InterfaceDocVO;
   /** 网关调用地址 */
   gatewayUrl?: string;
-  /** 是否旧字段兜底 */
-  legacyFallback?: boolean;
+  /** 是否缺少结构化文档 */
+  structuredDocMissing?: boolean;
   /** 请求 Header 列表 */
   requestHeaders?: InterfaceDocParamVO[];
   /** 请求参数列表 */
