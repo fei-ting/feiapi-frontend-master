@@ -58,6 +58,7 @@
                       <span>
                         {{ param.name }}
                         <small>{{ param.type }}</small>
+                        <span v-if="param.required" class="fei-invoke-param__required" aria-label="必填">*</span>
                       </span>
                     </span>
                     <input
@@ -66,6 +67,7 @@
                       class="fei-input"
                       :type="param.type === 'number' ? 'number' : 'text'"
                       :placeholder="`请输入${param.name}`"
+                      :required="param.required"
                     />
                   </label>
                 </div>
@@ -219,7 +221,7 @@
       <div v-else class="fei-empty fei-card">接口不存在</div>
     </PageContainer>
 
-    <div v-if="dialog.visible" class="fei-modal-mask" role="dialog" aria-modal="true" aria-labelledby="invoke-dialog-title">
+    <div v-if="dialog.visible" class="fei-modal-mask" role="dialog" aria-modal="true" aria-labelledby="invoke-dialog-title" @keyup.esc="closeDialog" tabindex="0">
       <div class="fei-confirm-dialog">
         <h2 id="invoke-dialog-title">{{ dialog.title }}</h2>
         <p>{{ dialog.message }}</p>

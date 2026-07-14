@@ -266,6 +266,11 @@ import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
+/** Toast 显示时长（毫秒） */
+const TOAST_DURATION = 2200;
+/** 退出登录后跳转延迟（毫秒） */
+const LOGOUT_REDIRECT_DELAY = 1000;
+
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
@@ -314,7 +319,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   toast.visible = true;
   window.setTimeout(() => {
     toast.visible = false;
-  }, 2200);
+  }, TOAST_DURATION);
 };
 
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
@@ -428,7 +433,7 @@ const loadLoginUser = async () => {
 
 const loadDetail = async () => {
   const id = Number(route.params.id);
-  if (!id) {
+  if (isNaN(id) || id <= 0) {
     docDetail.value = null;
     loading.value = false;
     return;
@@ -457,7 +462,7 @@ const handleLogout = async () => {
     showToast('已安全退出', 'success');
     setTimeout(() => {
       router.replace('/home');
-    }, 1000);
+    }, LOGOUT_REDIRECT_DELAY);
   } catch (error) {
     console.error('[InterfaceDetailView] 退出登录失败:', error);
     showToast('退出失败', 'error');
