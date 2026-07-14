@@ -58,6 +58,7 @@
                       <span>
                         {{ param.name }}
                         <small>{{ param.type }}</small>
+                        <span v-if="param.required" class="fei-invoke-param__required" aria-label="必填">*</span>
                       </span>
                     </span>
                     <input
@@ -66,6 +67,7 @@
                       class="fei-input"
                       :type="param.type === 'number' ? 'number' : 'text'"
                       :placeholder="`请输入${param.name}`"
+                      :required="param.required"
                     />
                   </label>
                 </div>
@@ -219,7 +221,7 @@
       <div v-else class="fei-empty fei-card">接口不存在</div>
     </PageContainer>
 
-    <div v-if="dialog.visible" class="fei-modal-mask" role="dialog" aria-modal="true" aria-labelledby="invoke-dialog-title">
+    <div v-if="dialog.visible" class="fei-modal-mask" role="dialog" aria-modal="true" aria-labelledby="invoke-dialog-title" @keyup.esc="closeDialog" tabindex="0">
       <div class="fei-confirm-dialog">
         <h2 id="invoke-dialog-title">{{ dialog.title }}</h2>
         <p>{{ dialog.message }}</p>
@@ -525,7 +527,8 @@ const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
     loginUser.value = res.data || null;
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceInvokeView] 加载登录用户信息失败:', error);
     loginUser.value = null;
   }
 };
@@ -546,7 +549,8 @@ const loadDetail = async () => {
     } else {
       requestParams.value = '';
     }
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceInvokeView] 加载接口文档详情失败:', error);
     docDetail.value = null;
   } finally {
     loading.value = false;
@@ -631,7 +635,8 @@ const copyInvokeResult = async () => {
   try {
     await navigator.clipboard.writeText(invokeResult.value);
     showToast('复制成功', 'success');
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceInvokeView] 复制调用结果失败:', error);
     showToast('复制失败，请手动选择内容复制', 'error');
   }
 };
@@ -645,7 +650,8 @@ const handleLogout = async () => {
     setTimeout(() => {
       router.replace('/home');
     }, 1000);
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceInvokeView] 退出登录失败:', error);
     showToast('退出失败', 'error');
   }
 };

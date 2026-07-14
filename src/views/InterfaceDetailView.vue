@@ -93,11 +93,11 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>名称</th>
-                    <th>必填</th>
-                    <th>类型</th>
-                    <th>值</th>
-                    <th>说明</th>
+                    <th scope="col">名称</th>
+                    <th scope="col">必填</th>
+                    <th scope="col">类型</th>
+                    <th scope="col">值</th>
+                    <th scope="col">说明</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,11 +120,11 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>名称</th>
-                    <th>位置</th>
-                    <th>必填</th>
-                    <th>类型</th>
-                    <th>说明</th>
+                    <th scope="col">名称</th>
+                    <th scope="col">位置</th>
+                    <th scope="col">必填</th>
+                    <th scope="col">类型</th>
+                    <th scope="col">说明</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -147,11 +147,11 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>字段名</th>
-                    <th>类型</th>
-                    <th>可能为空</th>
-                    <th>父级字段</th>
-                    <th>说明</th>
+                    <th scope="col">字段名</th>
+                    <th scope="col">类型</th>
+                    <th scope="col">可能为空</th>
+                    <th scope="col">父级字段</th>
+                    <th scope="col">说明</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -213,10 +213,10 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>错误码</th>
-                    <th>错误信息</th>
-                    <th>说明</th>
-                    <th>解决建议</th>
+                    <th scope="col">错误码</th>
+                    <th scope="col">错误信息</th>
+                    <th scope="col">说明</th>
+                    <th scope="col">解决建议</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,6 +266,11 @@ import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
+/** Toast 显示时长（毫秒） */
+const TOAST_DURATION = 2200;
+/** 退出登录后跳转延迟（毫秒） */
+const LOGOUT_REDIRECT_DELAY = 1000;
+
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
@@ -314,7 +319,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   toast.visible = true;
   window.setTimeout(() => {
     toast.visible = false;
-  }, 2200);
+  }, TOAST_DURATION);
 };
 
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
@@ -410,7 +415,8 @@ const copyText = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text);
     showToast('已复制', 'success');
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 复制文本失败:', error);
     showToast('复制失败', 'error');
   }
 };
@@ -419,14 +425,15 @@ const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
     loginUser.value = res.data || null;
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 加载登录用户信息失败:', error);
     loginUser.value = null;
   }
 };
 
 const loadDetail = async () => {
   const id = Number(route.params.id);
-  if (!id) {
+  if (isNaN(id) || id <= 0) {
     docDetail.value = null;
     loading.value = false;
     return;
@@ -434,7 +441,8 @@ const loadDetail = async () => {
   try {
     const res = await interfaceService.getDocDetail(id);
     docDetail.value = res.data || null;
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 加载接口文档详情失败:', error);
     docDetail.value = null;
   } finally {
     loading.value = false;
@@ -454,14 +462,15 @@ const handleLogout = async () => {
     showToast('已安全退出', 'success');
     setTimeout(() => {
       router.replace('/home');
-    }, 1000);
-  } catch {
+    }, LOGOUT_REDIRECT_DELAY);
+  } catch (error) {
+    console.error('[InterfaceDetailView] 退出登录失败:', error);
     showToast('退出失败', 'error');
   }
 };
 
 onMounted(async () => {
-  await loadLoginUser();
-  await loadDetail();
+  // 并行加载用户信息和接口详情，提升页面加载速度
+  await Promise.all([loadLoginUser(), loadDetail()]);
 });
 </script>
