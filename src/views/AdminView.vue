@@ -858,10 +858,11 @@ watch(activeTab, async (tab) => {
     return;
   }
 
-  if (tab === 'quotas' && !quotaConfigs.value.length) {
+  // 每次切换 tab 都刷新数据，确保数据最新
+  if (tab === 'quotas') {
     await loadQuotaConfigs();
   }
-  if (tab === 'interfaces' && !interfaces.value.length) {
+  if (tab === 'interfaces') {
     await loadInterfaces();
   }
 });
