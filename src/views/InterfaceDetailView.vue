@@ -93,11 +93,11 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>名称</th>
-                    <th>必填</th>
-                    <th>类型</th>
-                    <th>值</th>
-                    <th>说明</th>
+                    <th scope="col">名称</th>
+                    <th scope="col">必填</th>
+                    <th scope="col">类型</th>
+                    <th scope="col">值</th>
+                    <th scope="col">说明</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,11 +120,11 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>名称</th>
-                    <th>位置</th>
-                    <th>必填</th>
-                    <th>类型</th>
-                    <th>说明</th>
+                    <th scope="col">名称</th>
+                    <th scope="col">位置</th>
+                    <th scope="col">必填</th>
+                    <th scope="col">类型</th>
+                    <th scope="col">说明</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -147,11 +147,11 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>字段名</th>
-                    <th>类型</th>
-                    <th>可能为空</th>
-                    <th>父级字段</th>
-                    <th>说明</th>
+                    <th scope="col">字段名</th>
+                    <th scope="col">类型</th>
+                    <th scope="col">可能为空</th>
+                    <th scope="col">父级字段</th>
+                    <th scope="col">说明</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -213,10 +213,10 @@
               <table class="fei-table fei-doc-table">
                 <thead>
                   <tr>
-                    <th>错误码</th>
-                    <th>错误信息</th>
-                    <th>说明</th>
-                    <th>解决建议</th>
+                    <th scope="col">错误码</th>
+                    <th scope="col">错误信息</th>
+                    <th scope="col">说明</th>
+                    <th scope="col">解决建议</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -465,7 +465,7 @@ const handleLogout = async () => {
 };
 
 onMounted(async () => {
-  await loadLoginUser();
-  await loadDetail();
+  // 并行加载用户信息和接口详情，提升页面加载速度
+  await Promise.all([loadLoginUser(), loadDetail()]);
 });
 </script>
