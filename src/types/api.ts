@@ -1,6 +1,14 @@
+/**
+ * 统一响应数据结构。
+ *
+ * @template T 响应数据类型
+ */
 export interface ResponseData<T> {
+  /** 响应状态码，0 表示成功 */
   code: number;
+  /** 响应数据 */
   data: T;
+  /** 响应消息 */
   message: string;
 }
 
@@ -62,7 +70,7 @@ export interface InterfaceInfoVO {
   /** HTTP 请求方法 */
   method?: string;
   /** 配额类型 */
-  quotaType?: InterfaceQuotaType | string;
+  quotaType?: InterfaceQuotaType;
   /** 配额类型说明 */
   quotaTypeText?: string;
   /** 初始额度 */
@@ -96,7 +104,7 @@ export interface InterfaceDocInterfaceInfoVO {
   /** HTTP 请求方法 */
   method?: string;
   /** 配额类型 */
-  quotaType?: InterfaceQuotaType | string;
+  quotaType?: InterfaceQuotaType;
   /** 配额类型说明 */
   quotaTypeText?: string;
   /** 初始额度 */
@@ -221,7 +229,7 @@ export interface UserInterfaceInfoVO {
   interfacePath?: string;
   method?: string;
   interfaceStatus?: number;
-  quotaType?: InterfaceQuotaType | string;
+  quotaType?: InterfaceQuotaType;
   quotaTypeText?: string;
   initialQuota?: number;
   totalNum?: number;
@@ -233,7 +241,7 @@ export interface UserInterfaceInfoVO {
 
 export interface InterfaceQuotaConfigVO {
   id?: number;
-  quotaType: InterfaceQuotaType | string;
+  quotaType: InterfaceQuotaType;
   quotaTypeText?: string;
   initialQuota: number;
   description?: string;
@@ -282,15 +290,25 @@ export interface IdRequest {
   id: number;
 }
 
+/**
+ * 接口分页查询参数
+ */
 export interface InterfaceQuery {
+  /** 当前页码，从 1 开始 */
   current?: number;
+  /** 每页大小，默认 10 */
   pageSize?: number;
+  /** 接口名称，模糊搜索 */
   name?: string;
+  /** 接口状态（0-下线，1-上线，2-发布验证中） */
   status?: number | string;
-  quotaType?: InterfaceQuotaType | string;
+  /** 配额类型 */
+  quotaType?: InterfaceQuotaType;
+  /** 排序字段 */
   sortField?: string;
+  /** 排序方向 */
   sortOrder?: SortOrder;
-  /** 接口描述，用于模糊搜索 */
+  /** 接口描述，模糊搜索 */
   description?: string;
 }
 
@@ -298,15 +316,15 @@ export interface InterfaceQuery {
  * 接口信息新增请求
  */
 export interface InterfaceInfoAddRequest {
-  /** 接口名称 */
+  /** 接口名称，最大 50 字符 */
   name: string;
-  /** 接口描述 */
+  /** 接口描述，最大 512 字符 */
   description?: string;
-  /** 接口展示地址 */
+  /** 接口展示地址，最大 512 字符 */
   url?: string;
-  /** 接口路径（网关匹配） */
+  /** 接口路径（网关匹配），如 /api/xxx，最大 512 字符 */
   path: string;
-  /** 真实后端服务地址 */
+  /** 真实后端服务地址，如 http://localhost:8080，最大 512 字符 */
   targetHost: string;
   /** 请求参数文档 */
   requestParams?: string;
@@ -314,10 +332,12 @@ export interface InterfaceInfoAddRequest {
   requestHeader?: string;
   /** 响应头文档 */
   responseHeader?: string;
-  /** HTTP 请求方法 */
+  /** HTTP 请求方法（GET/POST/PUT/DELETE） */
   method: string;
   /** 接口配额类型 */
-  quotaType?: InterfaceQuotaType | string;
+  quotaType?: InterfaceQuotaType;
+  /** SDK 方法名 */
+  sdkMethodName?: string;
 }
 
 /**
@@ -327,15 +347,15 @@ export interface InterfaceInfoAddRequest {
 export interface InterfaceInfoUpdateRequest {
   /** 接口 ID（必填） */
   id: number;
-  /** 接口名称 */
+  /** 接口名称，最大 50 字符 */
   name?: string;
-  /** 接口描述 */
+  /** 接口描述，最大 512 字符 */
   description?: string;
-  /** 接口展示地址 */
+  /** 接口展示地址，最大 512 字符 */
   url?: string;
-  /** 接口路径（网关匹配） */
+  /** 接口路径（网关匹配），最大 512 字符 */
   path?: string;
-  /** 真实后端服务地址 */
+  /** 真实后端服务地址，最大 512 字符 */
   targetHost?: string;
   /** 请求参数文档 */
   requestParams?: string;
@@ -343,10 +363,12 @@ export interface InterfaceInfoUpdateRequest {
   requestHeader?: string;
   /** 响应头文档 */
   responseHeader?: string;
-  /** HTTP 请求方法 */
+  /** HTTP 请求方法（GET/POST/PUT/DELETE） */
   method?: string;
   /** 接口配额类型 */
-  quotaType?: InterfaceQuotaType | string;
+  quotaType?: InterfaceQuotaType;
+  /** SDK 方法名 */
+  sdkMethodName?: string;
 }
 
 /**
@@ -354,7 +376,7 @@ export interface InterfaceInfoUpdateRequest {
  */
 export interface InterfaceQuotaConfigUpdateRequest {
   /** 配额类型 */
-  quotaType: InterfaceQuotaType | string;
-  /** 初始发放额度 */
+  quotaType: InterfaceQuotaType;
+  /** 初始发放额度，必须大于 0 */
   initialQuota: number;
 }
