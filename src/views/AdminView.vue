@@ -6,7 +6,7 @@
         <!-- 桌面端侧边栏 -->
         <aside class="fei-admin-sidebar">
           <div class="fei-card">
-            <nav class="fei-admin-sidebar-nav" style="padding: 8px">
+            <nav class="fei-admin-sidebar-nav fei-admin-sidebar-nav--padded">
               <a
                 class="fei-admin-nav-link"
                 :class="{ 'is-active': activeTab === 'dashboard' }"
@@ -92,7 +92,7 @@
                 <button class="fei-btn fei-btn--primary fei-btn--sm" @click="openAddModal">新增接口</button>
               </div>
             </div>
-            <div class="fei-table-wrap" style="border: none; border-radius: 0">
+            <div class="fei-table-wrap fei-table-wrap--borderless">
               <table class="fei-table">
                 <thead>
                   <tr>
@@ -159,6 +159,26 @@
               </table>
             </div>
             <div v-if="!interfaces.length" class="fei-empty">暂无接口数据</div>
+            <!-- 分页控件 -->
+            <div v-if="interfaces.length" class="fei-pagination">
+              <button
+                class="fei-pagination__btn"
+                :disabled="interfacePagination.current <= 1"
+                @click="changePage(interfacePagination.current - 1)"
+              >
+                上一页
+              </button>
+              <span class="fei-pagination__info">
+                第 {{ interfacePagination.current }} 页 / 共 {{ interfacePagination.totalPages }} 页
+              </span>
+              <button
+                class="fei-pagination__btn"
+                :disabled="interfacePagination.current >= interfacePagination.totalPages"
+                @click="changePage(interfacePagination.current + 1)"
+              >
+                下一页
+              </button>
+            </div>
           </div>
 
           <!-- 配额策略 -->
@@ -288,8 +308,19 @@
 
     <!-- 删除接口确认弹窗 -->
     <Teleport to="body">
-      <div v-if="deleteModalVisible" class="fei-modal-overlay" @click.self="closeDeleteModal">
-        <div class="fei-delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+      <div
+        v-if="deleteModalVisible"
+        ref="deleteModalRef"
+        class="fei-modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteModalTitle"
+        tabindex="-1"
+        @click.self="closeDeleteModal"
+        @keyup.esc="closeDeleteModal"
+        @keydown="handleDeleteModalKeydown"
+      >
+        <div class="fei-delete-modal">
           <div class="fei-delete-modal__head">
             <div class="fei-delete-modal__icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -321,7 +352,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import DashboardView from '@/views/admin/DashboardView.vue';
@@ -372,6 +403,14 @@ const interfaceQuotaType = ref('');
 /** 调用总数字段排序方向 */
 const totalNumSortOrder = ref<SortOrder | ''>('');
 
+/** 接口列表分页状态 */
+const interfacePagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  totalPages: 0,
+});
+
 const toast = reactive({
   visible: false,
   type: 'info' as 'success' | 'error' | 'info',
@@ -382,11 +421,17 @@ const toast = reactive({
 const editModalVisible = ref(false);
 const editSubmitting = ref(false);
 const modalMode = ref<'add' | 'edit'>('edit');
-const editForm = reactive({
+
+/**
+ * 创建默认的编辑表单。
+ * 使用工厂函数替代逐字段重置，提高可维护性。
+ * @returns 默认编辑表单对象
+ */
+const createDefaultEditForm = () => ({
   id: 0,
   name: '',
   method: 'GET',
-  quotaType: 'BASIC_QUOTA',
+  quotaType: 'BASIC_QUOTA' as InterfaceQuotaType,
   url: '',
   path: '',
   targetHost: '',
@@ -396,10 +441,15 @@ const editForm = reactive({
   responseHeader: '',
 });
 
+const editForm = reactive(createDefaultEditForm());
+
 /** 删除确认弹窗相关状态 */
 const deleteModalVisible = ref(false);
 const deleteSubmitting = ref(false);
 const deleteTarget = ref<InterfaceInfoVO | null>(null);
+
+/** 删除弹窗引用，用于焦点陷阱 */
+const deleteModalRef = ref<HTMLElement | null>(null);
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -479,6 +529,16 @@ const toggleTotalNumSort = async () => {
   } else {
     totalNumSortOrder.value = '';
   }
+  interfacePagination.current = 1;
+  await loadInterfaces();
+};
+
+/** 切换分页 */
+const changePage = async (page: number) => {
+  if (page < 1 || page > interfacePagination.totalPages) {
+    return;
+  }
+  interfacePagination.current = page;
   await loadInterfaces();
 };
 
@@ -494,7 +554,10 @@ const loadLoginUser = async () => {
 
 const loadInterfaces = async () => {
   try {
-    const params: InterfaceQuery = { current: 1, pageSize: 10 };
+    const params: InterfaceQuery = {
+      current: interfacePagination.current,
+      pageSize: interfacePagination.pageSize,
+    };
     if (interfaceStatus.value !== '') params.status = interfaceStatus.value;
     if (interfaceQuotaType.value) params.quotaType = interfaceQuotaType.value;
     if (interfaceSearch.value) params.name = interfaceSearch.value;
@@ -503,10 +566,17 @@ const loadInterfaces = async () => {
       params.sortOrder = totalNumSortOrder.value;
     }
     const res = await interfaceService.listPage(params);
-    interfaces.value = res.data?.records ?? [];
+    const pageData = res.data;
+    interfaces.value = pageData?.records ?? [];
+    interfacePagination.total = pageData?.total ?? 0;
+    interfacePagination.totalPages = pageData?.total
+      ? Math.ceil(pageData.total / interfacePagination.pageSize)
+      : 0;
   } catch (error) {
     console.error('[AdminView] 加载接口列表失败:', error);
     interfaces.value = [];
+    interfacePagination.total = 0;
+    interfacePagination.totalPages = 0;
   }
 };
 
@@ -547,12 +617,65 @@ const offlineInterface = async (id: number) => {
 };
 
 /**
+ * 获取弹窗内所有可聚焦元素。
+ * @param container 弹窗容器
+ * @returns 可聚焦元素列表
+ */
+const getFocusableElements = (container: HTMLElement): HTMLElement[] => {
+  const selectors = [
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ];
+  return Array.from(container.querySelectorAll(selectors.join(', ')));
+};
+
+/**
+ * 实现删除弹窗焦点陷阱。
+ * @param event 键盘事件
+ */
+const handleDeleteModalKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Tab' || !deleteModalRef.value) {
+    return;
+  }
+
+  const focusableElements = getFocusableElements(deleteModalRef.value);
+  if (!focusableElements.length) {
+    return;
+  }
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (event.shiftKey) {
+    if (document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    }
+  } else {
+    if (document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+};
+
+/**
  * 打开删除确认弹窗
  * @param item 待删除的接口信息
  */
 const openDeleteModal = (item: InterfaceInfoVO) => {
   deleteTarget.value = item;
   deleteModalVisible.value = true;
+  // 下一帧聚焦第一个按钮
+  nextTick(() => {
+    if (deleteModalRef.value) {
+      const firstButton = deleteModalRef.value.querySelector('button') as HTMLElement;
+      firstButton?.focus();
+    }
+  });
 };
 
 /** 关闭删除确认弹窗 */
@@ -587,17 +710,8 @@ const confirmDeleteInterface = async () => {
 };
 
 const resetEditForm = () => {
-  editForm.id = 0;
-  editForm.name = '';
-  editForm.method = 'GET';
-  editForm.quotaType = 'BASIC_QUOTA';
-  editForm.url = '';
-  editForm.path = '';
-  editForm.targetHost = '';
-  editForm.description = '';
-  editForm.requestParams = '';
-  editForm.requestHeader = '';
-  editForm.responseHeader = '';
+  const defaults = createDefaultEditForm();
+  Object.assign(editForm, defaults);
 };
 
 const openAddModal = () => {
@@ -754,6 +868,53 @@ watch(activeTab, async (tab) => {
 </script>
 
 <style scoped>
+/* 侧边栏导航内边距 */
+.fei-admin-sidebar-nav--padded {
+  padding: 8px;
+}
+
+/* 表格无边框样式 */
+.fei-table-wrap--borderless {
+  border: none;
+  border-radius: 0;
+}
+
+/* 分页控件样式 */
+.fei-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--fei-border-color, #eee);
+}
+
+.fei-pagination__btn {
+  padding: 6px 16px;
+  font-size: 14px;
+  color: var(--fei-primary);
+  background: rgba(22, 93, 255, 0.08);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fei-pagination__btn:hover:not(:disabled) {
+  background: rgba(22, 93, 255, 0.15);
+}
+
+.fei-pagination__btn:disabled {
+  color: var(--fei-text-muted);
+  background: var(--fei-surface-soft);
+  cursor: not-allowed;
+}
+
+.fei-pagination__info {
+  font-size: 14px;
+  color: var(--fei-text-secondary);
+}
+
 /* 操作按钮样式 */
 .fei-table-actions {
   display: flex;
