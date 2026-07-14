@@ -410,7 +410,8 @@ const copyText = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text);
     showToast('已复制', 'success');
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 复制文本失败:', error);
     showToast('复制失败', 'error');
   }
 };
@@ -419,7 +420,8 @@ const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
     loginUser.value = res.data || null;
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 加载登录用户信息失败:', error);
     loginUser.value = null;
   }
 };
@@ -434,7 +436,8 @@ const loadDetail = async () => {
   try {
     const res = await interfaceService.getDocDetail(id);
     docDetail.value = res.data || null;
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 加载接口文档详情失败:', error);
     docDetail.value = null;
   } finally {
     loading.value = false;
@@ -455,7 +458,8 @@ const handleLogout = async () => {
     setTimeout(() => {
       router.replace('/home');
     }, 1000);
-  } catch {
+  } catch (error) {
+    console.error('[InterfaceDetailView] 退出登录失败:', error);
     showToast('退出失败', 'error');
   }
 };

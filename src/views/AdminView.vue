@@ -349,13 +349,12 @@ const quotaTypeOptions: { label: string; value: InterfaceQuotaType }[] = [
 
 /**
  * 计算当前激活的 Tab
- * 如果 URL 中的 tab 参数无效，则重定向到 dashboard
+ * 如果 URL 中的 tab 参数无效，则默认返回 dashboard
+ * 路由重定向逻辑移至 watch 处理，避免在 computed 中执行副作用
  */
 const activeTab = computed(() => {
   const tab = (route.params.tab as string) || 'interfaces';
   if (!VALID_TABS.includes(tab as (typeof VALID_TABS)[number])) {
-    // 无效的 tab，重定向到 dashboard
-    router.replace('/admin/dashboard');
     return 'dashboard';
   }
   return tab;
@@ -461,7 +460,8 @@ const formatTime = (time?: string) => {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}`;
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 格式化时间失败:', error);
     return time;
   }
 };
@@ -486,7 +486,8 @@ const loadLoginUser = async () => {
   try {
     const res = await userService.getLoginUser();
     loginUser.value = res.data || null;
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 加载登录用户信息失败:', error);
     loginUser.value = null;
   }
 };
@@ -503,7 +504,8 @@ const loadInterfaces = async () => {
     }
     const res = await interfaceService.listPage(params);
     interfaces.value = res.data?.records ?? [];
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 加载接口列表失败:', error);
     interfaces.value = [];
   }
 };
@@ -515,7 +517,8 @@ const loadQuotaConfigs = async () => {
     quotaConfigs.value.forEach((item) => {
       quotaEditMap[item.quotaType] = item.initialQuota;
     });
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 加载配额策略失败:', error);
     quotaConfigs.value = [];
     showToast('配额策略加载失败', 'error');
   }
@@ -526,7 +529,8 @@ const onlineInterface = async (id: number) => {
     await interfaceService.online({ id });
     showToast('接口已上线', 'success');
     await loadInterfaces();
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 接口上线失败:', error);
     showToast('上线失败', 'error');
   }
 };
@@ -536,7 +540,8 @@ const offlineInterface = async (id: number) => {
     await interfaceService.offline({ id });
     showToast('接口已下线', 'success');
     await loadInterfaces();
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 接口下线失败:', error);
     showToast('下线失败', 'error');
   }
 };
@@ -573,7 +578,8 @@ const confirmDeleteInterface = async () => {
     deleteModalVisible.value = false;
     deleteTarget.value = null;
     await loadInterfaces();
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 删除接口失败:', error);
     showToast('删除失败', 'error');
   } finally {
     deleteSubmitting.value = false;
@@ -678,7 +684,8 @@ const submitEdit = async () => {
     showToast(modalMode.value === 'add' ? '接口已新增' : '接口信息已更新', 'success');
     closeEditModal();
     await loadInterfaces();
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 保存接口信息失败:', error);
     showToast(modalMode.value === 'add' ? '新增失败' : '更新失败', 'error');
   } finally {
     editSubmitting.value = false;
@@ -697,7 +704,8 @@ const submitQuotaConfig = async (quotaType: string) => {
     showToast('配额策略已更新，仅对后续新注册用户和后续首次初始化额度的用户生效', 'success');
     await loadQuotaConfigs();
     await loadInterfaces();
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 更新配额策略失败:', error);
     showToast('配额策略更新失败', 'error');
   } finally {
     quotaSavingType.value = '';
@@ -714,7 +722,8 @@ const handleLogout = async () => {
     setTimeout(() => {
       router.replace('/home');
     }, 1000);
-  } catch {
+  } catch (error) {
+    console.error('[AdminView] 退出登录失败:', error);
     showToast('退出失败', 'error');
   }
 };
@@ -728,6 +737,13 @@ onMounted(async () => {
 });
 
 watch(activeTab, async (tab) => {
+  // 如果路由中的 tab 无效，重定向到 dashboard
+  const routeTab = route.params.tab as string;
+  if (routeTab && !VALID_TABS.includes(routeTab as (typeof VALID_TABS)[number])) {
+    router.replace('/admin/dashboard');
+    return;
+  }
+
   if (tab === 'quotas' && !quotaConfigs.value.length) {
     await loadQuotaConfigs();
   }
