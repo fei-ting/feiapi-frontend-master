@@ -638,11 +638,17 @@ const invokeApi = async () => {
   }
 };
 
+/**
+ * 填充示例值。
+ * 如果有结构化参数，填充示例值；否则提示无示例可填充。
+ */
 const fillExample = () => {
   if (structuredParams.value.length) {
     fillStructuredExample();
     return;
   }
+  // 无结构化参数时提示用户
+  showToast('暂无可填充的示例参数', 'info');
 };
 
 const copyInvokeResult = async () => {
