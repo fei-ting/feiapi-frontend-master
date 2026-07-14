@@ -39,8 +39,8 @@
         </section>
 
         <section class="fei-doc-panel fei-panel" aria-labelledby="interface-doc-title">
-          <div class="fei-doc-tabs" role="tablist" aria-label="接口详情标签">
-            <button class="fei-doc-tab is-active" type="button" role="tab" aria-selected="true">接口文档</button>
+          <div class="fei-doc-tabs">
+            <span class="fei-doc-tab is-active">接口文档</span>
           </div>
 
           <div class="fei-doc-section">
