@@ -221,7 +221,17 @@
       <div v-else class="fei-empty fei-card">接口不存在</div>
     </PageContainer>
 
-    <div v-if="dialog.visible" class="fei-modal-mask" role="dialog" aria-modal="true" aria-labelledby="invoke-dialog-title" @keyup.esc="closeDialog" tabindex="0">
+    <div
+      v-if="dialog.visible"
+      ref="dialogRef"
+      class="fei-modal-mask"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="invoke-dialog-title"
+      tabindex="-1"
+      @keyup.esc="closeDialog"
+      @keydown="handleDialogKeydown"
+    >
       <div class="fei-confirm-dialog">
         <h2 id="invoke-dialog-title">{{ dialog.title }}</h2>
         <p>{{ dialog.message }}</p>
@@ -242,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
@@ -253,6 +263,7 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
+import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
 type InvokeTab = 'result' | 'doc';
@@ -272,6 +283,25 @@ interface RequestParamField {
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+
+// 使用共享 composable
+const {
+  toast,
+  showToast,
+  copyText,
+  hasRows,
+  hasText,
+  requiredText,
+  nullableText,
+  rowKey,
+  paramValue,
+  headerRequiredText,
+  headerDescription,
+  requestParamDescription,
+  prettyJson,
+  interfaceSummary,
+} = useInterfaceDoc();
+
 const loading = ref(true);
 const invokeLoading = ref(false);
 const docDetail = ref<InterfaceDocDetailVO | null>(null);
@@ -288,11 +318,6 @@ const dialog = reactive({
   title: '',
   message: '',
   primaryText: '',
-});
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
 });
 
 const loginHref = computed(() => `#/login?redirect=${encodeURIComponent(route.fullPath)}`);
@@ -311,33 +336,14 @@ const invokeHeaderText = computed(() => {
   return headers.map((param) => `${param.name || '-'}: ${paramValue(param)}`).join('\n');
 });
 
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2200);
-};
+/** 弹窗引用，用于焦点陷阱 */
+const dialogRef = ref<HTMLElement | null>(null);
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error && error.message) {
     return error.message;
   }
   return '调用失败，请稍后重试';
-};
-
-const resolveParamType = (value: unknown) => {
-  if (Array.isArray(value)) return 'array';
-  if (value === null) return 'string';
-  if (typeof value === 'string') {
-    const marker = value.trim().toLowerCase();
-    if (['string', 'number', 'boolean', 'object', 'array'].includes(marker)) {
-      return marker;
-    }
-    return 'string';
-  }
-  return typeof value;
 };
 
 const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => {
@@ -456,18 +462,6 @@ const formatInvokeResponse = (data: unknown) => {
   return JSON.stringify(data, null, 2);
 };
 
-const prettyJson = (value: string | undefined, fallback: string) => {
-  const content = value?.trim();
-  if (!content) {
-    return fallback;
-  }
-  try {
-    return JSON.stringify(JSON.parse(content), null, 2);
-  } catch {
-    return content;
-  }
-};
-
 const fillStructuredExample = () => {
   structuredParams.value.forEach((param) => {
     if (param.example === null || param.example === undefined) {
@@ -481,46 +475,6 @@ const fillStructuredExample = () => {
     }
   });
   syncRequestParamsFromFields();
-};
-
-const interfaceSummary = (item: InterfaceDocInterfaceInfoVO) => item.description || '暂无接口描述';
-
-const hasRows = <T>(rows?: T[]) => Boolean(rows?.length);
-
-const hasText = (value?: string) => Boolean(value?.trim());
-
-const requiredText = (required?: boolean) => (required ? '是' : '否');
-
-const nullableText = (nullable?: boolean) => (nullable ? '是' : '否');
-
-const rowKey = (param: InterfaceDocParamVO) => `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
-
-const paramValue = (param: InterfaceDocParamVO) => param.exampleValue || param.defaultValue || '-';
-
-const headerRequiredText = (param: InterfaceDocParamVO) => {
-  if (param.required) return '是';
-  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) !== '-') return '是';
-  return '否';
-};
-
-const headerDescription = (param: InterfaceDocParamVO) => {
-  if (param.description && !param.description.includes('旧请求头字段自动转换')) {
-    return param.description;
-  }
-  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) === 'application/json') {
-    return '请求体为 JSON 格式时必须设置';
-  }
-  return param.description || '-';
-};
-
-const requestParamDescription = (param: InterfaceDocParamVO) => {
-  const parts = [
-    param.description && !param.description.includes('旧字段自动转换') ? param.description : '',
-    param.exampleValue ? `例如：${param.exampleValue}` : '',
-    param.defaultValue ? `默认值：${param.defaultValue}` : '',
-    param.validationRule ? param.validationRule : '',
-  ].filter(Boolean);
-  return parts.length ? parts.join('。') : '-';
 };
 
 const loadLoginUser = async () => {
@@ -557,12 +511,68 @@ const loadDetail = async () => {
   }
 };
 
+/**
+ * 获取弹窗内所有可聚焦元素。
+ * @param container 弹窗容器
+ * @returns 可聚焦元素列表
+ */
+const getFocusableElements = (container: HTMLElement): HTMLElement[] => {
+  const selectors = [
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ];
+  return Array.from(container.querySelectorAll(selectors.join(', ')));
+};
+
+/**
+ * 实现焦点陷阱。
+ * 弹窗打开时聚焦第一个元素，Tab 键循环焦点。
+ * @param event 键盘事件
+ */
+const handleDialogKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Tab' || !dialogRef.value) {
+    return;
+  }
+
+  const focusableElements = getFocusableElements(dialogRef.value);
+  if (!focusableElements.length) {
+    return;
+  }
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (event.shiftKey) {
+    // Shift + Tab：从第一个元素跳到最后一个
+    if (document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    }
+  } else {
+    // Tab：从最后一个元素跳到第一个
+    if (document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+};
+
 const openLoginDialog = () => {
   dialog.visible = true;
   dialog.action = 'login';
   dialog.title = '需要登录';
   dialog.message = '需要登录后才能调用接口。';
   dialog.primaryText = '去登录';
+  // 下一帧聚焦第一个按钮
+  nextTick(() => {
+    if (dialogRef.value) {
+      const firstButton = dialogRef.value.querySelector('button') as HTMLElement;
+      firstButton?.focus();
+    }
+  });
 };
 
 const openInvokeConfirmDialog = () => {
@@ -571,6 +581,13 @@ const openInvokeConfirmDialog = () => {
   dialog.title = '确认发起调用';
   dialog.message = '此次发起调用会使用当前登录账号的 APIKey 发起实际调用，请谨慎操作。';
   dialog.primaryText = '确认调用';
+  // 下一帧聚焦第一个按钮
+  nextTick(() => {
+    if (dialogRef.value) {
+      const firstButton = dialogRef.value.querySelector('button') as HTMLElement;
+      firstButton?.focus();
+    }
+  });
 };
 
 const closeDialog = () => {
@@ -621,24 +638,24 @@ const invokeApi = async () => {
   }
 };
 
+/**
+ * 填充示例值。
+ * 如果有结构化参数，填充示例值；否则提示无示例可填充。
+ */
 const fillExample = () => {
   if (structuredParams.value.length) {
     fillStructuredExample();
     return;
   }
+  // 无结构化参数时提示用户
+  showToast('暂无可填充的示例参数', 'info');
 };
 
 const copyInvokeResult = async () => {
   if (!invokeResult.value) {
     return;
   }
-  try {
-    await navigator.clipboard.writeText(invokeResult.value);
-    showToast('复制成功', 'success');
-  } catch (error) {
-    console.error('[InterfaceInvokeView] 复制调用结果失败:', error);
-    showToast('复制失败，请手动选择内容复制', 'error');
-  }
+  await copyText(invokeResult.value);
 };
 
 const handleLogout = async () => {

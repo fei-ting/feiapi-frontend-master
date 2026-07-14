@@ -2,9 +2,17 @@
   --fei-primary: #2f6df6;
   --fei-primary-dark: #2458c9;
   --fei-primary-light: #dce9ff;
+  --fei-primary-soft: rgba(47, 109, 246, 0.08);
+  --fei-primary-soft-hover: rgba(47, 109, 246, 0.15);
   --fei-success: #16a34a;
   --fei-warning: #d97706;
   --fei-error: #ef4444;
+  --fei-error-dark: #dc2626;
+  --fei-error-soft: rgba(239, 68, 68, 0.08);
+  --fei-error-soft-hover: rgba(239, 68, 68, 0.15);
+  --fei-error-surface: #fef2f2;
+  --fei-error-border: #fee2e2;
+  --fei-on-error: #ffffff;
   --fei-text: #101828;
   --fei-text-secondary: #475467;
   --fei-text-muted: #98a2b3;
@@ -17,5 +25,9 @@
   --fei-radius-lg: 16px;
   --fei-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
   --fei-shadow-soft: 0 4px 12px rgba(16, 24, 40, 0.06);
+  --fei-shadow-modal: 0 20px 60px rgba(16, 24, 40, 0.15);
+  --fei-shadow-dialog: 0 24px 70px rgba(16, 24, 40, 0.22);
+  --fei-overlay: rgba(15, 23, 42, 0.46);
+  --fei-focus-ring: 0 0 0 2px rgba(47, 109, 246, 0.1);
   --fei-header-height: 64px;
 }

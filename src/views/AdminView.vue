@@ -3,65 +3,22 @@
     <AppHeader :login-user="loginUser" active="admin" @logout="handleLogout" />
     <PageContainer>
       <div class="fei-admin-layout">
-        <!-- 桌面端侧边栏 -->
-        <aside class="fei-admin-sidebar">
-          <div class="fei-card">
-            <nav class="fei-admin-sidebar-nav" style="padding: 8px">
-              <a
-                class="fei-admin-nav-link"
-                :class="{ 'is-active': activeTab === 'dashboard' }"
-                href="#/admin/dashboard"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                工作台
-              </a>
-              <a
-                class="fei-admin-nav-link"
-                :class="{ 'is-active': activeTab === 'interfaces' }"
-                href="#/admin/interfaces"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                接口管理
-              </a>
-              <a
-                class="fei-admin-nav-link"
-                :class="{ 'is-active': activeTab === 'quotas' }"
-                href="#/admin/quotas"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                配额策略
-              </a>
-            </nav>
-          </div>
-        </aside>
+        <!-- 桌面端和移动端共用同一组导航，布局由 CSS 响应式切换 -->
+        <nav class="fei-admin-navigation" aria-label="管理后台导航">
+          <RouterLink
+            v-for="item in adminNavItems"
+            :key="item.key"
+            class="fei-admin-navigation__link"
+            :class="{ 'is-active': activeTab === item.key }"
+            :to="`/admin/${item.key}`"
+          >
+            <component :is="item.icon" class="fei-admin-navigation__icon" aria-hidden="true" />
+            <span>{{ item.label }}</span>
+          </RouterLink>
+        </nav>
 
         <!-- 内容区 -->
         <div class="fei-admin-content">
-          <!-- 移动端 Tab 导航 -->
-          <div class="fei-admin-tabs">
-            <button
-              class="fei-admin-tab"
-              :class="{ 'is-active': activeTab === 'dashboard' }"
-              @click="switchTab('dashboard')"
-            >
-              工作台
-            </button>
-            <button
-              class="fei-admin-tab"
-              :class="{ 'is-active': activeTab === 'interfaces' }"
-              @click="switchTab('interfaces')"
-            >
-              接口管理
-            </button>
-            <button
-              class="fei-admin-tab"
-              :class="{ 'is-active': activeTab === 'quotas' }"
-              @click="switchTab('quotas')"
-            >
-              配额策略
-            </button>
-          </div>
-
           <!-- 工作台 -->
           <DashboardView v-if="activeTab === 'dashboard'" :user-name="loginUser?.userName ?? '管理员'" />
 
@@ -92,7 +49,7 @@
                 <button class="fei-btn fei-btn--primary fei-btn--sm" @click="openAddModal">新增接口</button>
               </div>
             </div>
-            <div class="fei-table-wrap" style="border: none; border-radius: 0">
+            <div class="fei-table-wrap fei-table-wrap--borderless">
               <table class="fei-table">
                 <thead>
                   <tr>
@@ -159,6 +116,26 @@
               </table>
             </div>
             <div v-if="!interfaces.length" class="fei-empty">暂无接口数据</div>
+            <!-- 分页控件 -->
+            <div v-if="interfaces.length" class="fei-pagination">
+              <button
+                class="fei-pagination__btn"
+                :disabled="interfacePagination.current <= 1"
+                @click="changePage(interfacePagination.current - 1)"
+              >
+                上一页
+              </button>
+              <span class="fei-pagination__info">
+                第 {{ interfacePagination.current }} 页 / 共 {{ interfacePagination.totalPages }} 页
+              </span>
+              <button
+                class="fei-pagination__btn"
+                :disabled="interfacePagination.current >= interfacePagination.totalPages"
+                @click="changePage(interfacePagination.current + 1)"
+              >
+                下一页
+              </button>
+            </div>
           </div>
 
           <!-- 配额策略 -->
@@ -166,9 +143,7 @@
             <div class="fei-card-header">
               <h2 class="fei-section-title">配额策略配置</h2>
               <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadQuotaConfigs">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
-                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
-                </svg>
+                <ReloadOutlined class="fei-button-icon" aria-hidden="true" />
                 刷新
               </button>
             </div>
@@ -288,15 +263,22 @@
 
     <!-- 删除接口确认弹窗 -->
     <Teleport to="body">
-      <div v-if="deleteModalVisible" class="fei-modal-overlay" @click.self="closeDeleteModal">
-        <div class="fei-delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+      <div
+        v-if="deleteModalVisible"
+        ref="deleteModalRef"
+        class="fei-modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteModalTitle"
+        tabindex="-1"
+        @click.self="closeDeleteModal"
+        @keyup.esc="closeDeleteModal"
+        @keydown="handleDeleteModalKeydown"
+      >
+        <div class="fei-delete-modal">
           <div class="fei-delete-modal__head">
             <div class="fei-delete-modal__icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                <path d="M10.3 4.4 2.7 17.6A2 2 0 0 0 4.4 20h15.2a2 2 0 0 0 1.7-2.4L13.7 4.4a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-              </svg>
+              <ExclamationCircleOutlined aria-hidden="true" />
             </div>
             <div class="fei-delete-modal__title-wrap">
               <h3 id="deleteModalTitle">确认删除接口</h3>
@@ -321,8 +303,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import {
+  AppstoreOutlined,
+  DollarOutlined,
+  ExclamationCircleOutlined,
+  HomeOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons-vue';
 import AppHeader from '@/components/AppHeader.vue';
 import DashboardView from '@/views/admin/DashboardView.vue';
 import AppFooter from '@/components/AppFooter.vue';
@@ -340,6 +329,13 @@ const userStore = useUserStore();
 
 /** 有效的后台 Tab 列表 */
 const VALID_TABS = ['dashboard', 'interfaces', 'quotas'] as const;
+
+/** 管理后台导航配置，桌面端和移动端共用 */
+const adminNavItems = [
+  { key: 'dashboard', label: '工作台', icon: HomeOutlined },
+  { key: 'interfaces', label: '接口管理', icon: AppstoreOutlined },
+  { key: 'quotas', label: '配额策略', icon: DollarOutlined },
+] as const;
 
 const quotaTypeOptions: { label: string; value: InterfaceQuotaType }[] = [
   { label: '免费无限接口', value: 'FREE_UNLIMITED' },
@@ -372,6 +368,14 @@ const interfaceQuotaType = ref('');
 /** 调用总数字段排序方向 */
 const totalNumSortOrder = ref<SortOrder | ''>('');
 
+/** 接口列表分页状态 */
+const interfacePagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  totalPages: 0,
+});
+
 const toast = reactive({
   visible: false,
   type: 'info' as 'success' | 'error' | 'info',
@@ -382,11 +386,17 @@ const toast = reactive({
 const editModalVisible = ref(false);
 const editSubmitting = ref(false);
 const modalMode = ref<'add' | 'edit'>('edit');
-const editForm = reactive({
+
+/**
+ * 创建默认的编辑表单。
+ * 使用工厂函数替代逐字段重置，提高可维护性。
+ * @returns 默认编辑表单对象
+ */
+const createDefaultEditForm = () => ({
   id: 0,
   name: '',
   method: 'GET',
-  quotaType: 'BASIC_QUOTA',
+  quotaType: 'BASIC_QUOTA' as InterfaceQuotaType,
   url: '',
   path: '',
   targetHost: '',
@@ -396,10 +406,15 @@ const editForm = reactive({
   responseHeader: '',
 });
 
+const editForm = reactive(createDefaultEditForm());
+
 /** 删除确认弹窗相关状态 */
 const deleteModalVisible = ref(false);
 const deleteSubmitting = ref(false);
 const deleteTarget = ref<InterfaceInfoVO | null>(null);
+
+/** 删除弹窗引用，用于焦点陷阱 */
+const deleteModalRef = ref<HTMLElement | null>(null);
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -466,10 +481,6 @@ const formatTime = (time?: string) => {
   }
 };
 
-const switchTab = (tab: string) => {
-  router.push(`/admin/${tab}`);
-};
-
 /** 切换调用总数排序方向 */
 const toggleTotalNumSort = async () => {
   if (!totalNumSortOrder.value) {
@@ -479,6 +490,16 @@ const toggleTotalNumSort = async () => {
   } else {
     totalNumSortOrder.value = '';
   }
+  interfacePagination.current = 1;
+  await loadInterfaces();
+};
+
+/** 切换分页 */
+const changePage = async (page: number) => {
+  if (page < 1 || page > interfacePagination.totalPages) {
+    return;
+  }
+  interfacePagination.current = page;
   await loadInterfaces();
 };
 
@@ -494,7 +515,10 @@ const loadLoginUser = async () => {
 
 const loadInterfaces = async () => {
   try {
-    const params: InterfaceQuery = { current: 1, pageSize: 10 };
+    const params: InterfaceQuery = {
+      current: interfacePagination.current,
+      pageSize: interfacePagination.pageSize,
+    };
     if (interfaceStatus.value !== '') params.status = interfaceStatus.value;
     if (interfaceQuotaType.value) params.quotaType = interfaceQuotaType.value;
     if (interfaceSearch.value) params.name = interfaceSearch.value;
@@ -503,10 +527,17 @@ const loadInterfaces = async () => {
       params.sortOrder = totalNumSortOrder.value;
     }
     const res = await interfaceService.listPage(params);
-    interfaces.value = res.data?.records ?? [];
+    const pageData = res.data;
+    interfaces.value = pageData?.records ?? [];
+    interfacePagination.total = pageData?.total ?? 0;
+    interfacePagination.totalPages = pageData?.total
+      ? Math.ceil(pageData.total / interfacePagination.pageSize)
+      : 0;
   } catch (error) {
     console.error('[AdminView] 加载接口列表失败:', error);
     interfaces.value = [];
+    interfacePagination.total = 0;
+    interfacePagination.totalPages = 0;
   }
 };
 
@@ -547,12 +578,65 @@ const offlineInterface = async (id: number) => {
 };
 
 /**
+ * 获取弹窗内所有可聚焦元素。
+ * @param container 弹窗容器
+ * @returns 可聚焦元素列表
+ */
+const getFocusableElements = (container: HTMLElement): HTMLElement[] => {
+  const selectors = [
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ];
+  return Array.from(container.querySelectorAll(selectors.join(', ')));
+};
+
+/**
+ * 实现删除弹窗焦点陷阱。
+ * @param event 键盘事件
+ */
+const handleDeleteModalKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Tab' || !deleteModalRef.value) {
+    return;
+  }
+
+  const focusableElements = getFocusableElements(deleteModalRef.value);
+  if (!focusableElements.length) {
+    return;
+  }
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (event.shiftKey) {
+    if (document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    }
+  } else {
+    if (document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+};
+
+/**
  * 打开删除确认弹窗
  * @param item 待删除的接口信息
  */
 const openDeleteModal = (item: InterfaceInfoVO) => {
   deleteTarget.value = item;
   deleteModalVisible.value = true;
+  // 下一帧聚焦第一个按钮
+  nextTick(() => {
+    if (deleteModalRef.value) {
+      const firstButton = deleteModalRef.value.querySelector('button') as HTMLElement;
+      firstButton?.focus();
+    }
+  });
 };
 
 /** 关闭删除确认弹窗 */
@@ -587,17 +671,8 @@ const confirmDeleteInterface = async () => {
 };
 
 const resetEditForm = () => {
-  editForm.id = 0;
-  editForm.name = '';
-  editForm.method = 'GET';
-  editForm.quotaType = 'BASIC_QUOTA';
-  editForm.url = '';
-  editForm.path = '';
-  editForm.targetHost = '';
-  editForm.description = '';
-  editForm.requestParams = '';
-  editForm.requestHeader = '';
-  editForm.responseHeader = '';
+  const defaults = createDefaultEditForm();
+  Object.assign(editForm, defaults);
 };
 
 const openAddModal = () => {
@@ -744,16 +819,104 @@ watch(activeTab, async (tab) => {
     return;
   }
 
-  if (tab === 'quotas' && !quotaConfigs.value.length) {
+  // 每次切换 tab 都刷新数据，确保数据最新
+  if (tab === 'quotas') {
     await loadQuotaConfigs();
   }
-  if (tab === 'interfaces' && !interfaces.value.length) {
+  if (tab === 'interfaces') {
     await loadInterfaces();
   }
 });
 </script>
 
 <style scoped>
+/* 管理后台自适应导航 */
+.fei-admin-navigation {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-admin-navigation__link {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 8px;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.fei-admin-navigation__link:hover,
+.fei-admin-navigation__link.is-active {
+  color: var(--fei-primary);
+  border-bottom-color: var(--fei-primary);
+}
+
+.fei-admin-navigation__link:focus-visible {
+  outline: none;
+  box-shadow: var(--fei-focus-ring);
+}
+
+.fei-admin-navigation__icon {
+  flex: 0 0 auto;
+  font-size: 17px;
+}
+
+.fei-button-icon {
+  margin-right: 4px;
+  font-size: 14px;
+}
+
+/* 表格无边框样式 */
+.fei-table-wrap--borderless {
+  border: none;
+  border-radius: 0;
+}
+
+/* 分页控件样式 */
+.fei-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--fei-border);
+}
+
+.fei-pagination__btn {
+  padding: 6px 16px;
+  font-size: 14px;
+  color: var(--fei-primary);
+  background: var(--fei-primary-soft);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fei-pagination__btn:hover:not(:disabled) {
+  background: var(--fei-primary-soft-hover);
+}
+
+.fei-pagination__btn:disabled {
+  color: var(--fei-text-muted);
+  background: var(--fei-surface-soft);
+  cursor: not-allowed;
+}
+
+.fei-pagination__info {
+  font-size: 14px;
+  color: var(--fei-text-secondary);
+}
+
 /* 操作按钮样式 */
 .fei-table-actions {
   display: flex;
@@ -869,7 +1032,7 @@ watch(activeTab, async (tab) => {
   padding: 4px 12px;
   font-size: 13px;
   color: var(--fei-primary);
-  background: rgba(22, 93, 255, 0.08);
+  background: var(--fei-primary-soft);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -877,16 +1040,16 @@ watch(activeTab, async (tab) => {
 }
 
 .fei-action-btn:hover {
-  background: rgba(22, 93, 255, 0.15);
+  background: var(--fei-primary-soft-hover);
 }
 
 .fei-action-btn--danger {
-  color: #e33e33;
-  background: rgba(227, 62, 51, 0.08);
+  color: var(--fei-error);
+  background: var(--fei-error-soft);
 }
 
 .fei-action-btn--danger:hover {
-  background: rgba(227, 62, 51, 0.15);
+  background: var(--fei-error-soft-hover);
 }
 
 /* 配额策略卡片样式 */
@@ -925,21 +1088,21 @@ watch(activeTab, async (tab) => {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.46);
+  background: var(--fei-overlay);
   backdrop-filter: blur(4px);
   z-index: 1000;
 }
 
 /* 弹窗主体 */
 .fei-modal {
-  background: var(--fei-bg-primary, #fff);
+  background: var(--fei-surface);
   border-radius: 12px;
   width: 90%;
   max-width: 640px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--fei-shadow-modal);
 }
 
 .fei-modal-header {
@@ -947,7 +1110,7 @@ watch(activeTab, async (tab) => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--fei-border-color, #eee);
+  border-bottom: 1px solid var(--fei-border);
 }
 
 .fei-modal-header h3 {
@@ -961,12 +1124,12 @@ watch(activeTab, async (tab) => {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: var(--fei-text-muted, #999);
+  color: var(--fei-text-muted);
   padding: 4px;
 }
 
 .fei-modal-close:hover {
-  color: var(--fei-text-primary, #333);
+  color: var(--fei-text);
 }
 
 .fei-modal-body {
@@ -980,18 +1143,18 @@ watch(activeTab, async (tab) => {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid var(--fei-border-color, #eee);
+  border-top: 1px solid var(--fei-border);
 }
 
 .fei-btn--danger {
-  color: #fff;
+  color: var(--fei-on-error);
   background: var(--fei-error);
   border-color: var(--fei-error);
 }
 
 .fei-btn--danger:hover:not(:disabled) {
-  background: #dc2626;
-  border-color: #dc2626;
+  background: var(--fei-error-dark);
+  border-color: var(--fei-error-dark);
 }
 
 .fei-btn:disabled {
@@ -1003,9 +1166,9 @@ watch(activeTab, async (tab) => {
   width: min(420px, 100%);
   overflow: hidden;
   background: var(--fei-surface);
-  border: 1px solid rgba(228, 231, 236, 0.92);
+  border: 1px solid var(--fei-border);
   border-radius: var(--fei-radius-lg);
-  box-shadow: 0 24px 70px rgba(16, 24, 40, 0.22);
+  box-shadow: var(--fei-shadow-dialog);
   animation: feiModalEnter 0.18s ease-out;
 }
 
@@ -1023,8 +1186,8 @@ watch(activeTab, async (tab) => {
   width: 44px;
   height: 44px;
   color: var(--fei-error);
-  background: #fef2f2;
-  border: 1px solid #fee2e2;
+  background: var(--fei-error-surface);
+  border: 1px solid var(--fei-error-border);
   border-radius: 12px;
 }
 
@@ -1120,18 +1283,18 @@ watch(activeTab, async (tab) => {
   margin-bottom: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--fei-text-primary, #333);
+  color: var(--fei-text);
 }
 
 .fei-required {
-  color: #e33e33;
+  color: var(--fei-error);
   margin-left: 2px;
 }
 
 .fei-textarea {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--fei-border-color, #d9d9d9);
+  border: 1px solid var(--fei-border);
   border-radius: 6px;
   font-size: 14px;
   font-family: inherit;
@@ -1141,8 +1304,8 @@ watch(activeTab, async (tab) => {
 
 .fei-textarea:focus {
   outline: none;
-  border-color: var(--fei-primary, #165dff);
-  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+  border-color: var(--fei-primary);
+  box-shadow: var(--fei-focus-ring);
 }
 
 .fei-quota-config-grid {
@@ -1198,6 +1361,39 @@ watch(activeTab, async (tab) => {
   font-size: 24px;
   font-weight: 900;
   color: var(--fei-primary);
+}
+
+@media (min-width: 1024px) {
+  .fei-admin-navigation {
+    display: flex;
+    align-self: start;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    overflow: visible;
+    background: var(--fei-surface);
+    border: 1px solid var(--fei-border);
+    border-radius: var(--fei-radius-lg);
+    box-shadow: var(--fei-shadow-soft);
+  }
+
+  .fei-admin-navigation__link {
+    justify-content: flex-start;
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 0;
+    border-radius: var(--fei-radius-md);
+  }
+
+  .fei-admin-navigation__link:hover,
+  .fei-admin-navigation__link.is-active {
+    background: var(--fei-primary-light);
+  }
+
+  .fei-admin-navigation__icon {
+    font-size: 18px;
+  }
 }
 
 /* 响应式适配 */

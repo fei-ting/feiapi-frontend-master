@@ -39,8 +39,8 @@
         </section>
 
         <section class="fei-doc-panel fei-panel" aria-labelledby="interface-doc-title">
-          <div class="fei-doc-tabs" role="tablist" aria-label="接口详情标签">
-            <button class="fei-doc-tab is-active" type="button" role="tab" aria-selected="true">接口文档</button>
+          <div class="fei-doc-tabs">
+            <span class="fei-doc-tab is-active">接口文档</span>
           </div>
 
           <div class="fei-doc-section">
@@ -252,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CopyOutlined } from '@ant-design/icons-vue';
 import AppHeader from '@/components/AppHeader.vue';
@@ -264,25 +264,38 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
+import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO, UserVO } from '@/types/api';
 
-/** Toast 显示时长（毫秒） */
-const TOAST_DURATION = 2200;
 /** 退出登录后跳转延迟（毫秒） */
 const LOGOUT_REDIRECT_DELAY = 1000;
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+
+// 使用共享 composable
+const {
+  toast,
+  showToast,
+  copyText,
+  hasRows,
+  hasText,
+  requiredText,
+  nullableText,
+  rowKey,
+  paramValue,
+  headerRequiredText,
+  headerDescription,
+  requestParamDescription,
+  prettyJson,
+  interfaceSummary,
+} = useInterfaceDoc();
+
 const loading = ref(true);
 const docDetail = ref<InterfaceDocDetailVO | null>(null);
 const loginUser = ref<UserVO | null>(null);
 const exampleTab = ref<'success' | 'fail'>('success');
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
 
 const detail = computed<InterfaceDocInterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
 
@@ -313,15 +326,6 @@ const responseParamNameMap = computed(() => new Map(
     .map((param) => [param.id as number, param.name as string]),
 ));
 
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, TOAST_DURATION);
-};
-
 const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
 
 const quotaTypeText = (item: InterfaceDocInterfaceInfoVO) => {
@@ -329,21 +333,7 @@ const quotaTypeText = (item: InterfaceDocInterfaceInfoVO) => {
   return item.quotaTypeText || '基础额度接口';
 };
 
-const interfaceSummary = (item: InterfaceDocInterfaceInfoVO) => item.description || '暂无接口描述';
-
 const methodText = (item: InterfaceDocInterfaceInfoVO) => (item.method || 'GET').toUpperCase();
-
-const prettyJson = (value: string | undefined, fallback: string) => {
-  const content = value?.trim();
-  if (!content) {
-    return fallback;
-  }
-  try {
-    return JSON.stringify(JSON.parse(content), null, 2);
-  } catch {
-    return content;
-  }
-};
 
 const formatDateTime = (value?: string) => {
   if (!value) return '-';
@@ -356,14 +346,6 @@ const formatDateTime = (value?: string) => {
   ].join(' ');
 };
 
-const hasRows = <T>(rows?: T[]) => Boolean(rows?.length);
-
-const hasText = (value?: string) => Boolean(value?.trim());
-
-const requiredText = (required?: boolean) => (required ? '是' : '否');
-
-const nullableText = (nullable?: boolean) => (nullable ? '是' : '否');
-
 /** 将参数位置转换为面向使用者的名称。 */
 const paramSceneText = (paramScene?: string) => {
   if (paramScene === 'QUERY') return '查询参数';
@@ -375,50 +357,6 @@ const paramSceneText = (paramScene?: string) => {
 const parentFieldText = (param: InterfaceDocParamVO) => {
   if (!param.parentId) return '-';
   return responseParamNameMap.value.get(param.parentId) || `未知字段（ID：${param.parentId}）`;
-};
-
-const rowKey = (param: InterfaceDocParamVO) => `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
-
-const paramValue = (param: InterfaceDocParamVO) => param.exampleValue || param.defaultValue || '-';
-
-const headerRequiredText = (param: InterfaceDocParamVO) => {
-  if (param.required) return '是';
-  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) !== '-') return '是';
-  return '否';
-};
-
-const headerDescription = (param: InterfaceDocParamVO) => {
-  if (param.description && !param.description.includes('旧请求头字段自动转换')) {
-    return param.description;
-  }
-  if (param.name?.toLowerCase() === 'content-type' && paramValue(param) === 'application/json') {
-    return '请求体为 JSON 格式时必须设置';
-  }
-  return param.description || '-';
-};
-
-const requestParamDescription = (param: InterfaceDocParamVO) => {
-  const parts = [
-    param.description && !param.description.includes('旧字段自动转换') ? param.description : '',
-    param.exampleValue ? `例如：${param.exampleValue}` : '',
-    param.defaultValue ? `默认值：${param.defaultValue}` : '',
-    param.validationRule ? param.validationRule : '',
-  ].filter(Boolean);
-  return parts.length ? parts.join('。') : '-';
-};
-
-const copyText = async (text: string) => {
-  if (!text.trim()) {
-    showToast('暂无可复制内容', 'info');
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('已复制', 'success');
-  } catch (error) {
-    console.error('[InterfaceDetailView] 复制文本失败:', error);
-    showToast('复制失败', 'error');
-  }
 };
 
 const loadLoginUser = async () => {
