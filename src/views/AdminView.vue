@@ -359,12 +359,12 @@ const loginUser = ref<UserVO | null>(null);
 const interfaces = ref<InterfaceInfoVO[]>([]);
 const quotaConfigs = ref<InterfaceQuotaConfigVO[]>([]);
 const quotaEditMap = reactive<Record<string, number>>({});
-const quotaSavingType = ref('');
+const quotaSavingType = ref<InterfaceQuotaType | ''>('');
 
 /** 接口管理筛选 */
 const interfaceSearch = ref('');
 const interfaceStatus = ref<string | number>('');
-const interfaceQuotaType = ref('');
+const interfaceQuotaType = ref<InterfaceQuotaType | ''>('');
 /** 调用总数字段排序方向 */
 const totalNumSortOrder = ref<SortOrder | ''>('');
 
@@ -767,7 +767,7 @@ const submitEdit = async () => {
   }
 };
 
-const submitQuotaConfig = async (quotaType: string) => {
+const submitQuotaConfig = async (quotaType: InterfaceQuotaType) => {
   const initialQuota = Number(quotaEditMap[quotaType]);
   if (!Number.isInteger(initialQuota) || initialQuota <= 0) {
     showToast('初始额度必须是大于 0 的整数', 'error');
