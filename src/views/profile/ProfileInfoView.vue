@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import type { UserVO } from '@/types/api';
@@ -178,20 +178,6 @@ const emit = defineEmits<{
 }>();
 
 /**
- * 加载当前登录用户
- */
-const loadLoginUser = async () => {
-  try {
-    const user = await userStore.fetchLoginUser();
-    syncProfileForm(user);
-    return Boolean(user);
-  } catch {
-    syncProfileForm(null);
-    return false;
-  }
-};
-
-/**
  * 提交个人资料修改
  */
 const handleProfileSubmit = async () => {
@@ -211,7 +197,7 @@ const handleProfileSubmit = async () => {
       gender: profileForm.gender,
     });
     showToast('个人信息已更新', 'success');
-    await loadLoginUser();
+    await userStore.refreshLoginUser();
   } catch (error) {
     showToast(getErrorMessage(error, '个人信息更新失败'), 'error');
   } finally {
@@ -260,7 +246,9 @@ const handlePasswordSubmit = async () => {
   }
 };
 
-onMounted(async () => {
-  await loadLoginUser();
-});
+watch(
+  () => userStore.loginUser,
+  (user) => syncProfileForm(user),
+  { immediate: true },
+);
 </script>

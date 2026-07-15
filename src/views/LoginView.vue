@@ -226,10 +226,9 @@ const handleSubmit = async () => {
     // 延迟跳转，让用户看到成功提示
     await new Promise(resolve => setTimeout(resolve, 1200));
 
-    // 获取登录用户信息，管理员跳转后台工作台
+    // 刷新统一会话状态，管理员跳转后台工作台
     try {
-      const user = await userService.getLoginUser();
-      userStore.setLoginUser(user || null);
+      const user = await userStore.refreshLoginUser();
       if (user?.userRole === 'admin') {
         await router.push('/admin/dashboard');
         return;

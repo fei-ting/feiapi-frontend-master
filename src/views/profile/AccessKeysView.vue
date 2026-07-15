@@ -3,7 +3,7 @@
     <div class="fei-card-header">
       <h2 class="fei-section-title">访问密钥</h2>
     </div>
-    <div v-if="loginUser" class="fei-card-body">
+    <div v-if="userStore.loginUser" class="fei-card-body">
       <!-- 安全提示 -->
       <div class="fei-security-notice">
         <div class="fei-security-notice-icon">
@@ -57,7 +57,7 @@ import { onMounted, ref, computed } from 'vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import { useClipboard } from '@/composables/useClipboard';
-import type { UserVO, UserKeyVO } from '@/types/api';
+import type { UserKeyVO } from '@/types/api';
 
 /**
  * 密钥管理页面组件
@@ -65,9 +65,6 @@ import type { UserVO, UserKeyVO } from '@/types/api';
  */
 
 const userStore = useUserStore();
-
-/** 当前登录用户 */
-const loginUser = ref<UserVO | null>(null);
 
 /** 用户密钥信息 */
 const userKeys = ref<UserKeyVO | null>(null);
@@ -135,21 +132,10 @@ const copySdkSnippet = async () => {
 };
 
 /**
- * 加载当前登录用户
- */
-const loadLoginUser = async () => {
-  try {
-    loginUser.value = await userStore.fetchLoginUser();
-  } catch {
-    loginUser.value = null;
-  }
-};
-
-/**
  * 加载用户密钥
  */
 const loadUserKeys = async () => {
-  if (!loginUser.value || userKeys.value || userKeysLoading.value) {
+  if (!userStore.loginUser || userKeys.value || userKeysLoading.value) {
     return;
   }
   userKeysLoading.value = true;
@@ -158,7 +144,7 @@ const loadUserKeys = async () => {
     userKeys.value = data || null;
   } catch {
     userKeys.value = null;
-    if (loginUser.value) {
+    if (userStore.loginUser) {
       showToast('密钥加载失败，请稍后重试', 'error');
     }
   } finally {
@@ -167,7 +153,6 @@ const loadUserKeys = async () => {
 };
 
 onMounted(async () => {
-  await loadLoginUser();
   await loadUserKeys();
 });
 </script>

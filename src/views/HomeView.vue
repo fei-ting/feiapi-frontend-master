@@ -43,11 +43,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import SectionHeader from '@/components/SectionHeader.vue';
 import { homeStatsService } from '@/services/homeStats';
 import { useUserStore } from '@/stores/user';
-import type { UserVO } from '@/types/api';
 import type { HomeStats } from '@/types/home';
 
 /**
@@ -58,7 +57,7 @@ import type { HomeStats } from '@/types/home';
 const userStore = useUserStore();
 
 /** 当前登录用户 */
-const loginUser = ref<UserVO | null>(null);
+const loginUser = computed(() => userStore.loginUser);
 
 /** 统计数据 */
 const stats = ref([
@@ -151,8 +150,6 @@ const loadHomeStats = async () => {
 };
 
 onMounted(async () => {
-  // 从 Store 获取登录用户
-  loginUser.value = userStore.loginUser;
   await loadHomeStats();
 });
 </script>

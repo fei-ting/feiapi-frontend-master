@@ -49,7 +49,7 @@ router.beforeEach(async (to) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
   const guestOnly = to.matched.some((record) => record.meta.guestOnly);
 
-  if (requiresAuth || (!userStore.loaded && guestOnly)) {
+  if (!userStore.loaded) {
     await userStore.fetchLoginUser();
   }
 
