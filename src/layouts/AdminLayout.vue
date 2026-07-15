@@ -1,7 +1,7 @@
 <template>
   <div class="fei-app-shell">
     <AppHeader
-      :login-user="loginUser"
+      :login-user="userStore.loginUser"
       active="admin"
       @logout="handleLogout"
       @toggle-menu="toggleMenu"
@@ -72,9 +72,6 @@ const props = withDefaults(defineProps<AdminLayoutProps>(), {
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
-
-/** 当前登录用户 */
-const loginUser = ref<UserVO | null>(null);
 
 /** Toast 通知状态 */
 const toast = reactive({
@@ -162,7 +159,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 const loadLoginUser = async () => {
   try {
     const user = await userStore.fetchLoginUser();
-    loginUser.value = user;
 
     // 检查管理员权限
     if (!user || user.userRole !== 'admin') {
@@ -170,7 +166,6 @@ const loadLoginUser = async () => {
       router.replace('/home');
     }
   } catch {
-    loginUser.value = null;
     showToast('加载用户信息失败', 'error');
     router.replace('/home');
   }
@@ -182,7 +177,6 @@ const loadLoginUser = async () => {
 const handleLogout = async () => {
   try {
     await userService.logout();
-    loginUser.value = null;
     userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     setTimeout(() => {
@@ -213,7 +207,6 @@ const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = '
 defineExpose({
   showToast,
   loadLoginUser,
-  loginUser,
 });
 
 onMounted(async () => {

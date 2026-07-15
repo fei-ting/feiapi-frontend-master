@@ -1,7 +1,7 @@
 <template>
   <div class="fei-app-shell">
     <AppHeader
-      :login-user="loginUser"
+      :login-user="userStore.loginUser"
       active="profile"
       @logout="handleLogout"
       @toggle-menu="toggleMenu"
@@ -9,20 +9,20 @@
 
     <PageContainer>
       <!-- 个人信息头部卡片 -->
-      <div v-if="loginUser" class="fei-profile-header">
+      <div v-if="userStore.loginUser" class="fei-profile-header">
         <img
           class="fei-profile-avatar"
-          :src="loginUser.userAvatar || defaultAvatar"
-          :alt="loginUser.userName || '用户'"
+          :src="userStore.loginUser.userAvatar || defaultAvatar"
+          :alt="userStore.loginUser.userName || '用户'"
         />
         <div class="fei-profile-info">
-          <h1 class="fei-profile-name">{{ loginUser.userName || '未设置昵称' }}</h1>
-          <p class="fei-profile-account">账号：{{ loginUser.userAccount }}</p>
+          <h1 class="fei-profile-name">{{ userStore.loginUser.userName || '未设置昵称' }}</h1>
+          <p class="fei-profile-account">账号：{{ userStore.loginUser.userAccount }}</p>
           <div class="fei-profile-meta">
             <span class="fei-user-role-badge">
-              {{ loginUser.userRole === 'admin' ? '管理员' : '普通用户' }}
+              {{ userStore.loginUser.userRole === 'admin' ? '管理员' : '普通用户' }}
             </span>
-            <span>ID: {{ loginUser.id }}</span>
+            <span>ID: {{ userStore.loginUser.id }}</span>
             <span>性别：{{ genderText }}</span>
           </div>
         </div>
@@ -111,9 +111,6 @@ const props = withDefaults(defineProps<ProfileLayoutProps>(), {
 const router = useRouter();
 const userStore = useUserStore();
 
-/** 当前登录用户 */
-const loginUser = ref<UserVO | null>(null);
-
 /** Toast 通知状态 */
 const toast = reactive({
   visible: false,
@@ -182,8 +179,8 @@ const profileNavItems: ProfileNavItem[] = [
 
 /** 性别文本 */
 const genderText = computed(() => {
-  if (!loginUser.value) return '未设置';
-  const gender = loginUser.value.gender;
+  if (!userStore.loginUser) return '未设置';
+  const gender = userStore.loginUser.gender;
   if (gender === 0) return '男';
   if (gender === 1) return '女';
   return '未设置';
@@ -210,7 +207,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 const loadLoginUser = async () => {
   try {
     const user = await userStore.fetchLoginUser();
-    loginUser.value = user;
 
     // 检查是否已登录
     if (!user) {
@@ -218,7 +214,6 @@ const loadLoginUser = async () => {
       router.replace('/login');
     }
   } catch {
-    loginUser.value = null;
     showToast('加载用户信息失败', 'error');
     router.replace('/login');
   }
@@ -230,7 +225,6 @@ const loadLoginUser = async () => {
 const handleLogout = async () => {
   try {
     await userService.logout();
-    loginUser.value = null;
     userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     setTimeout(() => {
@@ -269,7 +263,6 @@ const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = '
 defineExpose({
   showToast,
   loadLoginUser,
-  loginUser,
 });
 
 onMounted(async () => {

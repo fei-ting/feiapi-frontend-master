@@ -1,7 +1,7 @@
 <template>
   <div class="fei-app-shell">
     <AppHeader
-      :login-user="loginUser"
+      :login-user="userStore.loginUser"
       :active="active"
       @logout="handleLogout"
       @toggle-menu="toggleMenu"
@@ -17,14 +17,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { UserVO } from '@/types/api';
 
 /**
  * 应用公共布局组件
@@ -41,9 +40,6 @@ const props = defineProps<AppLayoutProps>();
 
 const router = useRouter();
 const userStore = useUserStore();
-
-/** 当前登录用户 */
-const loginUser = ref<UserVO | null>(null);
 
 /** Toast 通知状态 */
 const toast = reactive({
@@ -67,26 +63,11 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 };
 
 /**
- * 加载当前登录用户
- * 使用用户 Store 统一管理会话状态
- */
-const loadLoginUser = async () => {
-  try {
-    // 使用 Store 的 fetchLoginUser 方法
-    const user = await userStore.fetchLoginUser();
-    loginUser.value = user;
-  } catch {
-    loginUser.value = null;
-  }
-};
-
-/**
  * 处理退出登录
  */
 const handleLogout = async () => {
   try {
     await userService.logout();
-    loginUser.value = null;
     userStore.clearLoginUser();
     showToast('已安全退出', 'success');
     // 延迟跳转到首页，让用户看到提示
@@ -108,11 +89,9 @@ const toggleMenu = () => {
 // 暴露方法给子组件使用
 defineExpose({
   showToast,
-  loadLoginUser,
-  loginUser,
 });
 
 onMounted(async () => {
-  await loadLoginUser();
+  await userStore.fetchLoginUser();
 });
 </script>
