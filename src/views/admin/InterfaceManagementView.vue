@@ -120,6 +120,7 @@ import { computed, onMounted, ref } from 'vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { useQuota } from '@/composables/useQuota';
+import { useFormat } from '@/composables/useFormat';
 import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/types/api';
 
 /**
@@ -128,6 +129,7 @@ import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/type
  */
 
 const { isFreeUnlimited, getQuotaTagClass, getQuotaTypeText, getInitialQuotaText, getInterfaceStatusText } = useQuota();
+const { formatTime } = useFormat();
 
 /** 接口列表 */
 const interfaces = ref<InterfaceInfoVO[]>([]);
@@ -167,27 +169,6 @@ const totalNumSortLabel = computed(() => {
   if (totalNumSortOrder.value === 'ascend') return '调用总数当前按升序排序，点击恢复默认排序';
   return '点击按调用总数降序排序';
 });
-
-/**
- * 格式化时间显示
- * @param time 时间字符串
- * @returns 格式化后的时间
- */
-const formatTime = (time?: string) => {
-  if (!time) return '暂无更新时间';
-  try {
-    const date = new Date(time);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-  } catch (error) {
-    console.error('[InterfaceManagementView] 格式化时间失败:', error);
-    return time;
-  }
-};
 
 /**
  * 显示 Toast 通知（通过父组件）

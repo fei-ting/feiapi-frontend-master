@@ -56,6 +56,7 @@
 import { onMounted, ref, computed } from 'vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
+import { useClipboard } from '@/composables/useClipboard';
 import type { UserVO, UserKeyVO } from '@/types/api';
 
 /**
@@ -111,6 +112,9 @@ const emit = defineEmits<{
   (event: 'show-toast', message: string, type: 'success' | 'error' | 'info'): void;
 }>();
 
+/** 使用剪贴板组合式函数 */
+const { copyToClipboard } = useClipboard(showToast);
+
 /**
  * 复制密钥到剪贴板
  * @param text 要复制的文本
@@ -120,24 +124,14 @@ const copyKey = async (text: string) => {
     showToast('密钥暂未加载完成', 'error');
     return;
   }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('已复制到剪贴板', 'success');
-  } catch {
-    showToast('复制失败，请手动复制', 'error');
-  }
+  await copyToClipboard(text);
 };
 
 /**
  * 复制 SDK 示例代码
  */
 const copySdkSnippet = async () => {
-  try {
-    await navigator.clipboard.writeText(sdkSnippet);
-    showToast('SDK 示例已复制到剪贴板', 'success');
-  } catch {
-    showToast('复制失败，请手动复制', 'error');
-  }
+  await copyToClipboard(sdkSnippet, 'SDK 示例已复制到剪贴板');
 };
 
 /**

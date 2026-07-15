@@ -252,6 +252,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import { useQuota } from '@/composables/useQuota';
+import { useFormat } from '@/composables/useFormat';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
 
 /**
@@ -263,6 +264,7 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const { isFreeUnlimited, getQuotaTypeText } = useQuota();
+const { formatDateTime } = useFormat();
 
 // 使用共享 composable
 const {
@@ -327,22 +329,6 @@ const responseParamNameMap = computed(() => new Map(
  * @returns 请求方法文本
  */
 const methodText = (item: InterfaceDocInterfaceInfoVO) => (item.method || 'GET').toUpperCase();
-
-/**
- * 格式化日期时间
- * @param value 日期时间字符串
- * @returns 格式化后的日期时间
- */
-const formatDateTime = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-  const pad = (num: number) => String(num).padStart(2, '0');
-  return [
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`,
-  ].join(' ');
-};
 
 /**
  * 将参数位置转换为面向使用者的名称

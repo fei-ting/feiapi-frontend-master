@@ -250,6 +250,7 @@ import MethodTag from '@/components/MethodTag.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
+import { useDialogFocusTrap } from '@/composables/useDialogFocusTrap';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
 
 /**
@@ -352,6 +353,9 @@ const invokeHeaderText = computed(() => {
 
 /** 弹窗引用，用于焦点陷阱 */
 const dialogRef = ref<HTMLElement | null>(null);
+
+/** 使用焦点陷阱组合式函数 */
+const { handleKeydown: handleDialogKeydown, focusFirst: focusDialogFirst } = useDialogFocusTrap(dialogRef);
 
 /**
  * 获取错误消息
@@ -551,55 +555,6 @@ const loadDetail = async () => {
 };
 
 /**
- * 获取弹窗内所有可聚焦元素
- * @param container 弹窗容器
- * @returns 可聚焦元素列表
- */
-const getFocusableElements = (container: HTMLElement): HTMLElement[] => {
-  const selectors = [
-    'button:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
-    'textarea:not([disabled])',
-    '[tabindex]:not([tabindex="-1"])',
-  ];
-  return Array.from(container.querySelectorAll(selectors.join(', ')));
-};
-
-/**
- * 实现焦点陷阱
- * 弹窗打开时聚焦第一个元素，Tab 键循环焦点
- * @param event 键盘事件
- */
-const handleDialogKeydown = (event: KeyboardEvent) => {
-  if (event.key !== 'Tab' || !dialogRef.value) {
-    return;
-  }
-
-  const focusableElements = getFocusableElements(dialogRef.value);
-  if (!focusableElements.length) {
-    return;
-  }
-
-  const firstElement = focusableElements[0];
-  const lastElement = focusableElements[focusableElements.length - 1];
-
-  if (event.shiftKey) {
-    // Shift + Tab：从第一个元素跳到最后一个
-    if (document.activeElement === firstElement) {
-      event.preventDefault();
-      lastElement.focus();
-    }
-  } else {
-    // Tab：从最后一个元素跳到第一个
-    if (document.activeElement === lastElement) {
-      event.preventDefault();
-      firstElement.focus();
-    }
-  }
-};
-
-/**
  * 打开登录弹窗
  */
 const openLoginDialog = () => {
@@ -608,13 +563,7 @@ const openLoginDialog = () => {
   dialog.title = '需要登录';
   dialog.message = '需要登录后才能调用接口。';
   dialog.primaryText = '去登录';
-  // 下一帧聚焦第一个按钮
-  nextTick(() => {
-    if (dialogRef.value) {
-      const firstButton = dialogRef.value.querySelector('button') as HTMLElement;
-      firstButton?.focus();
-    }
-  });
+  focusDialogFirst();
 };
 
 /**
@@ -626,13 +575,7 @@ const openInvokeConfirmDialog = () => {
   dialog.title = '确认发起调用';
   dialog.message = '此次发起调用会使用当前登录账号的 APIKey 发起实际调用，请谨慎操作。';
   dialog.primaryText = '确认调用';
-  // 下一帧聚焦第一个按钮
-  nextTick(() => {
-    if (dialogRef.value) {
-      const firstButton = dialogRef.value.querySelector('button') as HTMLElement;
-      firstButton?.focus();
-    }
-  });
+  focusDialogFirst();
 };
 
 /**

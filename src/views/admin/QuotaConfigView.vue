@@ -47,12 +47,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
+import { useFormat } from '@/composables/useFormat';
 import type { InterfaceQuotaConfigVO } from '@/types/api';
 
 /**
  * 配额策略配置页面组件
  * 展示和管理接口的配额策略
  */
+
+const { formatTime } = useFormat();
 
 /** 配额策略列表 */
 const quotaConfigs = ref<InterfaceQuotaConfigVO[]>([]);
@@ -62,27 +65,6 @@ const quotaEditMap = ref<Record<string, number>>({});
 
 /** 正在保存的配额类型 */
 const quotaSavingType = ref<string | null>(null);
-
-/**
- * 格式化时间显示
- * @param time 时间字符串
- * @returns 格式化后的时间
- */
-const formatTime = (time?: string) => {
-  if (!time) return '暂无更新时间';
-  try {
-    const date = new Date(time);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-  } catch (error) {
-    console.error('[QuotaConfigView] 格式化时间失败:', error);
-    return time;
-  }
-};
 
 /**
  * 显示 Toast 通知（通过父组件）
