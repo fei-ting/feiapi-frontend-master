@@ -1,7 +1,5 @@
 <template>
-  <div class="fei-app-shell">
-    <AppHeader :login-user="loginUser" active="home" @logout="handleLogout" @toggle-menu="toggleMenu" />
-
+  <AppLayout active="home">
     <section class="fei-hero">
       <div class="fei-container fei-hero__inner">
         <div class="fei-badge">
@@ -43,34 +41,29 @@
         </div>
       </div>
     </div>
-
-    <AppFooter />
-    <ToastMessage :message="toast.message" :type="toast.type" :visible="toast.visible" />
-  </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import AppHeader from '@/components/AppHeader.vue';
-import AppFooter from '@/components/AppFooter.vue';
+import { onMounted, ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import SectionHeader from '@/components/SectionHeader.vue';
-import ToastMessage from '@/components/ToastMessage.vue';
 import { homeStatsService } from '@/services/homeStats';
-import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import type { UserVO } from '@/types/api';
 import type { HomeStats } from '@/types/home';
 
-const router = useRouter();
-const userStore = useUserStore();
-const loginUser = ref<UserVO | null>(null);
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
+/**
+ * 首页组件
+ * 展示平台核心能力和统计数据
+ */
 
+const userStore = useUserStore();
+
+/** 当前登录用户 */
+const loginUser = ref<UserVO | null>(null);
+
+/** 统计数据 */
 const stats = ref([
   { value: '--', label: '平台接口' },
   { value: '--', label: '累计调用' },
@@ -78,6 +71,7 @@ const stats = ref([
   { value: '--', label: '平均耗时' },
 ]);
 
+/** 平台核心能力列表 */
 const features = [
   { icon: '∎', title: '接口广场', desc: '统一浏览已上线接口，查看请求方法、地址、参数与状态，快速发现所需能力。' },
   { icon: '▶', title: '在线调试', desc: '登录用户可直接在详情页填写参数并发起调用，实时查看响应结果与错误信息。' },
@@ -85,24 +79,11 @@ const features = [
   { icon: '◌', title: '调用分析', desc: '管理员可查看热门接口 TOP3、用户调用关系与额度，为运营决策提供数据支撑。' },
 ];
 
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2400);
-};
-
-const loadLoginUser = async () => {
-  try {
-    const res = await userService.getLoginUser();
-    loginUser.value = res.data || null;
-  } catch {
-    loginUser.value = null;
-  }
-};
-
+/**
+ * 格式化数量显示
+ * @param num 数量
+ * @returns 格式化后的字符串
+ */
 const formatCount = (num: number | null | undefined): string => {
   if (num == null) {
     return '--';
@@ -116,6 +97,11 @@ const formatCount = (num: number | null | undefined): string => {
   return String(num);
 };
 
+/**
+ * 格式化比率显示
+ * @param rate 比率
+ * @returns 格式化后的字符串
+ */
 const formatRate = (rate: number | null | undefined): string => {
   if (rate == null) {
     return '--';
@@ -123,6 +109,11 @@ const formatRate = (rate: number | null | undefined): string => {
   return `${rate.toFixed(1).replace(/\.0$/, '')}%`;
 };
 
+/**
+ * 格式化响应时间显示
+ * @param responseTimeMs 响应时间（毫秒）
+ * @returns 格式化后的字符串
+ */
 const formatResponseTime = (responseTimeMs: number | null | undefined): string => {
   if (responseTimeMs == null) {
     return '--';
@@ -130,6 +121,10 @@ const formatResponseTime = (responseTimeMs: number | null | undefined): string =
   return `${Math.round(responseTimeMs)}ms`;
 };
 
+/**
+ * 更新统计数据
+ * @param homeStats 首页统计数据
+ */
 const updateStats = (homeStats: HomeStats) => {
   stats.value = [
     { value: formatCount(homeStats.platformInterfaceCount), label: '平台接口' },
@@ -139,6 +134,9 @@ const updateStats = (homeStats: HomeStats) => {
   ];
 };
 
+/**
+ * 加载首页统计数据
+ */
 const loadHomeStats = async () => {
   try {
     const res = await homeStatsService.getHomeStats();
@@ -155,26 +153,9 @@ const loadHomeStats = async () => {
   }
 };
 
-const handleLogout = async () => {
-  try {
-    await userService.logout();
-    loginUser.value = null;
-    userStore.clearLoginUser();
-    showToast('已安全退出', 'success');
-    // 延迟跳转到首页，让用户看到提示
-    setTimeout(() => {
-      router.replace('/home');
-    }, 1000);
-  } catch {
-    showToast('退出失败', 'error');
-  }
-};
-
-const toggleMenu = () => {
-  showToast('移动端菜单已保留为简洁模式', 'info');
-};
-
 onMounted(async () => {
-  await Promise.all([loadLoginUser(), loadHomeStats()]);
+  // 从 Store 获取登录用户
+  loginUser.value = userStore.loginUser;
+  await loadHomeStats();
 });
 </script>
