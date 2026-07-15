@@ -170,7 +170,7 @@
                       <button
                         class="fei-btn fei-btn--primary fei-btn--sm"
                         :disabled="quotaSavingType === item.quotaType"
-                        @click="submitQuotaConfig(item.quotaType)"
+                        @click="openQuotaConfirmModal(item.quotaType)"
                       >
                         {{ quotaSavingType === item.quotaType ? '保存中...' : '保存' }}
                       </button>
@@ -299,6 +299,43 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 配额修改确认弹窗 -->
+    <Teleport to="body">
+      <div
+        v-if="quotaConfirmModalVisible"
+        class="fei-modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quotaConfirmModalTitle"
+        tabindex="-1"
+        @click.self="closeQuotaConfirmModal"
+        @keyup.esc="closeQuotaConfirmModal"
+      >
+        <div class="fei-delete-modal">
+          <div class="fei-delete-modal__head">
+            <div class="fei-delete-modal__icon" style="background: var(--fei-primary-light); border-color: var(--fei-primary);">
+              <ExclamationCircleOutlined style="color: var(--fei-primary);" aria-hidden="true" />
+            </div>
+            <div class="fei-delete-modal__title-wrap">
+              <h3 id="quotaConfirmModalTitle">确认修改配额策略</h3>
+              <p>此操作将修改接口的初始配额额度，请确认是否继续。</p>
+            </div>
+          </div>
+          <div class="fei-delete-modal__body">
+            <span class="fei-delete-modal__label">即将修改</span>
+            <strong>{{ quotaConfigText(quotaConfigs.find(item => item.quotaType === quotaConfirmTarget)) }}</strong>
+            <span class="fei-delete-modal__url">新初始额度：{{ quotaConfirmValue }} 次</span>
+          </div>
+          <div class="fei-delete-modal__footer">
+            <button class="fei-btn fei-btn--secondary" :disabled="quotaSavingType === quotaConfirmTarget" @click="closeQuotaConfirmModal">取消</button>
+            <button class="fei-btn fei-btn--primary" :disabled="quotaSavingType === quotaConfirmTarget" @click="confirmQuotaConfig">
+              {{ quotaSavingType === quotaConfirmTarget ? '保存中...' : '确认修改' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -415,6 +452,11 @@ const deleteTarget = ref<InterfaceInfoVO | null>(null);
 
 /** 删除弹窗引用，用于焦点陷阱 */
 const deleteModalRef = ref<HTMLElement | null>(null);
+
+/** 配额修改确认弹窗相关状态 */
+const quotaConfirmModalVisible = ref(false);
+const quotaConfirmTarget = ref<InterfaceQuotaType | ''>('');
+const quotaConfirmValue = ref(0);
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   toast.message = message;
@@ -764,6 +806,53 @@ const submitEdit = async () => {
     showToast(modalMode.value === 'add' ? '新增失败' : '更新失败', 'error');
   } finally {
     editSubmitting.value = false;
+  }
+};
+
+/**
+ * 打开配额修改确认弹窗
+ * @param quotaType 配额类型
+ */
+const openQuotaConfirmModal = (quotaType: InterfaceQuotaType) => {
+  const initialQuota = Number(quotaEditMap[quotaType]);
+  if (!Number.isInteger(initialQuota) || initialQuota <= 0) {
+    showToast('初始额度必须是大于 0 的整数', 'error');
+    return;
+  }
+  quotaConfirmTarget.value = quotaType;
+  quotaConfirmValue.value = initialQuota;
+  quotaConfirmModalVisible.value = true;
+};
+
+/** 关闭配额修改确认弹窗 */
+const closeQuotaConfirmModal = () => {
+  if (quotaSavingType.value) {
+    return;
+  }
+  quotaConfirmModalVisible.value = false;
+  quotaConfirmTarget.value = '';
+  quotaConfirmValue.value = 0;
+};
+
+/** 确认修改配额策略 */
+const confirmQuotaConfig = async () => {
+  const quotaType = quotaConfirmTarget.value as InterfaceQuotaType;
+  const initialQuota = quotaConfirmValue.value;
+
+  quotaSavingType.value = quotaType;
+  try {
+    await interfaceQuotaConfigService.update({ quotaType, initialQuota });
+    showToast('配额策略已更新，仅对后续新注册用户和后续首次初始化额度的用户生效', 'success');
+    quotaConfirmModalVisible.value = false;
+    quotaConfirmTarget.value = '';
+    quotaConfirmValue.value = 0;
+    await loadQuotaConfigs();
+    await loadInterfaces();
+  } catch (error) {
+    console.error('[AdminView] 更新配额策略失败:', error);
+    showToast('配额策略更新失败', 'error');
+  } finally {
+    quotaSavingType.value = '';
   }
 };
 
