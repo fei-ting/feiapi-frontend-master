@@ -125,6 +125,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import LoadingBlock from '@/components/LoadingBlock.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import { interfaceService } from '@/services/interfaceInfo';
@@ -137,6 +138,7 @@ import type { InterfaceInfoVO } from '@/types/api';
  * 展示已上线的接口列表，支持搜索和分页
  */
 
+const router = useRouter();
 const userStore = useUserStore();
 const { isFreeUnlimited, getQuotaTagClass, getQuotaTypeText } = useQuota();
 
@@ -255,7 +257,7 @@ const onSearchInput = () => {
  * @param id 接口ID
  */
 const goDetail = (id: number) => {
-  window.location.hash = `#/interface/${id}`;
+  router.push(`/interface/${id}`);
 };
 
 onMounted(async () => {

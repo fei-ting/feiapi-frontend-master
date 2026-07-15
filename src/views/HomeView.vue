@@ -13,9 +13,9 @@
           FeiAPI 提供统一的接口广场、在线调试、网关转发、调用统计与后台管理，帮助开发团队快速开放能力、降低接入成本。
         </p>
         <div class="fei-actions">
-          <a class="fei-btn fei-btn--primary" href="#/market">浏览接口广场</a>
-          <a v-if="loginUser" class="fei-btn fei-btn--secondary" href="#/profile/records">查看我的调用</a>
-          <a v-else class="fei-btn fei-btn--secondary" href="#/register">获取免费额度</a>
+          <RouterLink class="fei-btn fei-btn--primary" to="/market">浏览接口广场</RouterLink>
+          <RouterLink v-if="loginUser" class="fei-btn fei-btn--secondary" to="/profile/records">查看我的调用</RouterLink>
+          <RouterLink v-else class="fei-btn fei-btn--secondary" to="/register">获取免费额度</RouterLink>
         </div>
       </div>
     </section>

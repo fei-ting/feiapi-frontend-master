@@ -175,30 +175,30 @@
       </div>
       <div class="fei-card-body">
         <div class="fei-quick-actions">
-          <a class="fei-quick-action" href="#/admin/interfaces">
+          <RouterLink class="fei-quick-action" to="/admin/interfaces">
             <div class="fei-quick-action__icon" style="background: #dbeafe; color: #2563eb">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             </div>
             <span>管理接口</span>
-          </a>
-          <a class="fei-quick-action" href="#/home">
+          </RouterLink>
+          <RouterLink class="fei-quick-action" to="/market">
             <div class="fei-quick-action__icon" style="background: #dcfce7; color: #16a34a">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
             <span>查看接口广场</span>
-          </a>
-          <a class="fei-quick-action" href="javascript:void(0)" @click="handleRefresh">
+          </RouterLink>
+          <button class="fei-quick-action" type="button" @click="handleRefresh">
             <div class="fei-quick-action__icon" style="background: #fef3c7; color: #d97706">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </div>
             <span>刷新数据</span>
-          </a>
-          <a class="fei-quick-action" href="#/home">
+          </button>
+          <RouterLink class="fei-quick-action" to="/home">
             <div class="fei-quick-action__icon" style="background: #e0e7ff; color: #4f46e5">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
             <span>返回首页</span>
-          </a>
+          </RouterLink>
         </div>
       </div>
     </div>
@@ -219,6 +219,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { dashboardService } from '@/services/dashboard';
 import type { DashboardOverview, DashboardTrends, AlertInterface, ChangedInterface } from '@/types/dashboard';
 import type { DataSource } from '@/services/dashboardMock';
@@ -227,6 +228,8 @@ defineProps<{
   /** 当前登录用户名 */
   userName: string;
 }>();
+
+const router = useRouter();
 
 /** 概览统计 */
 const overview = ref<DashboardOverview>({
@@ -341,7 +344,7 @@ const changeTypeText = (type: string): string => {
  * 跳转到接口详情
  */
 const goInterface = (id: number) => {
-  window.location.hash = `#/interface/${id}`;
+  router.push(`/interface/${id}`);
 };
 
 /**

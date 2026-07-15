@@ -2,9 +2,9 @@
   <div v-if="loading" class="fei-empty fei-card">正在加载在线调用...</div>
   <template v-else-if="detail">
     <nav class="fei-breadcrumb" aria-label="在线调用路径">
-      <a href="#/market">接口广场</a>
+      <RouterLink to="/market">接口广场</RouterLink>
       <span>/</span>
-      <a :href="`#/interface/${detail.id}`">{{ detail.name }}</a>
+      <RouterLink :to="`/interface/${detail.id}`">{{ detail.name }}</RouterLink>
       <span>/</span>
       <span>在线调用</span>
     </nav>
@@ -601,7 +601,7 @@ const handleInvokeClick = () => {
  */
 const handleDialogPrimary = () => {
   if (dialog.action === 'login') {
-    window.location.hash = loginHref.value;
+    router.push(loginHref.value);
     return;
   }
   closeDialog();

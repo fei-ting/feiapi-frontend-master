@@ -76,8 +76,8 @@
           </form>
 
           <div class="fei-toolbar" style="margin-top: 18px; justify-content: space-between">
-            <a href="#/login">返回登录</a>
-            <a href="#/home">返回首页</a>
+            <RouterLink to="/login">返回登录</RouterLink>
+            <RouterLink to="/home">返回首页</RouterLink>
           </div>
         </div>
       </div>

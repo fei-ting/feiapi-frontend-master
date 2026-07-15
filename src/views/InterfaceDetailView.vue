@@ -2,7 +2,7 @@
   <div v-if="loading" class="fei-empty fei-card">正在加载接口详情...</div>
   <template v-else-if="detail && docDetail">
     <nav class="fei-breadcrumb" aria-label="接口详情路径">
-      <a href="#/market">接口广场</a>
+      <RouterLink to="/market">接口广场</RouterLink>
       <span>/</span>
       <span>{{ detail.name }}</span>
     </nav>

@@ -56,8 +56,8 @@
           </form>
 
           <div class="fei-toolbar" style="margin-top: 18px; justify-content: space-between">
-            <a href="#/register">新用户注册</a>
-            <a href="#/home">返回首页</a>
+            <RouterLink to="/register">新用户注册</RouterLink>
+            <RouterLink to="/home">返回首页</RouterLink>
           </div>
         </div>
       </div>
