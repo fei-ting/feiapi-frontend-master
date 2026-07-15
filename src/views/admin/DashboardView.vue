@@ -204,9 +204,15 @@
     </div>
 
     <!-- Mock 数据提示 -->
-    <div v-if="hasMockData" class="fei-dashboard__mock-tip">
+    <div v-if="dataSource === 'mock'" class="fei-dashboard__mock-tip">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-      <span>部分数据为模拟数据，待后端接口实现后自动切换为真实数据</span>
+      <span>当前为开发模式，显示模拟数据。设置 VITE_ENABLE_MOCK=true 可启用 Mock 降级</span>
+    </div>
+
+    <!-- 接口错误提示 -->
+    <div v-if="dataSource === 'error'" class="fei-dashboard__error-tip">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+      <span>数据加载失败，当前显示为降级数据。请检查后端接口状态</span>
     </div>
   </div>
 </template>
@@ -215,6 +221,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { dashboardService } from '@/services/dashboard';
 import type { DashboardOverview, DashboardTrends, AlertInterface, ChangedInterface } from '@/types/dashboard';
+import type { DataSource } from '@/services/dashboardMock';
 
 defineProps<{
   /** 当前登录用户名 */
@@ -245,8 +252,8 @@ const alerts = ref<AlertInterface[]>([]);
 /** 最近变更 */
 const changes = ref<ChangedInterface[]>([]);
 
-/** 是否包含 Mock 数据 */
-const hasMockData = ref(false);
+/** 数据来源 */
+const dataSource = ref<DataSource>('real');
 
 /** 趋势 Tab 配置 */
 const trendTabs = [
@@ -349,31 +356,35 @@ const handleRefresh = () => {
  */
 const loadDashboard = async () => {
   try {
-    const [overviewData, trendsData, alertsData, changesData] = await Promise.all([
+    const [overviewResult, trendsResult, alertsResult, changesResult] = await Promise.all([
       dashboardService.getOverview(),
       dashboardService.getTrends(),
       dashboardService.getAlerts(),
       dashboardService.getChanges(),
     ]);
 
-    // 添加空值保护，确保数据有效
-    if (overviewData) {
-      overview.value = overviewData;
-    }
-    if (trendsData) {
-      trends.value = trendsData;
-    }
-    if (alertsData) {
-      alerts.value = alertsData;
-    }
-    if (changesData) {
-      changes.value = changesData;
-    }
+    // 更新数据
+    overview.value = overviewResult.data;
+    trends.value = trendsResult.data;
+    alerts.value = alertsResult.data;
+    changes.value = changesResult.data;
 
-    // 检测是否使用了 Mock 数据（今日调用为固定值则认为是 Mock）
-    hasMockData.value = overviewData?.todayInvocations === 12580;
+    // 数据来源：优先显示 error，其次 mock，最后 real
+    const sources: DataSource[] = [
+      overviewResult.source,
+      trendsResult.source,
+      alertsResult.source,
+      changesResult.source,
+    ];
+    if (sources.includes('error')) {
+      dataSource.value = 'error';
+    } else if (sources.includes('mock')) {
+      dataSource.value = 'mock';
+    } else {
+      dataSource.value = 'real';
+    }
   } catch {
-    // 加载失败时保持默认值
+    dataSource.value = 'error';
   }
 };
 
@@ -815,6 +826,23 @@ onMounted(() => {
 .fei-dashboard__mock-tip svg {
   flex-shrink: 0;
   color: #d97706;
+}
+
+.fei-dashboard__error-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--fei-radius-sm);
+  font-size: 13px;
+  color: #991b1b;
+}
+
+.fei-dashboard__error-tip svg {
+  flex-shrink: 0;
+  color: #dc2626;
 }
 
 /* ========== 响应式 ========== */
