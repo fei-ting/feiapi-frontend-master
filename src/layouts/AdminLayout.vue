@@ -25,9 +25,11 @@
 
         <!-- 内容区 -->
         <div class="fei-admin-content">
-          <ErrorBoundary>
-            <slot @show-toast="handleShowToast" />
-          </ErrorBoundary>
+          <RouterView v-slot="{ Component }">
+            <ErrorBoundary>
+              <component :is="Component" @show-toast="handleShowToast" />
+            </ErrorBoundary>
+          </RouterView>
         </div>
       </div>
     </PageContainer>
@@ -38,9 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { h } from 'vue';
+import { computed, h, onMounted, reactive } from 'vue';
+import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
@@ -48,7 +49,6 @@ import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { UserVO } from '@/types/api';
 
 /**
  * 后台管理布局组件
@@ -62,19 +62,12 @@ interface AdminNavItem {
   icon: () => ReturnType<typeof h>;
 }
 
-/** 组件属性 */
-interface AdminLayoutProps {
-  /** 当前活动的标签页 */
-  activeTab?: string;
-}
-
-const props = withDefaults(defineProps<AdminLayoutProps>(), {
-  activeTab: 'dashboard',
-});
-
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+
+/** 当前后台导航项 */
+const activeTab = computed(() => route.path.split('/')[2] || 'dashboard');
 
 /** Toast 通知状态 */
 const toast = reactive({

@@ -266,6 +266,11 @@ const userStore = useUserStore();
 const { isFreeUnlimited, getQuotaTypeText } = useQuota();
 const { formatDateTime } = useFormat();
 
+/** 组件事件 */
+const emit = defineEmits<{
+  (event: 'show-toast', message: string, type: 'success' | 'error' | 'info'): void;
+}>();
+
 // 使用共享 composable
 const {
   showToast,
@@ -281,7 +286,7 @@ const {
   requestParamDescription,
   prettyJson,
   interfaceSummary,
-} = useInterfaceDoc();
+} = useInterfaceDoc((message, type) => emit('show-toast', message, type));
 
 /** 加载状态 */
 const loading = ref(true);
