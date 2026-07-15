@@ -484,7 +484,8 @@ const quotaTypeText = (item: InterfaceInfoVO) => {
   return item.quotaTypeText || quotaTypeOptions.find((option) => option.value === item.quotaType)?.label || '基础额度接口';
 };
 
-const quotaConfigText = (item: InterfaceQuotaConfigVO) => {
+const quotaConfigText = (item: InterfaceQuotaConfigVO | undefined) => {
+  if (!item) return '未知类型';
   if (isFreeUnlimited(item.quotaType)) return '免费无限接口';
   return item.quotaTypeText || quotaTypeOptions.find((option) => option.value === item.quotaType)?.label || item.quotaType;
 };
