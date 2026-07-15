@@ -2,7 +2,7 @@
   <div class="fei-dashboard">
     <!-- 欢迎语 -->
     <div class="fei-dashboard__welcome">
-      <h2 class="fei-section-title">👋 欢迎回来，{{ userName }}</h2>
+      <h2 class="fei-section-title">👋 欢迎回来，{{ displayName }}</h2>
       <p class="fei-section-desc">这是您的管理工作台，可以快速了解平台运行状态</p>
     </div>
 
@@ -221,15 +221,15 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { dashboardService } from '@/services/dashboard';
+import { useUserStore } from '@/stores/user';
 import type { DashboardOverview, DashboardTrends, AlertInterface, ChangedInterface } from '@/types/dashboard';
 import type { DataSource } from '@/services/dashboardMock';
 
-defineProps<{
-  /** 当前登录用户名 */
-  userName: string;
-}>();
-
 const router = useRouter();
+const userStore = useUserStore();
+
+/** 当前管理员显示名称 */
+const displayName = computed(() => userStore.loginUser?.userName || '管理员');
 
 /** 概览统计 */
 const overview = ref<DashboardOverview>({

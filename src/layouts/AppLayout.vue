@@ -8,9 +8,11 @@
     />
 
     <main class="fei-container fei-page">
-      <ErrorBoundary>
-        <slot />
-      </ErrorBoundary>
+      <RouterView v-slot="{ Component }">
+        <ErrorBoundary>
+          <component :is="Component" @show-toast="handleShowToast" />
+        </ErrorBoundary>
+      </RouterView>
     </main>
 
     <AppFooter />
@@ -19,8 +21,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, reactive } from 'vue';
+import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
@@ -33,16 +35,14 @@ import { useUserStore } from '@/stores/user';
  * 统一管理页头、页脚、用户会话和 Toast 通知
  */
 
-/** 组件属性 */
-interface AppLayoutProps {
-  /** 当前活动的导航项 */
-  active: 'home' | 'market' | 'profile' | 'admin' | 'login' | 'register' | 'detail' | 'notfound';
-}
-
-const props = defineProps<AppLayoutProps>();
-
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
+
+/** 当前主导航项 */
+const active = computed<'home' | 'market'>(() => (
+  route.path === '/home' ? 'home' : 'market'
+));
 
 /** Toast 通知状态 */
 const toast = reactive({
@@ -63,6 +63,15 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   window.setTimeout(() => {
     toast.visible = false;
   }, 2400);
+};
+
+/**
+ * 接收路由页面发出的 Toast 通知
+ * @param message 通知消息
+ * @param type 通知类型
+ */
+const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  showToast(message, type);
 };
 
 /**
