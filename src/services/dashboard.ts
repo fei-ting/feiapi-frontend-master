@@ -1,5 +1,5 @@
 import http from './http';
-import type { ResponseData, InterfaceInfoVO, PageResult } from '@/types/api';
+import type { InterfaceInfoVO, PageResult } from '@/types/api';
 import type {
   DashboardOverview,
   DashboardTrends,
@@ -112,17 +112,17 @@ export const dashboardService = {
   async getOverview(): Promise<DashboardOverview> {
     try {
       // 尝试调用真实接口
-      const res = await http.get<ResponseData<DashboardOverview>>('/analysis/dashboard/overview');
+      const data = await http.get<DashboardOverview>('/analysis/dashboard/overview');
       // 确保返回有效数据，如果后端返回 null 则降级
-      return res.data.data ?? MOCK_OVERVIEW;
+      return data ?? MOCK_OVERVIEW;
     } catch {
       // 降级：从接口列表统计总数和状态分布
       try {
-        const res = await http.get<ResponseData<PageResult<InterfaceInfoVO>>>('/interfaceInfo/list/page', {
+        const data = await http.get<PageResult<InterfaceInfoVO>>('/interfaceInfo/list/page', {
           params: { current: 1, pageSize: 100 },
         });
-        const records = res.data.data?.records ?? [];
-        const totalInterfaces = res.data.data?.total ?? 0;
+        const records = data?.records ?? [];
+        const totalInterfaces = data?.total ?? 0;
         const onlineInterfaces = records.filter((r) => r.status === 1).length;
         const offlineInterfaces = records.filter((r) => r.status !== 1).length;
 
@@ -150,8 +150,8 @@ export const dashboardService = {
    */
   async getTrends(): Promise<DashboardTrends> {
     try {
-      const res = await http.get<ResponseData<DashboardTrends>>('/analysis/dashboard/trends');
-      return res.data.data ?? MOCK_TRENDS;
+      const data = await http.get<DashboardTrends>('/analysis/dashboard/trends');
+      return data ?? MOCK_TRENDS;
     } catch {
       return MOCK_TRENDS;
     }
@@ -165,8 +165,8 @@ export const dashboardService = {
    */
   async getAlerts(): Promise<AlertInterface[]> {
     try {
-      const res = await http.get<ResponseData<AlertInterface[]>>('/analysis/dashboard/alerts');
-      return res.data.data ?? MOCK_ALERTS;
+      const data = await http.get<AlertInterface[]>('/analysis/dashboard/alerts');
+      return data ?? MOCK_ALERTS;
     } catch {
       return MOCK_ALERTS;
     }
@@ -180,15 +180,15 @@ export const dashboardService = {
    */
   async getChanges(): Promise<ChangedInterface[]> {
     try {
-      const res = await http.get<ResponseData<ChangedInterface[]>>('/analysis/dashboard/changes');
-      return res.data.data ?? MOCK_CHANGES;
+      const data = await http.get<ChangedInterface[]>('/analysis/dashboard/changes');
+      return data ?? MOCK_CHANGES;
     } catch {
       // 降级：从接口列表按更新时间排序
       try {
-        const res = await http.get<ResponseData<PageResult<InterfaceInfoVO>>>('/interfaceInfo/list/page', {
+        const data = await http.get<PageResult<InterfaceInfoVO>>('/interfaceInfo/list/page', {
           params: { current: 1, pageSize: 4, sortField: 'updateTime', sortOrder: 'desc' },
         });
-        const records = res.data.data?.records ?? [];
+        const records = data?.records ?? [];
         return records.map((r) => ({
           id: r.id,
           name: r.name,
@@ -208,8 +208,8 @@ export const dashboardService = {
    */
   async getTopInterfaces(): Promise<InterfaceInfoVO[]> {
     try {
-      const res = await http.get<ResponseData<InterfaceInfoVO[]>>('/analysis/top/interface/invoke');
-      return res.data.data ?? [];
+      const data = await http.get<InterfaceInfoVO[]>('/analysis/top/interface/invoke');
+      return data ?? [];
     } catch {
       return [];
     }

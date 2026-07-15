@@ -4,31 +4,30 @@ import type {
   CurrentUserProfileUpdateRequest,
   LoginRequest,
   RegisterRequest,
-  ResponseData,
   UserKeyVO,
   UserVO,
 } from '@/types/api';
 
 export const userService = {
   login(data: LoginRequest) {
-    return http.post<ResponseData<UserVO>>('/user/login', data).then((response) => response.data);
+    return http.post<UserVO>('/user/login', data);
   },
   register(data: RegisterRequest) {
-    return http.post<ResponseData<number>>('/user/register', data).then((response) => response.data);
+    return http.post<number>('/user/register', data);
   },
   logout() {
-    return http.post<ResponseData<boolean>>('/user/logout').then((response) => response.data);
+    return http.post<boolean>('/user/logout');
   },
   getLoginUser() {
-    return http.get<ResponseData<UserVO>>('/user/get/login').then((response) => response.data);
+    return http.get<UserVO>('/user/get/login');
   },
   getCurrentUserKeys() {
-    return http.get<ResponseData<UserKeyVO>>('/user/get/keys').then((response) => response.data);
+    return http.get<UserKeyVO>('/user/get/keys');
   },
   updateCurrentUserProfile(data: CurrentUserProfileUpdateRequest) {
-    return http.post<ResponseData<boolean>>('/user/update/my/profile', data).then((response) => response.data);
+    return http.post<boolean>('/user/update/my/profile', data);
   },
   updateCurrentUserPassword(data: CurrentUserPasswordUpdateRequest) {
-    return http.post<ResponseData<boolean>>('/user/update/my/password', data).then((response) => response.data);
+    return http.post<boolean>('/user/update/my/password', data);
   },
 };

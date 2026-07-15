@@ -538,8 +538,8 @@ const loadDetail = async () => {
     return;
   }
   try {
-    const res = await interfaceService.getDocDetail(id);
-    docDetail.value = res.data || null;
+    const data = await interfaceService.getDocDetail(id);
+    docDetail.value = data || null;
     structuredParams.value = parseStructuredParams(docDetail.value);
     if (structuredParams.value.length) {
       fillStructuredExample();
@@ -623,11 +623,11 @@ const invokeApi = async () => {
   invokeLoading.value = true;
   activeTab.value = 'result';
   try {
-    const res = await interfaceService.invoke({
+    const data = await interfaceService.invoke({
       id: detail.value.id,
       userRequestParams: requestParams.value,
     });
-    invokeResult.value = formatInvokeResponse(res.data);
+    invokeResult.value = formatInvokeResponse(data);
     showToast('调用成功', 'success');
   } catch (error) {
     const message = getErrorMessage(error);

@@ -90,8 +90,8 @@ const records = ref<UserInterfaceInfoVO[]>([]);
  */
 const loadRecords = async () => {
   try {
-    const res = await userInterfaceInfoService.myListPage({ current: 1, pageSize: 10 });
-    records.value = res.data?.records ?? [];
+    const data = await userInterfaceInfoService.myListPage({ current: 1, pageSize: 10 });
+    records.value = data?.records ?? [];
   } catch {
     records.value = [];
   }

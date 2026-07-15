@@ -469,8 +469,8 @@ const copySdkSnippet = async () => {
 
 const loadLoginUser = async () => {
   try {
-    const res = await userService.getLoginUser();
-    loginUser.value = res.data || null;
+    const user = await userService.getLoginUser();
+    loginUser.value = user || null;
     userStore.setLoginUser(loginUser.value);
     syncProfileForm(loginUser.value);
     return Boolean(loginUser.value);
@@ -544,8 +544,8 @@ const handlePasswordSubmit = async () => {
 
 const loadRecords = async () => {
   try {
-    const res = await userInterfaceInfoService.myListPage({ current: 1, pageSize: 10 });
-    records.value = res.data?.records ?? [];
+    const data = await userInterfaceInfoService.myListPage({ current: 1, pageSize: 10 });
+    records.value = data?.records ?? [];
   } catch {
     records.value = [];
   }
@@ -557,8 +557,8 @@ const loadUserKeys = async () => {
   }
   userKeysLoading.value = true;
   try {
-    const res = await userService.getCurrentUserKeys();
-    userKeys.value = res.data || null;
+    const data = await userService.getCurrentUserKeys();
+    userKeys.value = data || null;
   } catch {
     userKeys.value = null;
     if (loginUser.value) {

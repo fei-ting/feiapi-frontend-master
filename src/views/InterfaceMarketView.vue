@@ -217,9 +217,9 @@ const loadInterfaces = async (page = 1, description = '') => {
   loading.value = true;
   currentPage.value = page;
   try {
-    const res = await interfaceService.listPage({ current: page, pageSize, status: 1, description });
-    list.value = res.data?.records ?? [];
-    total.value = res.data?.total ?? 0;
+    const data = await interfaceService.listPage({ current: page, pageSize, status: 1, description });
+    list.value = data?.records ?? [];
+    total.value = data?.total ?? 0;
   } catch {
     list.value = [];
     total.value = 0;

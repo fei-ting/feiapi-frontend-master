@@ -154,8 +154,8 @@ const loadUserKeys = async () => {
   }
   userKeysLoading.value = true;
   try {
-    const res = await userService.getCurrentUserKeys();
-    userKeys.value = res.data || null;
+    const data = await userService.getCurrentUserKeys();
+    userKeys.value = data || null;
   } catch {
     userKeys.value = null;
     if (loginUser.value) {

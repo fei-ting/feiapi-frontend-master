@@ -139,9 +139,9 @@ const updateStats = (homeStats: HomeStats) => {
  */
 const loadHomeStats = async () => {
   try {
-    const res = await homeStatsService.getHomeStats();
-    if (res.data) {
-      updateStats(res.data);
+    const data = await homeStatsService.getHomeStats();
+    if (data) {
+      updateStats(data);
     }
   } catch {
     stats.value = [

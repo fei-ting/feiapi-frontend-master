@@ -362,8 +362,8 @@ const loadDetail = async () => {
     return;
   }
   try {
-    const res = await interfaceService.getDocDetail(id);
-    docDetail.value = res.data || null;
+    const data = await interfaceService.getDocDetail(id);
+    docDetail.value = data || null;
   } catch (error) {
     console.error('[InterfaceDetailView] 加载接口文档详情失败:', error);
     docDetail.value = null;

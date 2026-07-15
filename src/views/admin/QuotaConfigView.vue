@@ -107,8 +107,8 @@ const quotaConfigText = (item: InterfaceQuotaConfigVO) => {
  */
 const loadQuotaConfigs = async () => {
   try {
-    const res = await interfaceQuotaConfigService.list();
-    quotaConfigs.value = res.data ?? [];
+    const data = await interfaceQuotaConfigService.list();
+    quotaConfigs.value = data ?? [];
     quotaConfigs.value.forEach((item) => {
       quotaEditMap.value[item.quotaType] = item.initialQuota;
     });

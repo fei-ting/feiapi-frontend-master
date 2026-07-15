@@ -121,7 +121,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { useQuota } from '@/composables/useQuota';
 import { useFormat } from '@/composables/useFormat';
-import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/types/api';
+import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery, PageResult } from '@/types/api';
 
 /**
  * 接口管理页面组件
@@ -227,12 +227,11 @@ const loadInterfaces = async () => {
       params.sortField = 'totalNum';
       params.sortOrder = totalNumSortOrder.value;
     }
-    const res = await interfaceService.listPage(params);
-    const pageData = res.data;
-    interfaces.value = pageData?.records ?? [];
-    interfacePagination.value.total = pageData?.total ?? 0;
-    interfacePagination.value.totalPages = pageData?.total
-      ? Math.ceil(pageData.total / interfacePagination.value.pageSize)
+    const data = await interfaceService.listPage(params);
+    interfaces.value = data?.records ?? [];
+    interfacePagination.value.total = data?.total ?? 0;
+    interfacePagination.value.totalPages = data?.total
+      ? Math.ceil(data.total / interfacePagination.value.pageSize)
       : 0;
   } catch (error) {
     console.error('[InterfaceManagementView] 加载接口列表失败:', error);

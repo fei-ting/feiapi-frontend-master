@@ -14,8 +14,8 @@ export const useUserStore = defineStore('user', {
     },
     async fetchLoginUser() {
       try {
-        const res = await userService.getLoginUser();
-        this.setLoginUser(res.data || null);
+        const user = await userService.getLoginUser();
+        this.setLoginUser(user || null);
       } catch {
         this.clearLoginUser();
       }

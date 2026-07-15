@@ -228,8 +228,7 @@ const handleSubmit = async () => {
 
     // 获取登录用户信息，管理员跳转后台工作台
     try {
-      const res = await userService.getLoginUser();
-      const user = res.data;
+      const user = await userService.getLoginUser();
       userStore.setLoginUser(user || null);
       if (user?.userRole === 'admin') {
         await router.push('/admin/dashboard');

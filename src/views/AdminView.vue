@@ -548,8 +548,8 @@ const changePage = async (page: number) => {
 
 const loadLoginUser = async () => {
   try {
-    const res = await userService.getLoginUser();
-    loginUser.value = res.data || null;
+    const user = await userService.getLoginUser();
+    loginUser.value = user || null;
   } catch (error) {
     console.error('[AdminView] 加载登录用户信息失败:', error);
     loginUser.value = null;
@@ -569,12 +569,11 @@ const loadInterfaces = async () => {
       params.sortField = 'totalNum';
       params.sortOrder = totalNumSortOrder.value;
     }
-    const res = await interfaceService.listPage(params);
-    const pageData = res.data;
-    interfaces.value = pageData?.records ?? [];
-    interfacePagination.total = pageData?.total ?? 0;
-    interfacePagination.totalPages = pageData?.total
-      ? Math.ceil(pageData.total / interfacePagination.pageSize)
+    const data = await interfaceService.listPage(params);
+    interfaces.value = data?.records ?? [];
+    interfacePagination.total = data?.total ?? 0;
+    interfacePagination.totalPages = data?.total
+      ? Math.ceil(data.total / interfacePagination.pageSize)
       : 0;
   } catch (error) {
     console.error('[AdminView] 加载接口列表失败:', error);
@@ -586,8 +585,8 @@ const loadInterfaces = async () => {
 
 const loadQuotaConfigs = async () => {
   try {
-    const res = await interfaceQuotaConfigService.list();
-    quotaConfigs.value = res.data ?? [];
+    const data = await interfaceQuotaConfigService.list();
+    quotaConfigs.value = data ?? [];
     quotaConfigs.value.forEach((item) => {
       quotaEditMap[item.quotaType] = item.initialQuota;
     });
