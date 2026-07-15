@@ -8,7 +8,9 @@
     />
 
     <main class="fei-container fei-page">
-      <slot />
+      <ErrorBoundary>
+        <slot />
+      </ErrorBoundary>
     </main>
 
     <AppFooter />
@@ -21,6 +23,7 @@ import { onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';

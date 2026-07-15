@@ -25,7 +25,9 @@
 
         <!-- 内容区 -->
         <div class="fei-admin-content">
-          <slot @show-toast="handleShowToast" />
+          <ErrorBoundary>
+            <slot @show-toast="handleShowToast" />
+          </ErrorBoundary>
         </div>
       </div>
     </PageContainer>
@@ -41,6 +43,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { h } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
