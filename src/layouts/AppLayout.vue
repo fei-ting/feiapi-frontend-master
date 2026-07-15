@@ -21,13 +21,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
-import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 
 /**
@@ -79,8 +78,7 @@ const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = '
  */
 const handleLogout = async () => {
   try {
-    await userService.logout();
-    userStore.clearLoginUser();
+    await userStore.logout();
     showToast('已安全退出', 'success');
     // 延迟跳转到首页，让用户看到提示
     setTimeout(() => {
@@ -103,7 +101,4 @@ defineExpose({
   showToast,
 });
 
-onMounted(async () => {
-  await userStore.fetchLoginUser();
-});
 </script>

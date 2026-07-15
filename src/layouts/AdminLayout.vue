@@ -40,14 +40,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, reactive } from 'vue';
+import { computed, h, reactive } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
-import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 
 /**
@@ -149,31 +148,11 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 };
 
 /**
- * 加载当前登录用户
- * 使用用户 Store 统一管理会话状态
- */
-const loadLoginUser = async () => {
-  try {
-    const user = await userStore.fetchLoginUser();
-
-    // 检查管理员权限
-    if (!user || user.userRole !== 'admin') {
-      showToast('无权访问后台管理', 'error');
-      router.replace('/home');
-    }
-  } catch {
-    showToast('加载用户信息失败', 'error');
-    router.replace('/home');
-  }
-};
-
-/**
  * 处理退出登录
  */
 const handleLogout = async () => {
   try {
-    await userService.logout();
-    userStore.clearLoginUser();
+    await userStore.logout();
     showToast('已安全退出', 'success');
     setTimeout(() => {
       router.replace('/home');
@@ -202,10 +181,5 @@ const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = '
 // 暴露方法给子组件使用
 defineExpose({
   showToast,
-  loadLoginUser,
-});
-
-onMounted(async () => {
-  await loadLoginUser();
 });
 </script>
