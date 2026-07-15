@@ -63,8 +63,8 @@
           </div>
           <div class="fei-api-card__tag-stack">
             <StatusTag :status="item.status" />
-            <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
-              {{ quotaTypeText(item) }}
+            <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
+              {{ getQuotaTypeText(item.quotaType, item.quotaTypeText) }}
             </span>
           </div>
         </div>
@@ -129,6 +129,7 @@ import LoadingBlock from '@/components/LoadingBlock.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
+import { useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO } from '@/types/api';
 
 /**
@@ -137,6 +138,7 @@ import type { InterfaceInfoVO } from '@/types/api';
  */
 
 const userStore = useUserStore();
+const { isFreeUnlimited, getQuotaTagClass, getQuotaTypeText } = useQuota();
 
 /** 接口列表 */
 const list = ref<InterfaceInfoVO[]>([]);
@@ -184,34 +186,6 @@ const paginationRange = computed(() => {
   }
   return pages;
 });
-
-/**
- * 判断是否为免费无限配额
- * @param quotaType 配额类型
- * @returns 是否为免费无限
- */
-const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
-
-/**
- * 获取配额标签样式类
- * @param quotaType 配额类型
- * @returns 样式类名
- */
-const quotaTagClass = (quotaType?: string) => {
-  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
-  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
-  return 'fei-tag--quota-basic';
-};
-
-/**
- * 获取配额类型文本
- * @param item 接口信息
- * @returns 配额类型文本
- */
-const quotaTypeText = (item: InterfaceInfoVO) => {
-  if (isFreeUnlimited(item.quotaType)) return '免费无限';
-  return item.quotaTypeText || '基础额度';
-};
 
 /**
  * 获取接口显示名称

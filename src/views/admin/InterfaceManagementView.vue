@@ -59,12 +59,12 @@
             <td>{{ item.name }}</td>
             <td style="color: var(--fei-text-muted)">{{ item.url }}</td>
             <td>
-              <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
-                {{ quotaTypeText(item) }}
+              <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
+                {{ getQuotaTypeText(item.quotaType, item.quotaTypeText) }}
               </span>
             </td>
             <td>
-              <span class="fei-quota-value">{{ initialQuotaText(item) }}</span>
+              <span class="fei-quota-value">{{ getInitialQuotaText(item.quotaType, item.initialQuota) }}</span>
             </td>
             <td>
               <span
@@ -75,7 +75,7 @@
                   'fei-tag--offline': item.status !== 1 && item.status !== 2,
                 }"
               >
-                {{ statusText(item.status) }}
+                {{ getInterfaceStatusText(item.status) }}
               </span>
             </td>
             <td>
@@ -119,12 +119,15 @@
 import { computed, onMounted, ref } from 'vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
+import { useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/types/api';
 
 /**
  * 接口管理页面组件
  * 提供接口的增删改查、上下线和分页功能
  */
+
+const { isFreeUnlimited, getQuotaTagClass, getQuotaTypeText, getInitialQuotaText, getInterfaceStatusText } = useQuota();
 
 /** 接口列表 */
 const interfaces = ref<InterfaceInfoVO[]>([]);
@@ -286,48 +289,6 @@ const offlineInterface = async (id: number) => {
     console.error('[InterfaceManagementView] 接口下线失败:', error);
     showToast('下线失败', 'error');
   }
-};
-
-/**
- * 获取配额标签样式类
- * @param quotaType 配额类型
- * @returns 样式类名
- */
-const quotaTagClass = (quotaType?: string) => {
-  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
-  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
-  return 'fei-tag--quota-basic';
-};
-
-/**
- * 获取配额类型文本
- * @param item 接口信息
- * @returns 配额类型文本
- */
-const quotaTypeText = (item: InterfaceInfoVO) => {
-  if (item.quotaType === 'FREE_UNLIMITED') return '免费无限';
-  return item.quotaTypeText || '基础额度';
-};
-
-/**
- * 获取初始额度文本
- * @param item 接口信息
- * @returns 初始额度文本
- */
-const initialQuotaText = (item: InterfaceInfoVO) => {
-  if (item.quotaType === 'FREE_UNLIMITED') return '无限次';
-  return `${item.initialQuota ?? 0} 次`;
-};
-
-/**
- * 获取状态文本
- * @param status 状态值
- * @returns 状态文本
- */
-const statusText = (status?: number) => {
-  if (status === 1) return '已上线';
-  if (status === 2) return '发布验证中';
-  return '已下线';
 };
 
 /**

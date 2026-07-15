@@ -22,7 +22,7 @@
         <p class="fei-section-desc fei-detail-hero__desc">{{ interfaceSummary(detail) }}</p>
         <div class="fei-detail-hero__meta" aria-label="接口摘要">
           <span><strong>{{ methodText(detail) }}</strong> 请求方式</span>
-          <span>{{ quotaTypeText(detail) }}</span>
+          <span>{{ getQuotaTypeText(detail.quotaType, detail.quotaTypeText) }}</span>
           <span>调用 {{ detail.totalNum ?? 0 }} 次</span>
           <span>更新于 {{ formatDateTime(detail.updateTime) }}</span>
         </div>
@@ -66,7 +66,7 @@
           </div>
           <div class="fei-doc-info-item">
             <span class="fei-info-label">配额类型</span>
-            <span>{{ quotaTypeText(detail) }}</span>
+            <span>{{ getQuotaTypeText(detail.quotaType, detail.quotaTypeText) }}</span>
           </div>
           <div class="fei-doc-info-item">
             <span class="fei-info-label">更新时间</span>
@@ -251,6 +251,7 @@ import MethodTag from '@/components/MethodTag.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
+import { useQuota } from '@/composables/useQuota';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
 
 /**
@@ -261,6 +262,7 @@ import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocPar
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const { isFreeUnlimited, getQuotaTypeText } = useQuota();
 
 // 使用共享 composable
 const {
@@ -318,23 +320,6 @@ const responseParamNameMap = computed(() => new Map(
     .filter((param) => param.id && param.name)
     .map((param) => [param.id as number, param.name as string]),
 ));
-
-/**
- * 判断是否为免费无限配额
- * @param quotaType 配额类型
- * @returns 是否为免费无限
- */
-const isFreeUnlimited = (quotaType?: string) => quotaType === 'FREE_UNLIMITED';
-
-/**
- * 获取配额类型文本
- * @param item 接口信息
- * @returns 配额类型文本
- */
-const quotaTypeText = (item: InterfaceDocInterfaceInfoVO) => {
-  if (isFreeUnlimited(item.quotaType)) return '免费无限';
-  return item.quotaTypeText || '基础额度接口';
-};
 
 /**
  * 获取请求方法文本
