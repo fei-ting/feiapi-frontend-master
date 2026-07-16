@@ -51,12 +51,12 @@
             </td>
             <td>
               <div class="fei-table-actions">
-                <a
+                <RouterLink
                   v-if="item.interfaceStatus === 1 && item.interfaceInfoId"
-                  :href="`#/interface/${item.interfaceInfoId}`"
+                  :to="`/interface/${item.interfaceInfoId}`"
                 >
                   去调用
-                </a>
+                </RouterLink>
                 <span v-else class="fei-muted-action">暂不可调用</span>
               </div>
             </td>
