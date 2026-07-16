@@ -228,11 +228,8 @@ import type { DataSource } from '@/services/dashboardMock';
 const router = useRouter();
 const userStore = useUserStore();
 
-/** 当前管理员显示名称 */
-const displayName = computed(() => userStore.loginUser?.userName || '管理员');
-
-/** 概览统计 */
-const overview = ref<DashboardOverview>({
+/** 创建空概览数据，接口失败时避免展示伪造指标。 */
+const createEmptyOverview = (): DashboardOverview => ({
   totalInterfaces: 0,
   onlineInterfaces: 0,
   offlineInterfaces: 0,
@@ -241,13 +238,22 @@ const overview = ref<DashboardOverview>({
   abnormalInterfaces: 0,
 });
 
-/** 趋势数据 */
-const trends = ref<DashboardTrends>({
+/** 创建空趋势数据，接口失败时保持图表为空状态。 */
+const createEmptyTrends = (): DashboardTrends => ({
   successRate: [],
   invocationCount: [],
   errorRate: [],
   responseTime: [],
 });
+
+/** 当前管理员显示名称 */
+const displayName = computed(() => userStore.loginUser?.userName || '管理员');
+
+/** 概览统计 */
+const overview = ref<DashboardOverview>(createEmptyOverview());
+
+/** 趋势数据 */
+const trends = ref<DashboardTrends>(createEmptyTrends());
 
 /** 重点关注 */
 const alerts = ref<AlertInterface[]>([]);
@@ -367,10 +373,10 @@ const loadDashboard = async () => {
     ]);
 
     // 更新数据
-    overview.value = overviewResult.data;
-    trends.value = trendsResult.data;
-    alerts.value = alertsResult.data;
-    changes.value = changesResult.data;
+    overview.value = overviewResult.data ?? createEmptyOverview();
+    trends.value = trendsResult.data ?? createEmptyTrends();
+    alerts.value = alertsResult.data ?? [];
+    changes.value = changesResult.data ?? [];
 
     // 数据来源：优先显示 error，其次 mock，最后 real
     const sources: DataSource[] = [
