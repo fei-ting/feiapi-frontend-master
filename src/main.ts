@@ -4,6 +4,7 @@ import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';
 import '@/styles/global.css';
+import { registerGlobalErrorHandlers, reportError } from '@/services/errorReporter';
 
 const app = createApp(App);
 
@@ -12,12 +13,12 @@ const app = createApp(App);
  * 捕获未处理的渲染错误和组件错误
  */
 app.config.errorHandler = (err, instance, info) => {
-  console.error('[全局错误] 捕获到未处理的错误:', {
-    error: err,
+  reportError(err, {
+    source: 'vue-global',
     component: instance?.$?.type?.name || 'Unknown',
     info,
   });
-  // TODO: 在此处接入错误上报服务（如 Sentry）
 };
 
+registerGlobalErrorHandlers();
 app.use(createPinia()).use(router).mount('#app');

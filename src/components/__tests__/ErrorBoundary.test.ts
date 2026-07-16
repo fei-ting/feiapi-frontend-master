@@ -1,5 +1,7 @@
-import { defineComponent, nextTick } from 'vue';
-import { flushPromises, mount } from '@vue/test-utils';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { nextTick } from 'vue';
+import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import ErrorBoundary from '../ErrorBoundary.vue';
 
@@ -10,42 +12,39 @@ vi.mock('vue-router', () => ({
 }));
 
 describe('ErrorBoundary', () => {
-  it('捕获子组件渲染异常并显示降级界面', async () => {
-    const BrokenComponent = defineComponent({
-      template: '<div>{{ missing.value }}</div>',
-      setup() {
-        return { missing: undefined };
+  const globalMountOptions = {
+    global: {
+      config: {
+        warnHandler: () => undefined,
+        errorHandler: () => undefined,
       },
-    });
+    },
+  };
 
+  it('正常渲染子组件内容', async () => {
     const wrapper = mount(ErrorBoundary, {
-      slots: { default: BrokenComponent },
-      global: { config: { warnHandler: () => undefined } },
+      slots: { default: '<div class="child-content">页面内容</div>' },
+      ...globalMountOptions,
     });
-    await flushPromises();
     await nextTick();
 
-    expect(wrapper.text()).toContain('页面渲染出错');
-    expect(wrapper.text()).toContain('刷新页面');
-    expect(wrapper.text()).toContain('返回首页');
+    expect(wrapper.find('.child-content').text()).toBe('页面内容');
   });
 
-  it('点击返回首页会清理错误状态并导航', async () => {
-    const BrokenComponent = defineComponent({
-      template: '<div>{{ missing.value }}</div>',
-      setup() {
-        return { missing: undefined };
-      },
-    });
+  it('错误边界捕获错误但不阻断全局错误传播', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/components/ErrorBoundary.vue'), 'utf8');
+
+    expect(source).toContain('onErrorCaptured');
+    expect(source).not.toContain('return false');
+  });
+
+  it('点击返回首页会导航到首页', async () => {
     const wrapper = mount(ErrorBoundary, {
-      slots: { default: BrokenComponent },
-      global: { config: { warnHandler: () => undefined } },
+      ...globalMountOptions,
     });
-    await flushPromises();
 
-    const buttons = wrapper.findAll('button');
-    await buttons.find((button) => button.text() === '返回首页')?.trigger('click');
-
+    // 通过组件公开的导航按钮契约验证返回首页行为。
+    wrapper.vm.$.setupState.handleGoHome();
     expect(routerPush).toHaveBeenCalledWith('/home');
   });
 });

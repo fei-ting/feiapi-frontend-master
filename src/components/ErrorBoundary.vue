@@ -29,7 +29,8 @@ import { useRouter } from 'vue-router';
 
 /**
  * 错误边界组件
- * 捕获子组件的渲染错误，显示友好的错误提示
+ * 捕获子组件的渲染错误，显示友好的错误提示。
+ * 错误继续向上传播，由应用级错误处理器统一上报。
  */
 
 const router = useRouter();
@@ -42,14 +43,11 @@ const errorMessage = ref('');
 
 /**
  * 捕获子组件错误
- * 返回 false 阻止错误继续向上传播
+ * 不返回 false，确保错误继续进入应用级错误处理器。
  */
 onErrorCaptured((err: Error, instance, info) => {
-  console.error('[ErrorBoundary] 捕获到组件错误:', err, info);
   hasError.value = true;
   errorMessage.value = err.message || '页面遇到了意外错误';
-  // 阻止错误继续向上传播
-  return false;
 });
 
 /**
