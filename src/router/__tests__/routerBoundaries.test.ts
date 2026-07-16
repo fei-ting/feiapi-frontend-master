@@ -38,6 +38,7 @@ describe('功能路由边界', () => {
     expect(routeMap.get('profile-keys')?.meta.feature).toBe('profile-keys');
     expect(routeMap.get('admin-dashboard')?.meta.feature).toBe('admin-dashboard');
     expect(routeMap.get('admin-interfaces')?.meta.feature).toBe('admin-interfaces');
+    expect(routeMap.get('admin-interface-doc')?.meta.feature).toBe('admin-interface-doc');
     expect(routeMap.get('admin-quotas')?.meta.feature).toBe('admin-quotas');
   });
 
