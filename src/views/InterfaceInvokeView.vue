@@ -243,7 +243,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import StatusTag from '@/components/StatusTag.vue';
 import MethodTag from '@/components/MethodTag.vue';
@@ -251,6 +251,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import { useDialogFocusTrap } from '@/composables/useDialogFocusTrap';
+import { useInterfaceInvoke } from '@/composables/useInterfaceInvoke';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
 
 /**
@@ -260,19 +261,6 @@ import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO, InterfaceDocPar
 
 type InvokeTab = 'result' | 'doc';
 type DialogAction = 'login' | 'invoke';
-type RequestParamValue = string | number | boolean | Record<string, unknown> | unknown[];
-
-/** 请求参数字段配置 */
-interface RequestParamField {
-  name: string;
-  type: string;
-  example: unknown;
-  required: boolean;
-  defaultValue?: string;
-  description?: string;
-  validationRule?: string;
-}
-
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
@@ -308,23 +296,22 @@ const invokeLoading = ref(false);
 /** 接口文档详情 */
 const docDetail = ref<InterfaceDocDetailVO | null>(null);
 
-/** 请求参数 */
-const requestParams = ref('');
+/** 在线调用参数状态 */
+const {
+  requestParams,
+  requestParamError,
+  structuredParams,
+  paramValues,
+  validateRequestParams,
+  fillStructuredExample,
+  syncFromDocument,
+} = useInterfaceInvoke(docDetail);
 
 /** 调用结果 */
 const invokeResult = ref('');
 
-/** 请求参数错误信息 */
-const requestParamError = ref('');
-
 /** 当前活动的标签 */
 const activeTab = ref<InvokeTab>('result');
-
-/** 结构化参数列表 */
-const structuredParams = ref<RequestParamField[]>([]);
-
-/** 参数值 */
-const paramValues = reactive<Record<string, string>>({});
 
 /** 弹窗状态 */
 const dialog = reactive({
@@ -375,131 +362,6 @@ const getErrorMessage = (error: unknown) => {
 };
 
 /**
- * 解析结构化参数
- * @param doc 接口文档详情
- * @returns 结构化参数列表
- */
-const parseStructuredParams = (doc: InterfaceDocDetailVO | null) => {
-  if (!doc || doc.structuredDocMissing) {
-    return [];
-  }
-  return (doc.requestParams || [])
-    .filter((param) => param.name)
-    .map((param) => ({
-      name: param.name as string,
-      type: param.type || 'string',
-      example: param.exampleValue || param.defaultValue || '',
-      required: param.required !== false,
-      defaultValue: param.defaultValue,
-      description: param.description,
-      validationRule: param.validationRule,
-    }));
-};
-
-/**
- * 解析参数值
- * @param param 参数字段
- * @param rawValue 原始值
- * @returns 解析结果
- */
-const parseParamValue = (param: RequestParamField, rawValue: string) => {
-  const trimmedValue = rawValue.trim();
-  if (!trimmedValue && param.required) {
-    return {
-      valid: false,
-      message: `请求参数缺少必填字段：${param.name}`,
-      value: undefined,
-    };
-  }
-  if (!trimmedValue) {
-    return { valid: true, value: undefined };
-  }
-  if (param.type === 'number') {
-    const numberValue = Number(trimmedValue);
-    return Number.isFinite(numberValue)
-      ? { valid: true, value: numberValue }
-      : { valid: false, message: `请求参数字段类型错误：${param.name} 应为 number`, value: undefined };
-  }
-  if (param.type === 'boolean') {
-    if (trimmedValue === 'true' || trimmedValue === '1') {
-      return { valid: true, value: true };
-    }
-    if (trimmedValue === 'false' || trimmedValue === '0') {
-      return { valid: true, value: false };
-    }
-    return {
-      valid: false,
-      message: `请求参数字段类型错误：${param.name} 应为 boolean`,
-      value: undefined,
-    };
-  }
-  if (param.type === 'object' || param.type === 'array') {
-    try {
-      const parsedValue = JSON.parse(trimmedValue);
-      const isExpectedType = param.type === 'array'
-        ? Array.isArray(parsedValue)
-        : parsedValue !== null && !Array.isArray(parsedValue) && typeof parsedValue === 'object';
-      return isExpectedType
-        ? { valid: true, value: parsedValue as RequestParamValue }
-        : { valid: false, message: `请求参数字段类型错误：${param.name} 应为 ${param.type}`, value: undefined };
-    } catch {
-      return {
-        valid: false,
-        message: `请求参数字段类型错误：${param.name} 应为 ${param.type}`,
-        value: undefined,
-      };
-    }
-  }
-  return { valid: true, value: rawValue };
-};
-
-/**
- * 从结构化字段同步请求参数
- * @returns 错误消息，成功返回空字符串
- */
-const syncRequestParamsFromFields = () => {
-  if (!structuredParams.value.length) {
-    return '';
-  }
-  const params: Record<string, RequestParamValue> = {};
-  for (const param of structuredParams.value) {
-    const parsedValue = parseParamValue(param, paramValues[param.name] || '');
-    if (!parsedValue.valid) {
-      return parsedValue.message || '请求参数格式错误';
-    }
-    if (parsedValue.value !== undefined) {
-      params[param.name] = parsedValue.value as RequestParamValue;
-    }
-  }
-  requestParams.value = JSON.stringify(params);
-  return '';
-};
-
-/**
- * 验证请求参数 JSON
- * @returns 是否有效
- */
-const validateRequestParamsJson = () => {
-  requestParamError.value = '';
-  const structuredParamError = syncRequestParamsFromFields();
-  if (structuredParamError) {
-    requestParamError.value = structuredParamError;
-    return false;
-  }
-  const trimmedParams = requestParams.value.trim();
-  if (!trimmedParams) {
-    return true;
-  }
-  try {
-    JSON.parse(trimmedParams);
-    return true;
-  } catch {
-    requestParamError.value = '请求参数必须是合法 JSON';
-    return false;
-  }
-};
-
-/**
  * 格式化调用响应
  * @param data 响应数据
  * @returns 格式化后的字符串
@@ -515,24 +377,6 @@ const formatInvokeResponse = (data: unknown) => {
 };
 
 /**
- * 填充结构化示例值
- */
-const fillStructuredExample = () => {
-  structuredParams.value.forEach((param) => {
-    if (param.example === null || param.example === undefined) {
-      paramValues[param.name] = '';
-    } else if (typeof param.example === 'string' && ['string', 'number', 'boolean', 'object', 'array'].includes(param.example.toLowerCase())) {
-      paramValues[param.name] = '';
-    } else if (typeof param.example === 'object') {
-      paramValues[param.name] = JSON.stringify(param.example);
-    } else {
-      paramValues[param.name] = String(param.example);
-    }
-  });
-  syncRequestParamsFromFields();
-};
-
-/**
  * 加载接口文档详情
  */
 const loadDetail = async () => {
@@ -545,12 +389,7 @@ const loadDetail = async () => {
   try {
     const data = await interfaceService.getDocDetail(id);
     docDetail.value = data || null;
-    structuredParams.value = parseStructuredParams(docDetail.value);
-    if (structuredParams.value.length) {
-      fillStructuredExample();
-    } else {
-      requestParams.value = '';
-    }
+    syncFromDocument();
   } catch (error) {
     console.error('[InterfaceInvokeView] 加载接口文档详情失败:', error);
     docDetail.value = null;
@@ -618,7 +457,7 @@ const handleDialogPrimary = () => {
  */
 const invokeApi = async () => {
   if (!detail.value?.id) return;
-  if (!validateRequestParamsJson()) {
+  if (!validateRequestParams()) {
     const message = requestParamError.value || '请求参数必须是合法 JSON';
     invokeResult.value = message;
     activeTab.value = 'result';

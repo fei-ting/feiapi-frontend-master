@@ -87,70 +87,28 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { userService } from '@/services/user';
-
-/**
- * 账号格式正则：4-10 位，第一位必须是字母，只能包含大小写字母和数字
- * 自动排除纯数字（因为第一位必须是字母）
- */
-const ACCOUNT_REGEX = /^[a-zA-Z][a-zA-Z0-9]{3,9}$/;
-/** 密码格式正则：8-16位，仅大小写字母和数字 */
-const PASSWORD_CHAR_REGEX = /^[a-zA-Z0-9]{8,16}$/;
-/** 必须包含至少一个字母 */
-const LETTER_REGEX = /[a-zA-Z]/;
-/** 必须包含至少一个数字 */
-const DIGIT_REGEX = /[0-9]/;
-
-/** 可校验的字段名类型 */
-type ValidatableField = 'userAccount' | 'userPassword' | 'checkPassword';
+import { useAuthForm } from '@/composables/useAuthForm';
+import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
+const { form, errors, shakingField, validateAccount, validatePassword, validateCheckPassword } = useAuthForm({ withCheckPassword: true });
+const { toast, showToast } = useToast(2200);
 
-const form = reactive({
-  userAccount: '',
-  userPassword: '',
-  checkPassword: '',
-});
-
-/** 各字段的错误提示信息 */
-const errors = reactive({
-  userAccount: '',
-  userPassword: '',
-  checkPassword: '',
-});
-
-/** 各字段的抖动动画状态 */
-const shake = reactive({
-  userAccount: false,
-  userPassword: false,
-  checkPassword: false,
-});
-
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
-
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2200);
+/** 各字段的抖动状态，保持注册页原有模板契约 */
+const shake = {
+  get userAccount() { return shakingField.value === 'userAccount'; },
+  get userPassword() { return shakingField.value === 'userPassword'; },
+  get checkPassword() { return shakingField.value === 'checkPassword'; },
 };
 
-/**
- * 触发指定字段的抖动动画
- */
-const triggerShake = (field: ValidatableField) => {
-  shake[field] = false;
+/** 触发指定字段的抖动动画 */
+const triggerShake = (field: 'userAccount' | 'userPassword' | 'checkPassword') => {
+  shakingField.value = '';
   requestAnimationFrame(() => {
-    shake[field] = true;
+    shakingField.value = field;
   });
 };
 
@@ -158,7 +116,6 @@ const triggerShake = (field: ValidatableField) => {
  * 账号输入时实时校验
  */
 const onAccountInput = () => {
-  shake.userAccount = false;
   validateAccount();
 };
 
@@ -166,7 +123,6 @@ const onAccountInput = () => {
  * 密码输入时实时校验
  */
 const onPasswordInput = () => {
-  shake.userPassword = false;
   validatePassword();
   // 密码变化时，如果确认密码已有内容，同步校验确认密码
   if (form.checkPassword) {
@@ -178,78 +134,7 @@ const onPasswordInput = () => {
  * 确认密码输入时实时校验
  */
 const onCheckPasswordInput = () => {
-  shake.checkPassword = false;
   validateCheckPassword();
-};
-
-/**
- * 校验账号格式
- * @returns 是否合法
- */
-const validateAccount = (): boolean => {
-  const account = form.userAccount.trim();
-  if (!account) {
-    errors.userAccount = '请输入账号';
-    return false;
-  }
-  if (account.length < 4) {
-    errors.userAccount = '账号长度至少 4 位';
-    return false;
-  }
-  if (account.length > 10) {
-    errors.userAccount = '账号长度不能超过 10 位';
-    return false;
-  }
-  if (!ACCOUNT_REGEX.test(account)) {
-    errors.userAccount = '账号必须以字母开头，只能包含大小写字母和数字';
-    return false;
-  }
-  errors.userAccount = '';
-  return true;
-};
-
-/**
- * 校验密码格式
- * @returns 是否合法
- */
-const validatePassword = (): boolean => {
-  const password = form.userPassword;
-  if (!password) {
-    errors.userPassword = '请输入密码';
-    return false;
-  }
-  if (password.length < 8) {
-    errors.userPassword = '密码长度至少 8 位';
-    return false;
-  }
-  if (password.length > 16) {
-    errors.userPassword = '密码长度不能超过 16 位';
-    return false;
-  }
-  if (!PASSWORD_CHAR_REGEX.test(password) || !LETTER_REGEX.test(password) || !DIGIT_REGEX.test(password)) {
-    errors.userPassword = '密码只能包含大小写字母和数字，且必须同时包含字母和数字';
-    return false;
-  }
-  errors.userPassword = '';
-  return true;
-};
-
-/**
- * 校验确认密码：只校验是否与密码一致，格式规则已在密码字段校验
- * @returns 是否合法
- */
-const validateCheckPassword = (): boolean => {
-  const checkPassword = form.checkPassword;
-  if (!checkPassword) {
-    errors.checkPassword = '请输入确认密码';
-    return false;
-  }
-  if (form.userPassword !== checkPassword) {
-    errors.checkPassword = '两次输入的密码不一致';
-    return false;
-  }
-  errors.checkPassword = '';
-  return true;
 };
 
 /**
