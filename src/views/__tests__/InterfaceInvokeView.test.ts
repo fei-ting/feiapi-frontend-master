@@ -33,6 +33,7 @@ vi.mock('@/services/user', () => ({
 
 vi.mock('@/stores/user', () => ({
   useUserStore: () => ({
+    loginUser: { id: 1, userRole: 'user' },
     clearLoginUser: mocks.clearLoginUser,
   }),
 }));
@@ -75,9 +76,9 @@ const buildDocDetail = (): InterfaceDocDetailVO => ({
  * 挂载在线调用页组件。
  */
 const mountView = async () => {
-  mocks.getLoginUser.mockResolvedValue({ data: { id: 1, userRole: 'user' } });
-  mocks.getDocDetail.mockResolvedValue({ data: buildDocDetail() });
-  mocks.invoke.mockResolvedValue({ data: { ok: true } });
+  mocks.getLoginUser.mockResolvedValue({ id: 1, userRole: 'user' });
+  mocks.getDocDetail.mockResolvedValue(buildDocDetail());
+  mocks.invoke.mockResolvedValue({ ok: true });
   const wrapper = mount(InterfaceInvokeView, {
     global: {
       stubs: {
