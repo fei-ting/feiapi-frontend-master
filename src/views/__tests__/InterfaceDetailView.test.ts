@@ -32,6 +32,7 @@ vi.mock('@/services/user', () => ({
 
 vi.mock('@/stores/user', () => ({
   useUserStore: () => ({
+    loginUser: { id: 1, userRole: 'admin' },
     clearLoginUser: mocks.clearLoginUser,
   }),
 }));
@@ -78,8 +79,8 @@ const buildDocDetail = (override: Partial<InterfaceDocDetailVO> = {}): Interface
  * 挂载接口详情页组件。
  */
 const mountView = async (docDetail: InterfaceDocDetailVO) => {
-  mocks.getLoginUser.mockResolvedValue({ data: { id: 1, userRole: 'admin' } });
-  mocks.getDocDetail.mockResolvedValue({ data: docDetail });
+  mocks.getLoginUser.mockResolvedValue({ id: 1, userRole: 'admin' });
+  mocks.getDocDetail.mockResolvedValue(docDetail);
   const wrapper = mount(InterfaceDetailView, {
     global: {
       stubs: {
@@ -109,6 +110,10 @@ describe('InterfaceDetailView', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
+      configurable: true,
+    });
+    Object.defineProperty(window, 'isSecureContext', {
+      value: true,
       configurable: true,
     });
     const wrapper = await mountView(buildDocDetail());
