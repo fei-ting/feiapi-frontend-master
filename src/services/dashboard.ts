@@ -6,7 +6,7 @@
  */
 
 import http from './http';
-import type { InterfaceInfoVO, PageResult } from '@/types/api';
+import type { InterfaceInfoVO } from '@/types/api';
 import type {
   DashboardOverview,
   DashboardTrends,
@@ -36,7 +36,7 @@ export const dashboardService = {
       if (isMockEnabled()) {
         return getMockOverview();
       }
-      return { data: getMockOverview().data, source: 'error' };
+      return { data: null, source: 'error' };
     }
   },
 
@@ -53,7 +53,7 @@ export const dashboardService = {
       if (isMockEnabled()) {
         return getMockTrends();
       }
-      return { data: getMockTrends().data, source: 'error' };
+      return { data: null, source: 'error' };
     }
   },
 
@@ -70,7 +70,7 @@ export const dashboardService = {
       if (isMockEnabled()) {
         return getMockAlerts();
       }
-      return { data: getMockAlerts().data, source: 'error' };
+      return { data: null, source: 'error' };
     }
   },
 
@@ -87,7 +87,7 @@ export const dashboardService = {
       if (isMockEnabled()) {
         return getMockChanges();
       }
-      return { data: getMockChanges().data, source: 'error' };
+      return { data: null, source: 'error' };
     }
   },
 

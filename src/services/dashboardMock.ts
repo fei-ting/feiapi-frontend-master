@@ -17,7 +17,8 @@ export type DataSource = 'real' | 'mock' | 'error';
 
 /** 带来源标记的返回结果 */
 export interface DataResult<T> {
-  data: T;
+  /** 数据内容；接口失败且未启用 Mock 时为空 */
+  data: T | null;
   source: DataSource;
 }
 
