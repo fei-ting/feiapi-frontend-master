@@ -323,7 +323,7 @@ const dialog = reactive({
 });
 
 /** 登录链接 */
-const loginHref = computed(() => `#/login?redirect=${encodeURIComponent(route.fullPath)}`);
+const loginHref = computed(() => `/login?redirect=${encodeURIComponent(route.fullPath)}`);
 
 /** 接口信息 */
 const detail = computed<InterfaceDocInterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);

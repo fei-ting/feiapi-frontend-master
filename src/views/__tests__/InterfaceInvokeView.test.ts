@@ -9,12 +9,14 @@ const mocks = vi.hoisted(() => ({
   getLoginUser: vi.fn(),
   logout: vi.fn(),
   clearLoginUser: vi.fn(),
+  routerPush: vi.fn(),
+  loginUser: null as { id: number; userRole: string } | null,
   routerReplace: vi.fn(),
 }));
 
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: { id: '1' }, fullPath: '/interface/1/invoke' }),
-  useRouter: () => ({ replace: mocks.routerReplace }),
+  useRouter: () => ({ push: mocks.routerPush, replace: mocks.routerReplace }),
 }));
 
 vi.mock('@/services/interfaceInfo', () => ({
@@ -33,7 +35,7 @@ vi.mock('@/services/user', () => ({
 
 vi.mock('@/stores/user', () => ({
   useUserStore: () => ({
-    loginUser: { id: 1, userRole: 'user' },
+    loginUser: mocks.loginUser,
     clearLoginUser: mocks.clearLoginUser,
   }),
 }));
@@ -98,6 +100,7 @@ const mountView = async () => {
 describe('InterfaceInvokeView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.loginUser = { id: 1, userRole: 'user' };
   });
 
   /**
@@ -121,5 +124,16 @@ describe('InterfaceInvokeView', () => {
       meta: { level: 2 },
       tags: ['vip'],
     });
+  });
+
+  /** 验证未登录调用使用 Vue Router 跳转且不生成 Hash 链接。 */
+  it('未登录时跳转到带 redirect 参数的登录路由', async () => {
+    mocks.loginUser = null;
+    const wrapper = await mountView();
+
+    await wrapper.findAll('button').find((button) => button.text() === '发送请求')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '去登录')?.trigger('click');
+
+    expect(mocks.routerPush).toHaveBeenCalledWith('/login?redirect=%2Finterface%2F1%2Finvoke');
   });
 });
