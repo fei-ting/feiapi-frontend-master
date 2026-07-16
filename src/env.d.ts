@@ -4,6 +4,8 @@
 interface ImportMetaEnv {
   /** API 基础地址 */
   readonly VITE_API_BASE: string;
+  /** 是否在开发环境启用 Dashboard Mock 降级 */
+  readonly VITE_ENABLE_MOCK?: string;
 }
 
 interface ImportMeta {

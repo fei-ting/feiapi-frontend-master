@@ -13,7 +13,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         </div>
         <div class="fei-overview-card__content">
-          <div class="fei-overview-card__value">{{ overview.totalInterfaces }}</div>
+          <div class="fei-overview-card__value">{{ overview?.totalInterfaces ?? '--' }}</div>
           <div class="fei-overview-card__label">接口总数</div>
         </div>
       </div>
@@ -22,7 +22,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <div class="fei-overview-card__content">
-          <div class="fei-overview-card__value">{{ overview.onlineInterfaces }}</div>
+          <div class="fei-overview-card__value">{{ overview?.onlineInterfaces ?? '--' }}</div>
           <div class="fei-overview-card__label">在线接口</div>
         </div>
       </div>
@@ -31,7 +31,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
         </div>
         <div class="fei-overview-card__content">
-          <div class="fei-overview-card__value">{{ overview.offlineInterfaces }}</div>
+          <div class="fei-overview-card__value">{{ overview?.offlineInterfaces ?? '--' }}</div>
           <div class="fei-overview-card__label">已下线接口</div>
         </div>
       </div>
@@ -40,7 +40,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         </div>
         <div class="fei-overview-card__content">
-          <div class="fei-overview-card__value">{{ formatNumber(overview.todayInvocations) }}</div>
+          <div class="fei-overview-card__value">{{ overview ? formatNumber(overview.todayInvocations) : '--' }}</div>
           <div class="fei-overview-card__label">今日调用</div>
         </div>
       </div>
@@ -49,7 +49,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </div>
         <div class="fei-overview-card__content">
-          <div class="fei-overview-card__value">{{ overview.todayErrors }}</div>
+          <div class="fei-overview-card__value">{{ overview?.todayErrors ?? '--' }}</div>
           <div class="fei-overview-card__label">今日错误</div>
         </div>
       </div>
@@ -58,7 +58,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
         <div class="fei-overview-card__content">
-          <div class="fei-overview-card__value">{{ overview.abnormalInterfaces }}</div>
+          <div class="fei-overview-card__value">{{ overview?.abnormalInterfaces ?? '--' }}</div>
           <div class="fei-overview-card__label">异常接口</div>
         </div>
       </div>
@@ -212,7 +212,7 @@
     <!-- 接口错误提示 -->
     <div v-if="dataSource === 'error'" class="fei-dashboard__error-tip">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-      <span>数据加载失败，当前显示为降级数据。请检查后端接口状态</span>
+      <span>数据加载失败，当前未显示不可用指标。请检查后端接口状态</span>
     </div>
   </div>
 </template>
@@ -228,16 +228,6 @@ import type { DataSource } from '@/services/dashboardMock';
 const router = useRouter();
 const userStore = useUserStore();
 
-/** 创建空概览数据，接口失败时避免展示伪造指标。 */
-const createEmptyOverview = (): DashboardOverview => ({
-  totalInterfaces: 0,
-  onlineInterfaces: 0,
-  offlineInterfaces: 0,
-  todayInvocations: 0,
-  todayErrors: 0,
-  abnormalInterfaces: 0,
-});
-
 /** 创建空趋势数据，接口失败时保持图表为空状态。 */
 const createEmptyTrends = (): DashboardTrends => ({
   successRate: [],
@@ -250,7 +240,7 @@ const createEmptyTrends = (): DashboardTrends => ({
 const displayName = computed(() => userStore.loginUser?.userName || '管理员');
 
 /** 概览统计 */
-const overview = ref<DashboardOverview>(createEmptyOverview());
+const overview = ref<DashboardOverview | null>(null);
 
 /** 趋势数据 */
 const trends = ref<DashboardTrends>(createEmptyTrends());
@@ -364,6 +354,11 @@ const handleRefresh = () => {
  * 加载 Dashboard 数据
  */
 const loadDashboard = async () => {
+  overview.value = null;
+  trends.value = createEmptyTrends();
+  alerts.value = [];
+  changes.value = [];
+
   try {
     const [overviewResult, trendsResult, alertsResult, changesResult] = await Promise.all([
       dashboardService.getOverview(),
@@ -373,7 +368,7 @@ const loadDashboard = async () => {
     ]);
 
     // 更新数据
-    overview.value = overviewResult.data ?? createEmptyOverview();
+    overview.value = overviewResult.data;
     trends.value = trendsResult.data ?? createEmptyTrends();
     alerts.value = alertsResult.data ?? [];
     changes.value = changesResult.data ?? [];

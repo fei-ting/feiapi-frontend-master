@@ -22,6 +22,32 @@ import {
   getMockChanges,
 } from './dashboardMock';
 
+/**
+ * 请求 Dashboard 数据，并根据开发环境开关处理临时 Mock 降级。
+ * @param request 真实接口请求
+ * @param mockFactory Mock 数据工厂
+ * @returns 带数据来源标记的结果
+ */
+const requestDashboardData = async <T>(
+  request: () => Promise<T | null | undefined>,
+  mockFactory: () => DataResult<T>,
+): Promise<DataResult<T>> => {
+  try {
+    const data = await request();
+    if (data !== null && data !== undefined) {
+      return { data, source: 'real' };
+    }
+  } catch {
+    // 真实接口暂不可用时，按环境开关决定是否使用过渡 Mock 数据。
+  }
+
+  if (isMockEnabled()) {
+    return mockFactory();
+  }
+
+  return { data: null, source: 'error' };
+};
+
 export const dashboardService = {
   /**
    * 获取概览统计
@@ -29,15 +55,10 @@ export const dashboardService = {
    * 真实接口：GET /analysis/dashboard/overview
    */
   async getOverview(): Promise<DataResult<DashboardOverview>> {
-    try {
-      const data = await http.get<DashboardOverview>('/analysis/dashboard/overview');
-      return { data: data ?? getMockOverview().data, source: 'real' };
-    } catch {
-      if (isMockEnabled()) {
-        return getMockOverview();
-      }
-      return { data: null, source: 'error' };
-    }
+    return requestDashboardData(
+      () => http.get<DashboardOverview>('/analysis/dashboard/overview'),
+      getMockOverview,
+    );
   },
 
   /**
@@ -46,15 +67,10 @@ export const dashboardService = {
    * 真实接口：GET /analysis/dashboard/trends
    */
   async getTrends(): Promise<DataResult<DashboardTrends>> {
-    try {
-      const data = await http.get<DashboardTrends>('/analysis/dashboard/trends');
-      return { data: data ?? getMockTrends().data, source: 'real' };
-    } catch {
-      if (isMockEnabled()) {
-        return getMockTrends();
-      }
-      return { data: null, source: 'error' };
-    }
+    return requestDashboardData(
+      () => http.get<DashboardTrends>('/analysis/dashboard/trends'),
+      getMockTrends,
+    );
   },
 
   /**
@@ -63,15 +79,10 @@ export const dashboardService = {
    * 真实接口：GET /analysis/dashboard/alerts
    */
   async getAlerts(): Promise<DataResult<AlertInterface[]>> {
-    try {
-      const data = await http.get<AlertInterface[]>('/analysis/dashboard/alerts');
-      return { data: data ?? getMockAlerts().data, source: 'real' };
-    } catch {
-      if (isMockEnabled()) {
-        return getMockAlerts();
-      }
-      return { data: null, source: 'error' };
-    }
+    return requestDashboardData(
+      () => http.get<AlertInterface[]>('/analysis/dashboard/alerts'),
+      getMockAlerts,
+    );
   },
 
   /**
@@ -80,15 +91,10 @@ export const dashboardService = {
    * 真实接口：GET /analysis/dashboard/changes
    */
   async getChanges(): Promise<DataResult<ChangedInterface[]>> {
-    try {
-      const data = await http.get<ChangedInterface[]>('/analysis/dashboard/changes');
-      return { data: data ?? getMockChanges().data, source: 'real' };
-    } catch {
-      if (isMockEnabled()) {
-        return getMockChanges();
-      }
-      return { data: null, source: 'error' };
-    }
+    return requestDashboardData(
+      () => http.get<ChangedInterface[]>('/analysis/dashboard/changes'),
+      getMockChanges,
+    );
   },
 
   /**
