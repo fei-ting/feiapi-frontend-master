@@ -80,10 +80,16 @@
             </td>
             <td>
               <div class="fei-table-actions">
-                <button class="fei-action-btn" @click="openEditModal(item)">编辑</button>
-                <button v-if="item.status !== 1" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
-                <button v-else class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
-                <button class="fei-action-btn fei-action-btn--danger" @click="openDeleteModal(item)">删除</button>
+                <button class="fei-action-btn" :disabled="item.status !== 0" @click="openEditModal(item)">编辑</button>
+                <button class="fei-action-btn" @click="openDocumentPage(item.id)">维护文档</button>
+                <button v-if="item.status === 0" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
+                <button v-else-if="item.status === 1" class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
+                <button v-else class="fei-action-btn" disabled>发布中</button>
+                <button
+                  class="fei-action-btn fei-action-btn--danger"
+                  :disabled="item.status !== 0"
+                  @click="openDeleteModal(item)"
+                >删除</button>
               </div>
             </td>
             <td>{{ item.totalNum ?? 0 }}</td>
@@ -113,23 +119,30 @@
       </button>
     </div>
   </div>
+
+  <InterfaceConfigModal
+    :open="configModalOpen"
+    :interface-info="editingInterface"
+    @close="closeConfigModal"
+    @saved="handleConfigSaved"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import InterfaceConfigModal from '@/components/admin/InterfaceConfigModal.vue';
 import { interfaceService } from '@/services/interfaceInfo';
-import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { useQuota } from '@/composables/useQuota';
-import { useFormat } from '@/composables/useFormat';
-import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery, PageResult } from '@/types/api';
+import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/types/api';
 
 /**
  * 接口管理页面组件
  * 提供接口的增删改查、上下线和分页功能
  */
 
-const { isFreeUnlimited, getQuotaTagClass, getQuotaTypeText, getInitialQuotaText, getInterfaceStatusText } = useQuota();
-const { formatTime } = useFormat();
+const router = useRouter();
+const { getQuotaTagClass, getQuotaTypeText, getInitialQuotaText, getInterfaceStatusText } = useQuota();
 
 /** 接口列表 */
 const interfaces = ref<InterfaceInfoVO[]>([]);
@@ -145,6 +158,12 @@ const interfaceQuotaType = ref<InterfaceQuotaType | ''>('');
 
 /** 调用总数排序方向 */
 const totalNumSortOrder = ref<'' | 'ascend' | 'descend'>('');
+
+/** 是否显示接口配置弹窗 */
+const configModalOpen = ref(false);
+
+/** 当前编辑的接口；为空时表示新增 */
+const editingInterface = ref<InterfaceInfoVO | null>(null);
 
 /** 接口分页配置 */
 const interfacePagination = ref({
@@ -272,26 +291,74 @@ const offlineInterface = async (id: number) => {
 };
 
 /**
- * 打开新增接口弹窗（占位实现）
+ * 打开新增接口弹窗
  */
 const openAddModal = () => {
-  showToast('新增接口功能待实现', 'info');
+  editingInterface.value = null;
+  configModalOpen.value = true;
 };
 
 /**
- * 打开编辑接口弹窗（占位实现）
+ * 打开编辑接口弹窗
  * @param item 接口信息
  */
 const openEditModal = (item: InterfaceInfoVO) => {
-  showToast(`编辑接口: ${item.name}`, 'info');
+  if (item.status !== 0) {
+    showToast('请先下线接口后再修改配置', 'info');
+    return;
+  }
+  editingInterface.value = item;
+  configModalOpen.value = true;
 };
 
 /**
- * 打开删除确认弹窗（占位实现）
+ * 删除下线接口
  * @param item 接口信息
  */
-const openDeleteModal = (item: InterfaceInfoVO) => {
-  showToast(`删除接口: ${item.name}`, 'info');
+const openDeleteModal = async (item: InterfaceInfoVO) => {
+  if (item.status !== 0) {
+    showToast('请先下线接口后再删除', 'info');
+    return;
+  }
+  if (!window.confirm(`确定删除接口“${item.name}”吗？此操作不可撤销。`)) return;
+  try {
+    await interfaceService.delete({ id: item.id });
+    showToast('接口已删除', 'success');
+    await loadInterfaces();
+  } catch (error) {
+    console.error('[InterfaceManagementView] 删除接口失败:', error);
+    showToast(error instanceof Error ? error.message : '删除失败', 'error');
+  }
+};
+
+/** 关闭接口配置弹窗 */
+const closeConfigModal = () => {
+  configModalOpen.value = false;
+  editingInterface.value = null;
+};
+
+/**
+ * 处理接口配置保存结果
+ * @param id 接口 ID
+ * @param created 是否为新增接口
+ */
+const handleConfigSaved = async (id: number, created: boolean) => {
+  closeConfigModal();
+  if (created) {
+    showToast('接口已创建，请继续维护文档', 'success');
+    await router.push({ name: 'admin-interface-doc', params: { id } });
+    return;
+  }
+  showToast('接口配置已保存', 'success');
+  await loadInterfaces();
+};
+
+/**
+ * 进入独立文档维护页
+ * @param id 接口 ID
+ */
+const openDocumentPage = (id: number) => {
+  void router.push({ name: 'admin-interface-doc', params: { id } });
 };
 
 onMounted(async () => {

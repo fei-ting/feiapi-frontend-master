@@ -39,6 +39,7 @@ const router = createRouter({
         { path: '', name: 'admin-root', redirect: { name: 'admin-dashboard' } },
         { path: 'dashboard', name: 'admin-dashboard', component: () => import('@/views/admin/DashboardView.vue'), meta: { feature: 'admin-dashboard' } },
         { path: 'interfaces', name: 'admin-interfaces', component: () => import('@/views/admin/InterfaceManagementView.vue'), meta: { feature: 'admin-interfaces' } },
+        { path: 'interfaces/:id/document', name: 'admin-interface-doc', component: () => import('@/views/admin/InterfaceDocMaintenanceView.vue'), meta: { feature: 'admin-interface-doc' } },
         { path: 'quotas', name: 'admin-quotas', component: () => import('@/views/admin/QuotaConfigView.vue'), meta: { feature: 'admin-quotas' } },
       ],
     },

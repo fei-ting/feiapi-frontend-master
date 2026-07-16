@@ -3,6 +3,7 @@ import type {
   IdRequest,
   InterfaceInfoAddRequest,
   InterfaceDocDetailVO,
+  InterfaceDocSaveRequest,
   InterfaceInfoUpdateRequest,
   InterfaceInfoVO,
   InterfaceQuery,
@@ -25,6 +26,13 @@ export const interfaceService = {
     return http.get<InterfaceDocDetailVO>('/interfaceDoc/get', {
       params: { interfaceInfoId },
     });
+  },
+  /**
+   * 聚合保存结构化接口文档
+   * @param data 文档保存请求
+   */
+  saveDoc(data: InterfaceDocSaveRequest) {
+    return http.post<boolean>('/interfaceDoc/save', data);
   },
   invoke(data: InvokeRequest) {
     return http.post<unknown>('/interfaceInfo/invoke', data);
