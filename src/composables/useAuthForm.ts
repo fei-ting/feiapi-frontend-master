@@ -1,4 +1,5 @@
 import { computed, reactive, ref } from 'vue';
+import { getPasswordFormatError } from '@/utils/passwordValidation';
 
 /** 认证表单字段 */
 export interface AuthFormState {
@@ -15,8 +16,6 @@ export interface AuthFormErrors {
 }
 
 const ACCOUNT_PATTERN = /^[a-zA-Z][a-zA-Z0-9]{3,9}$/;
-const PASSWORD_LETTER_PATTERN = /[a-zA-Z]/;
-const PASSWORD_DIGIT_PATTERN = /\d/;
 
 /**
  * 认证表单组合式函数
@@ -58,12 +57,9 @@ export function useAuthForm(options: { withCheckPassword?: boolean } = {}) {
       errors.userPassword = '请输入密码';
       return false;
     }
-    if (password.length < 8 || password.length > 16) {
-      errors.userPassword = '密码长度应为 8-16 位';
-      return false;
-    }
-    if (!PASSWORD_LETTER_PATTERN.test(password) || !PASSWORD_DIGIT_PATTERN.test(password) || !/^[a-zA-Z\d]+$/.test(password)) {
-      errors.userPassword = '密码只能包含字母和数字，且必须同时包含字母和数字';
+    const formatError = getPasswordFormatError(password);
+    if (formatError) {
+      errors.userPassword = formatError;
       return false;
     }
     errors.userPassword = '';

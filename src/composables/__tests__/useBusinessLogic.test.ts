@@ -4,6 +4,7 @@ import { useAuthForm } from '../useAuthForm';
 import { useInterfaceInvoke } from '../useInterfaceInvoke';
 import { useToast } from '../useToast';
 import type { InterfaceDocDetailVO } from '@/types/api';
+import { getPasswordFormatError } from '@/utils/passwordValidation';
 
 /** 构造在线调用测试文档 */
 const buildDoc = (): InterfaceDocDetailVO => ({
@@ -38,6 +39,16 @@ describe('页面业务组合式函数', () => {
     expect(validatePassword()).toBe(true);
     expect(validateCheckPassword()).toBe(false);
     expect(errors.checkPassword).toBe('两次输入的密码不一致');
+  });
+
+  it('复用密码长度和字母数字格式规则', () => {
+    expect(getPasswordFormatError('abc1234')).toBe('密码长度应为 8-16 位');
+    expect(getPasswordFormatError('12345678')).toBe('密码只能包含字母和数字，且必须同时包含字母和数字');
+    expect(getPasswordFormatError('abcdefgh')).toBe('密码只能包含字母和数字，且必须同时包含字母和数字');
+    expect(getPasswordFormatError('abcd123!')).toBe('密码只能包含字母和数字，且必须同时包含字母和数字');
+    expect(getPasswordFormatError('abcd1234')).toBe('');
+    expect(getPasswordFormatError('abcdefgh12345678')).toBe('');
+    expect(getPasswordFormatError('abcdefgh123456789')).toBe('密码长度应为 8-16 位');
   });
 
   it('转换结构化参数并拒绝错误类型', () => {
