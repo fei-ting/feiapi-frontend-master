@@ -4,12 +4,7 @@
       <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" @click="backToList">返回列表</button>
       <div class="fei-doc-editor__actions">
         <span v-if="dirty" class="fei-save-state">存在未保存修改</span>
-        <button
-          class="fei-btn fei-btn--primary fei-btn--sm"
-          type="button"
-          :disabled="!canSave"
-          @click="saveDocument"
-        >
+        <button class="fei-btn fei-btn--primary fei-btn--sm" type="button" :disabled="!canSave" @click="saveDocument">
           {{ saving ? '保存中...' : '保存文档' }}
         </button>
       </div>
@@ -23,148 +18,30 @@
     </div>
 
     <template v-else-if="detail">
-      <section class="fei-doc-summary">
-        <div class="fei-doc-summary__identity">
-          <span class="fei-method-badge">{{ detail.interfaceInfo.method || 'HTTP' }}</span>
-          <div>
-            <p class="fei-doc-summary__path">{{ detail.interfaceInfo.path || '-' }}</p>
-            <h1>{{ detail.interfaceInfo.name }}</h1>
-          </div>
-        </div>
-        <div class="fei-doc-summary__meta">
-          <div><span>当前状态</span><strong>{{ getInterfaceStatusText(detail.interfaceInfo.status) }}</strong></div>
-          <div><span>配额类型</span><strong>{{ getQuotaTypeText(detail.interfaceInfo.quotaType, detail.interfaceInfo.quotaTypeText) }}</strong></div>
-          <div><span>SDK 方法</span><strong>{{ detail.interfaceInfo.sdkMethodName || '-' }}</strong></div>
-        </div>
-        <p v-if="!editable" class="fei-doc-summary__notice">
-          当前接口不可编辑。请先返回接口列表执行下线操作，再维护运行时配置或接口文档。
-        </p>
-      </section>
+      <InterfaceDocSummary :detail="detail" :editable="editable" />
 
       <fieldset class="fei-doc-editor__fieldset" :disabled="!editable || saving">
-        <section class="fei-doc-section">
-          <div class="fei-doc-section__heading">
-            <div><span>01</span><h2>文档主信息</h2></div>
-            <p>版本、内容格式和面向调用方的公开备注</p>
-          </div>
-          <div class="fei-form-grid fei-form-grid--three">
-            <label class="fei-field">
-              <span class="fei-label">文档版本</span>
-              <input v-model.trim="form.docVersion" class="fei-input" maxlength="64" required />
-            </label>
-            <label class="fei-field">
-              <span class="fei-label">请求格式</span>
-              <select v-model="form.requestContentType" class="fei-select">
-                <option v-for="type in contentTypes" :key="`request-${type}`" :value="type">{{ type }}</option>
-              </select>
-            </label>
-            <label class="fei-field">
-              <span class="fei-label">响应格式</span>
-              <select v-model="form.responseContentType" class="fei-select">
-                <option v-for="type in contentTypes" :key="`response-${type}`" :value="type">{{ type }}</option>
-              </select>
-            </label>
-          </div>
-          <label class="fei-field">
-            <span class="fei-label">公开备注</span>
-            <textarea v-model.trim="form.remark" class="fei-textarea fei-textarea--compact" maxlength="512"></textarea>
-          </label>
-        </section>
-
-        <section class="fei-doc-section">
-          <div class="fei-doc-section__heading">
-            <div><span>02</span><h2>请求参数说明</h2></div>
-            <p>名称、位置、类型和必填性来自运行时模板，仅维护说明性内容</p>
-          </div>
-          <div v-if="!requestParams.length" class="fei-doc-empty">当前接口没有运行时请求参数</div>
-          <div v-else class="fei-doc-param-list">
-            <article v-for="param in requestParams" :key="param.paramKey" class="fei-doc-param-row">
-              <div class="fei-doc-param-row__identity">
-                <strong>{{ param.name }}</strong>
-                <span>{{ param.paramScene }} · {{ param.type }} · {{ param.required ? '必填' : '选填' }}</span>
-              </div>
-              <label class="fei-field"><span class="fei-label">说明</span><input v-model.trim="param.description" class="fei-input" maxlength="512" /></label>
-              <label class="fei-field"><span class="fei-label">示例值</span><input v-model="param.exampleValue" class="fei-input" maxlength="1024" /></label>
-              <label class="fei-field"><span class="fei-label">默认值</span><input v-model="param.defaultValue" class="fei-input" maxlength="512" /></label>
-              <label class="fei-field"><span class="fei-label">校验规则</span><input v-model.trim="param.validationRule" class="fei-input" maxlength="512" /></label>
-              <label class="fei-field fei-field--sort"><span class="fei-label">排序</span><input v-model.number="param.sortOrder" class="fei-input" type="number" /></label>
-            </article>
-          </div>
-        </section>
-
-        <section class="fei-doc-section">
-          <div class="fei-doc-section__heading fei-doc-section__heading--action">
-            <div><span>03</span><h2>响应字段</h2></div>
-            <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" @click="addResponseParam">新增字段</button>
-          </div>
-          <div v-if="!responseParams.length" class="fei-doc-empty">暂未维护响应字段</div>
-          <div v-else class="fei-doc-record-list">
-            <article v-for="param in responseParams" :key="param.paramKey" class="fei-doc-record">
-              <div class="fei-doc-record__toolbar">
-                <strong>{{ param.name || '未命名字段' }}</strong>
-                <button type="button" class="fei-action-btn fei-action-btn--danger" @click="removeResponseParam(param.paramKey)">删除</button>
-              </div>
-              <div class="fei-form-grid fei-form-grid--four">
-                <label class="fei-field"><span class="fei-label">字段名</span><input v-model.trim="param.name" class="fei-input" maxlength="128" required /></label>
-                <label class="fei-field"><span class="fei-label">类型</span><select v-model="param.type" class="fei-select"><option v-for="type in paramTypes" :key="type" :value="type">{{ type }}</option></select></label>
-                <label class="fei-field"><span class="fei-label">父字段</span><select v-model="param.parentParamKey" class="fei-select"><option value="">根节点</option><option v-for="parent in parentOptions(param.paramKey)" :key="parent.paramKey" :value="parent.paramKey">{{ parent.name || '未命名字段' }}</option></select></label>
-                <label class="fei-field"><span class="fei-label">排序</span><input v-model.number="param.sortOrder" class="fei-input" type="number" /></label>
-              </div>
-              <div class="fei-inline-checks">
-                <label><input v-model="param.required" type="checkbox" /> 字段必须出现</label>
-                <label><input v-model="param.nullable" type="checkbox" /> 允许空值</label>
-              </div>
-              <div class="fei-form-grid fei-form-grid--two">
-                <label class="fei-field"><span class="fei-label">字段说明</span><input v-model.trim="param.description" class="fei-input" maxlength="512" /></label>
-                <label class="fei-field"><span class="fei-label">示例值</span><input v-model="param.exampleValue" class="fei-input" maxlength="1024" /></label>
-                <label class="fei-field"><span class="fei-label">默认值</span><input v-model="param.defaultValue" class="fei-input" maxlength="512" /></label>
-                <label class="fei-field"><span class="fei-label">校验规则</span><input v-model.trim="param.validationRule" class="fei-input" maxlength="512" /></label>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="fei-doc-section">
-          <div class="fei-doc-section__heading">
-            <div><span>04</span><h2>JSON 示例</h2></div>
-            <p>示例只能使用模拟数据或固定脱敏占位符</p>
-          </div>
-          <div class="fei-form-grid fei-form-grid--two">
-            <label class="fei-field">
-              <span class="fei-label-row"><span class="fei-label">成功响应示例</span><button type="button" @click="formatJson('successExample')">格式化</button></span>
-              <textarea v-model="form.successExample" class="fei-textarea fei-code-input" spellcheck="false"></textarea>
-            </label>
-            <label class="fei-field">
-              <span class="fei-label-row"><span class="fei-label">失败响应示例</span><button type="button" @click="formatJson('failExample')">格式化</button></span>
-              <textarea v-model="form.failExample" class="fei-textarea fei-code-input" spellcheck="false"></textarea>
-            </label>
-          </div>
-        </section>
-
-        <section class="fei-doc-section">
-          <div class="fei-doc-section__heading fei-doc-section__heading--action">
-            <div><span>05</span><h2>接口错误码</h2></div>
-            <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" @click="addErrorCode">新增错误码</button>
-          </div>
-          <div v-if="!errorCodes.length" class="fei-doc-empty">当前接口没有专属错误码</div>
-          <div v-else class="fei-doc-record-list">
-            <article v-for="(errorCode, index) in errorCodes" :key="errorCode.clientKey" class="fei-doc-record">
-              <div class="fei-doc-record__toolbar">
-                <strong>{{ errorCode.errorCode || '未填写错误码' }}</strong>
-                <button type="button" class="fei-action-btn fei-action-btn--danger" @click="removeErrorCode(errorCode.clientKey)">删除</button>
-              </div>
-              <div class="fei-form-grid fei-form-grid--three">
-                <label class="fei-field"><span class="fei-label">错误码</span><input v-model.trim="errorCode.errorCode" class="fei-input" maxlength="64" required /></label>
-                <label class="fei-field"><span class="fei-label">错误信息</span><input v-model.trim="errorCode.errorMessage" class="fei-input" maxlength="256" required /></label>
-                <label class="fei-field"><span class="fei-label">排序</span><input v-model.number="errorCode.sortOrder" class="fei-input" type="number" :placeholder="String(index + 1)" /></label>
-              </div>
-              <div class="fei-form-grid fei-form-grid--two">
-                <label class="fei-field"><span class="fei-label">公开说明</span><input v-model.trim="errorCode.description" class="fei-input" maxlength="512" /></label>
-                <label class="fei-field"><span class="fei-label">解决建议</span><input v-model.trim="errorCode.solution" class="fei-input" maxlength="512" /></label>
-              </div>
-            </article>
-          </div>
-        </section>
+        <DocumentMainInfoForm :model-value="form" :content-types="contentTypes" @update-field="updateMainField" />
+        <RequestParamDescriptionList :params="requestParams" @update-param="updateRequestParam" />
+        <ResponseParamEditor
+          :params="responseParams"
+          :param-types="paramTypes"
+          @add="addResponseParam"
+          @remove="removeResponseParam"
+          @update-param="updateResponseParam"
+        />
+        <JsonExampleEditor
+          :success-example="form.successExample"
+          :fail-example="form.failExample"
+          @update-example="updateJsonExample"
+          @format="formatJson"
+        />
+        <ErrorCodeEditor
+          :error-codes="errorCodes"
+          @add="addErrorCode"
+          @remove="removeErrorCode"
+          @update-error-code="updateErrorCode"
+        />
       </fieldset>
 
       <div class="fei-doc-editor__bottom-actions">
@@ -180,38 +57,29 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
+import DocumentMainInfoForm from '@/components/admin/doc/DocumentMainInfoForm.vue';
+import ErrorCodeEditor from '@/components/admin/doc/ErrorCodeEditor.vue';
+import InterfaceDocSummary from '@/components/admin/doc/InterfaceDocSummary.vue';
+import JsonExampleEditor from '@/components/admin/doc/JsonExampleEditor.vue';
+import RequestParamDescriptionList from '@/components/admin/doc/RequestParamDescriptionList.vue';
+import ResponseParamEditor from '@/components/admin/doc/ResponseParamEditor.vue';
 import { interfaceService } from '@/services/interfaceInfo';
-import { getInterfaceStatusText, getQuotaTypeText } from '@/composables/useQuota';
 import type {
   InterfaceDocDetailVO,
-  InterfaceDocErrorCodeSaveRequest,
   InterfaceDocParamSaveRequest,
   InterfaceDocParamVO,
   InterfaceDocSaveRequest,
 } from '@/types/api';
-
-/** 页面文档主信息表单。 */
-interface DocMainForm {
-  /** 文档版本。 */
-  docVersion: string;
-  /** 请求格式。 */
-  requestContentType: string;
-  /** 响应格式。 */
-  responseContentType: string;
-  /** 成功示例。 */
-  successExample: string;
-  /** 失败示例。 */
-  failExample: string;
-  /** 公开备注。 */
-  remark: string;
-}
-
-/** 带前端标识的错误码表单。 */
-interface EditableErrorCode extends InterfaceDocErrorCodeSaveRequest {
-  /** 前端列表稳定键。 */
-  clientKey: string;
-}
-
+import type {
+  DocMainEditableField,
+  DocMainForm,
+  EditableErrorCode,
+  EditorFieldValue,
+  ErrorCodeEditableField,
+  JsonExampleField,
+  RequestParamEditableField,
+  ResponseParamEditableField,
+} from '@/types/interfaceDocEditor';
 const route = useRoute();
 const router = useRouter();
 const emit = defineEmits<{
@@ -219,6 +87,7 @@ const emit = defineEmits<{
   (event: 'show-toast', message: string, type: 'success' | 'error' | 'info'): void;
 }>();
 
+/** 支持的文档内容类型。 */
 const contentTypes = [
   'application/json',
   'application/xml',
@@ -228,17 +97,29 @@ const contentTypes = [
   'multipart/form-data',
   'application/octet-stream',
 ];
+/** 支持的接口参数类型。 */
 const paramTypes = ['string', 'number', 'boolean', 'object', 'array'];
+/** 页面加载状态。 */
 const loading = ref(true);
+/** 页面保存状态。 */
 const saving = ref(false);
+/** 文档加载错误。 */
 const loadError = ref('');
+/** 文档保存错误。 */
 const saveError = ref('');
+/** 接口文档聚合详情。 */
 const detail = ref<InterfaceDocDetailVO | null>(null);
+/** 运行时请求参数。 */
 const requestParams = ref<InterfaceDocParamSaveRequest[]>([]);
+/** 文档响应字段。 */
 const responseParams = ref<InterfaceDocParamSaveRequest[]>([]);
+/** 接口错误码。 */
 const errorCodes = ref<EditableErrorCode[]>([]);
+/** 最近加载或保存后的文档快照。 */
 const baseline = ref('');
+/** 新增记录稳定键序号。 */
 const keySequence = ref(0);
+/** 文档主信息表单。 */
 const form = reactive<DocMainForm>({
   docVersion: 'v1',
   requestContentType: 'application/json',
@@ -247,16 +128,18 @@ const form = reactive<DocMainForm>({
   failExample: '',
   remark: '',
 });
-
+/** 当前路由接口 ID。 */
 const interfaceInfoId = computed(() => Number(route.params.id));
+/** 当前接口是否允许编辑。 */
 const editable = computed(() => detail.value?.interfaceInfo.status === 0);
+/** 当前编辑状态序列化快照。 */
 const currentSnapshot = computed(() => JSON.stringify(buildSaveRequest()));
+/** 当前页面是否存在未保存修改。 */
 const dirty = computed(() => Boolean(detail.value) && currentSnapshot.value !== baseline.value);
+/** 当前页面是否允许保存。 */
 const canSave = computed(() => editable.value && !loading.value && !loadError.value && !saving.value && dirty.value);
-
 /** 生成前端稳定键。 */
-const nextClientKey = (prefix: string) => `${prefix}-${Date.now()}-${++keySequence.value}`;
-
+const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++keySequence.value}`;
 /** 将接口参数转换为保存请求，并保留父子关系。 */
 const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response'): InterfaceDocParamSaveRequest[] => {
   const keyMap = new Map(params.filter((param) => param.id).map((param) => [param.id as number, `${scene}-${param.id}`]));
@@ -277,7 +160,7 @@ const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response')
 };
 
 /** 加载接口文档并初始化编辑快照。 */
-const loadDocument = async () => {
+const loadDocument = async (): Promise<void> => {
   if (!Number.isInteger(interfaceInfoId.value) || interfaceInfoId.value <= 0) {
     loadError.value = '接口 ID 无效';
     loading.value = false;
@@ -333,7 +216,7 @@ const buildSaveRequest = (): InterfaceDocSaveRequest => ({
 });
 
 /** 校验表单中的必填字段。 */
-const validateForm = () => {
+const validateForm = (): string => {
   if (!form.docVersion || !form.requestContentType || !form.responseContentType) return '文档版本和内容格式不能为空';
   if (responseParams.value.some((param) => !param.name || !param.type)) return '响应字段名称和类型不能为空';
   if (errorCodes.value.some((item) => !item.errorCode || !item.errorMessage)) return '错误码和错误信息不能为空';
@@ -341,7 +224,7 @@ const validateForm = () => {
 };
 
 /** 保存结构化接口文档。 */
-const saveDocument = async () => {
+const saveDocument = async (): Promise<void> => {
   const validationMessage = validateForm();
   if (validationMessage) {
     saveError.value = validationMessage;
@@ -360,8 +243,36 @@ const saveDocument = async () => {
   }
 };
 
+/** 更新文档主信息字段。 */
+const updateMainField = (field: DocMainEditableField, value: string): void => {
+  form[field] = value;
+};
+
+/** 更新运行时请求参数说明字段。 */
+const updateRequestParam = (paramKey: string, field: RequestParamEditableField, value: string | number): void => {
+  const param = requestParams.value.find((item) => item.paramKey === paramKey);
+  if (param) Object.assign(param, { [field]: value });
+};
+
+/** 更新响应字段。 */
+const updateResponseParam = (paramKey: string, field: ResponseParamEditableField, value: EditorFieldValue): void => {
+  const param = responseParams.value.find((item) => item.paramKey === paramKey);
+  if (param) Object.assign(param, { [field]: value });
+};
+
+/** 更新 JSON 示例。 */
+const updateJsonExample = (field: JsonExampleField, value: string): void => {
+  form[field] = value;
+};
+
+/** 更新错误码字段。 */
+const updateErrorCode = (clientKey: string, field: ErrorCodeEditableField, value: string | number): void => {
+  const errorCode = errorCodes.value.find((item) => item.clientKey === clientKey);
+  if (errorCode) Object.assign(errorCode, { [field]: value });
+};
+
 /** 新增响应字段。 */
-const addResponseParam = () => {
+const addResponseParam = (): void => {
   responseParams.value.push({
     paramKey: nextClientKey('response'),
     paramScene: 'RESPONSE',
@@ -378,17 +289,14 @@ const addResponseParam = () => {
 };
 
 /** 删除响应字段及引用该字段父级关系的配置。 */
-const removeResponseParam = (paramKey: string) => {
+const removeResponseParam = (paramKey: string): void => {
   responseParams.value = responseParams.value
     .filter((param) => param.paramKey !== paramKey)
     .map((param) => param.parentParamKey === paramKey ? { ...param, parentParamKey: undefined } : param);
 };
 
-/** 获取可选父字段。 */
-const parentOptions = (currentKey: string) => responseParams.value.filter((param) => param.paramKey !== currentKey);
-
 /** 新增接口错误码。 */
-const addErrorCode = () => {
+const addErrorCode = (): void => {
   errorCodes.value.push({
     clientKey: nextClientKey('error'),
     errorCode: '',
@@ -400,12 +308,12 @@ const addErrorCode = () => {
 };
 
 /** 删除接口错误码。 */
-const removeErrorCode = (clientKey: string) => {
+const removeErrorCode = (clientKey: string): void => {
   errorCodes.value = errorCodes.value.filter((item) => item.clientKey !== clientKey);
 };
 
 /** 格式化 JSON 示例。 */
-const formatJson = (field: 'successExample' | 'failExample') => {
+const formatJson = (field: JsonExampleField): void => {
   const value = form[field].trim();
   if (!value) return;
   try {
@@ -420,10 +328,10 @@ const formatJson = (field: 'successExample' | 'failExample') => {
 const backToList = () => router.push({ name: 'admin-interfaces' });
 
 /** 确认是否允许离开存在未保存修改的页面。 */
-const confirmLeave = () => !dirty.value || window.confirm('当前文档存在未保存修改，确定离开吗？');
+const confirmLeave = (): boolean => !dirty.value || window.confirm('当前文档存在未保存修改，确定离开吗？');
 
 /** 处理浏览器关闭或刷新。 */
-const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!dirty.value) return;
   event.preventDefault();
   event.returnValue = '';
