@@ -1,10 +1,10 @@
-name: 前端 CI（Yarn 安装 + Lint + 构建）
+name: 前端 CI（类型检查 + 覆盖率 + 构建）
 
 on:
   push:
-    branches: [master, main]
+    branches: [dev, main, master]
   pull_request:
-    branches: [master, main]
+    branches: [dev, main, master]
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,20 @@ jobs:
           HUSKY: 0
 
       - name: TypeScript 类型检查
-        run: yarn vue-tsc --noEmit
+        run: yarn typecheck
+
+      - name: 单元测试与覆盖率门禁
+        run: yarn coverage
+
+      - name: 上传覆盖率报告
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: 前端构建
         run: yarn build

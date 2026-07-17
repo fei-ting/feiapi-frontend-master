@@ -213,4 +213,59 @@ describe('InterfaceDocMaintenanceView', () => {
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
   });
+
+  it('缺省文档映射稳定键并支持区块增删和返回列表', async () => {
+    mocks.getDocDetail.mockResolvedValue({
+      interfaceInfo: { id: 1, name: '缺省文档接口', status: 0 },
+      requestParams: [{ name: 'keyword', paramScene: 'QUERY' }],
+      responseParams: [{ paramScene: 'RESPONSE' }],
+      errorCodes: [{}],
+    } satisfies InterfaceDocDetailVO);
+    const wrapper = await mountView();
+
+    const requestSection = sectionByTitle(wrapper, '请求参数说明');
+    await requestSection.findAll('input')[0].setValue('查询关键字');
+    expect((requestSection.findAll('input')[0].element as HTMLInputElement).value).toBe('查询关键字');
+
+    await sectionByTitle(wrapper, '响应字段').findAll('button')[0].trigger('click');
+    expect(sectionByTitle(wrapper, '响应字段').findAll('.fei-doc-record')).toHaveLength(2);
+
+    const errorSection = sectionByTitle(wrapper, '接口错误码');
+    await errorSection.findAll('button')[0].trigger('click');
+    expect(errorSection.findAll('.fei-doc-record')).toHaveLength(2);
+    await errorSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    expect(errorSection.findAll('.fei-doc-record')).toHaveLength(1);
+
+    await wrapper.findAll('button').find((button) => button.text() === '返回列表')?.trigger('click');
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'admin-interfaces' });
+  });
+
+  it('空JSON不处理并展示成功示例格式错误', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const successExample = jsonSection.findAll('textarea')[0];
+
+    await successExample.setValue('');
+    await jsonSection.findAll('button')[0].trigger('click');
+    expect(wrapper.find('.fei-form-error').exists()).toBe(false);
+
+    await successExample.setValue('{bad json');
+    await jsonSection.findAll('button')[0].trigger('click');
+    expect(wrapper.text()).toContain('成功响应示例不是合法 JSON');
+  });
+
+  it('非Error加载和保存失败时使用兜底消息', async () => {
+    mocks.getDocDetail.mockRejectedValueOnce(null).mockResolvedValueOnce(buildDetail());
+    const wrapper = await mountView();
+    expect(wrapper.text()).toContain('接口文档加载失败');
+
+    await wrapper.findAll('button').find((button) => button.text() === '重新加载')?.trigger('click');
+    await flushPromises();
+    mocks.saveDoc.mockRejectedValue(null);
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存文档')?.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('接口文档保存失败');
+  });
 });

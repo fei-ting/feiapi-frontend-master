@@ -12,10 +12,11 @@ const mocks = vi.hoisted(() => ({
   routerPush: vi.fn(),
   loginUser: null as { id: number; userRole: string } | null,
   routerReplace: vi.fn(),
+  routeParams: { id: '1' },
 }));
 
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ params: { id: '1' }, fullPath: '/interface/1/invoke' }),
+  useRoute: () => ({ params: mocks.routeParams, fullPath: '/interface/1/invoke' }),
   useRouter: () => ({ push: mocks.routerPush, replace: mocks.routerReplace }),
 }));
 
@@ -110,6 +111,7 @@ describe('InterfaceInvokeView', () => {
     mocks.getLoginUser.mockResolvedValue({ id: 1, userRole: 'user' });
     mocks.getDocDetail.mockResolvedValue(buildDocDetail());
     mocks.invoke.mockResolvedValue({ ok: true });
+    mocks.routeParams.id = '1';
   });
 
   /**
@@ -213,5 +215,52 @@ describe('InterfaceInvokeView', () => {
 
     expect(writeText).toHaveBeenCalledWith('{\n  "ok": true\n}');
     expect(wrapper.emitted('show-toast')).toContainEqual(['已复制', 'success']);
+  });
+
+  it('展示请求头、填充结构化示例并保留字符串响应', async () => {
+    const detail = buildDocDetail();
+    detail.requestHeaders = [{ name: 'Authorization', defaultValue: 'Bearer demo' }];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    mocks.invoke.mockResolvedValue('plain response');
+    const wrapper = await mountView();
+
+    await wrapper.get('#invoke-param-name').setValue('');
+    await clickButton(wrapper, '填充示例');
+    expect((wrapper.get('#invoke-param-name').element as HTMLInputElement).value).toBe('alice');
+    expect(wrapper.text()).toContain('Authorization: Bearer demo');
+
+    await clickButton(wrapper, '发送请求');
+    await clickButton(wrapper, '确认调用');
+    expect(wrapper.text()).toContain('plain response');
+
+    await clickButton(wrapper, '接口文档');
+    expect(wrapper.find('[role="tab"][aria-selected="true"]').text()).toBe('接口文档');
+  });
+
+  it('非法接口ID不发起文档请求', async () => {
+    mocks.routeParams.id = '0';
+    const wrapper = await mountView();
+
+    expect(mocks.getDocDetail).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('接口不存在');
+  });
+
+  it('空文档使用缺省展示且非Error调用失败使用兜底消息', async () => {
+    const detail = buildDocDetail();
+    detail.gatewayUrl = undefined;
+    detail.requestHeaders = undefined;
+    detail.requestParams = [];
+    detail.structuredDocMissing = true;
+    mocks.getDocDetail.mockResolvedValue(detail);
+    mocks.invoke.mockRejectedValue(null);
+    const wrapper = await mountView();
+
+    expect(wrapper.text()).toContain('无请求 Header');
+    expect(wrapper.text()).toContain('暂无结构化请求参数');
+    await clickButton(wrapper, '发送请求');
+    await clickButton(wrapper, '确认调用');
+
+    expect(wrapper.text()).toContain('调用失败，请稍后重试');
+    expect(wrapper.emitted('show-toast')).toContainEqual(['调用失败，请稍后重试', 'error']);
   });
 });
