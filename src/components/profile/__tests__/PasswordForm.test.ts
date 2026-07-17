@@ -33,12 +33,16 @@ describe('PasswordForm', () => {
     await inputs[0].setValue('changed1');
     await inputs[1].setValue('changed2');
     await inputs[2].setValue('changed2');
+    await inputs[0].trigger('blur');
     await inputs[1].trigger('blur');
+    await inputs[2].trigger('blur');
 
     expect(wrapper.emitted('update:oldPassword')).toEqual([['changed1']]);
     expect(wrapper.emitted('update:newPassword')).toEqual([['changed2']]);
     expect(wrapper.emitted('update:checkPassword')).toEqual([['changed2']]);
-    expect(wrapper.emitted('validate-field')).toEqual([['newPassword']]);
+    expect(wrapper.emitted('validate-field')).toEqual([
+      ['oldPassword'], ['newPassword'], ['checkPassword'],
+    ]);
   });
 
   it('展示每个字段的实时错误状态', () => {
