@@ -10,7 +10,7 @@
     <main class="fei-container fei-page">
       <RouterView v-slot="{ Component }">
         <ErrorBoundary>
-          <component :is="Component" @show-toast="handleShowToast" />
+          <component :is="Component" @show-toast="showToast" />
         </ErrorBoundary>
       </RouterView>
     </main>
@@ -21,12 +21,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
+import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
 
 /**
@@ -37,41 +38,12 @@ import { useUserStore } from '@/stores/user';
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+const { toast, showToast } = useToast();
 
 /** 当前主导航项 */
 const active = computed<'home' | 'market'>(() => (
   route.path === '/home' ? 'home' : 'market'
 ));
-
-/** Toast 通知状态 */
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
-
-/**
- * 显示 Toast 通知
- * @param message 通知消息
- * @param type 通知类型
- */
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2400);
-};
-
-/**
- * 接收路由页面发出的 Toast 通知
- * @param message 通知消息
- * @param type 通知类型
- */
-const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  showToast(message, type);
-};
 
 /**
  * 处理退出登录

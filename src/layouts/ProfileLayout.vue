@@ -66,7 +66,7 @@
           <!-- 内容插槽 -->
           <RouterView v-slot="{ Component }">
             <ErrorBoundary>
-              <component :is="Component" @show-toast="handleShowToast" />
+              <component :is="Component" @show-toast="showToast" />
             </ErrorBoundary>
           </RouterView>
         </div>
@@ -79,13 +79,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, reactive } from 'vue';
+import { computed, h } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
+import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
 
 /**
@@ -103,16 +104,10 @@ interface ProfileNavItem {
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+const { toast, showToast } = useToast();
 
 /** 当前个人中心导航项 */
 const activeTab = computed(() => route.path.split('/')[2] || 'info');
-
-/** Toast 通知状态 */
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
 
 /** 默认头像地址 */
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
@@ -183,20 +178,6 @@ const genderText = computed(() => {
 });
 
 /**
- * 显示 Toast 通知
- * @param message 通知消息
- * @param type 通知类型
- */
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2400);
-};
-
-/**
  * 处理退出登录
  */
 const handleLogout = async () => {
@@ -224,15 +205,6 @@ const toggleMenu = () => {
  */
 const switchTab = (tab: string) => {
   router.push(`/profile/${tab}`);
-};
-
-/**
- * 处理子组件的 Toast 事件
- * @param message 通知消息
- * @param type 通知类型
- */
-const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  showToast(message, type);
 };
 
 // 暴露方法给子组件使用
