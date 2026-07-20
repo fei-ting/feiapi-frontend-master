@@ -1,5 +1,4 @@
 import http from './http';
-import type { ResponseData } from '@/types/api';
 import type { HomeStats } from '@/types/home';
 
 /**
@@ -10,8 +9,6 @@ export const homeStatsService = {
    * 获取首页统计数据。
    */
   getHomeStats() {
-    return http
-      .get<ResponseData<HomeStats>>('/analysis/home/stats')
-      .then((response) => response.data);
+    return http.get<HomeStats>('/analysis/home/stats');
   },
 };

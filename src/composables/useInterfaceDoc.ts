@@ -4,41 +4,26 @@
  * 抽取 InterfaceDetailView 和 InterfaceInvokeView 共享的工具函数，
  * 消除重复代码，提高可维护性。
  */
-import { reactive } from 'vue';
 import type { InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
 
-/** Toast 显示时长（毫秒） */
-const TOAST_DURATION = 2200;
+/** Toast 通知类型 */
+type ToastType = 'success' | 'error' | 'info';
 
-/** Toast 状态接口 */
-interface ToastState {
-  visible: boolean;
-  type: 'success' | 'error' | 'info';
-  message: string;
-}
+/** Toast 通知函数 */
+type ToastNotifier = (message: string, type: ToastType) => void;
 
 /**
  * 接口文档共享逻辑。
+ * @param notifyToast 将 Toast 通知交给应用布局处理
  */
-export function useInterfaceDoc() {
-  const toast = reactive<ToastState>({
-    visible: false,
-    type: 'info',
-    message: '',
-  });
-
+export function useInterfaceDoc(notifyToast?: ToastNotifier) {
   /**
    * 显示 Toast 提示。
    * @param message 提示消息
    * @param type 提示类型
    */
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    toast.message = message;
-    toast.type = type;
-    toast.visible = true;
-    window.setTimeout(() => {
-      toast.visible = false;
-    }, TOAST_DURATION);
+  const showToast = (message: string, type: ToastType = 'info') => {
+    notifyToast?.(message, type);
   };
 
   /**
@@ -203,7 +188,6 @@ export function useInterfaceDoc() {
     item.description || '暂无接口描述';
 
   return {
-    toast,
     showToast,
     copyText,
     hasRows,

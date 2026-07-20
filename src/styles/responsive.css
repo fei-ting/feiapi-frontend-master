@@ -47,6 +47,17 @@
 }
 
 @media (max-width: 768px) {
+  .fei-form-grid--two,
+  .fei-form-grid--three,
+  .fei-form-grid--four,
+  .fei-doc-summary__meta { grid-template-columns: 1fr; }
+
+  .fei-doc-param-row { grid-template-columns: 1fr 1fr; }
+  .fei-doc-param-row__identity { grid-column: 1 / -1; }
+  .fei-doc-section__heading { flex-direction: column; }
+  .fei-doc-section__heading p { text-align: left; }
+  .fei-doc-editor__topbar { align-items: flex-start; }
+
   .fei-header .fei-container {
     width: min(100%, calc(100vw - 32px));
   }

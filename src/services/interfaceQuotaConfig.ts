@@ -1,14 +1,12 @@
 import http from './http';
-import type { InterfaceQuotaConfigUpdateRequest, InterfaceQuotaConfigVO, ResponseData } from '@/types/api';
+import type { InterfaceQuotaConfigUpdateRequest, InterfaceQuotaConfigVO } from '@/types/api';
 
 export const interfaceQuotaConfigService = {
   /**
    * 查询全部接口配额类型配置
    */
   list() {
-    return http
-      .get<ResponseData<InterfaceQuotaConfigVO[]>>('/interfaceQuotaConfig/list')
-      .then((response) => response.data);
+    return http.get<InterfaceQuotaConfigVO[]>('/interfaceQuotaConfig/list');
   },
 
   /**
@@ -16,6 +14,6 @@ export const interfaceQuotaConfigService = {
    * @param data 配额配置更新请求
    */
   update(data: InterfaceQuotaConfigUpdateRequest) {
-    return http.post<ResponseData<boolean>>('/interfaceQuotaConfig/update', data).then((response) => response.data);
+    return http.post<boolean>('/interfaceQuotaConfig/update', data);
   },
 };

@@ -13,51 +13,33 @@
           </div>
 
           <form class="fei-form" @submit.prevent="handleSubmit">
-            <div class="fei-field">
-              <label class="fei-label" for="userAccount">用户名</label>
-              <input
-                id="userAccount"
-                v-model="form.userAccount"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.userAccount }"
-                placeholder="请输入用户名"
-                @blur="validateAccount"
-                @input="onAccountInput"
-              />
-              <span
-                v-if="errors.userAccount"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.userAccount }"
-              >
-                {{ errors.userAccount }}
-              </span>
-            </div>
-            <div class="fei-field">
-              <label class="fei-label" for="userPassword">密码</label>
-              <input
-                id="userPassword"
-                v-model="form.userPassword"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.userPassword }"
-                type="password"
-                placeholder="请输入密码"
-                @blur="validatePassword"
-                @input="onPasswordInput"
-              />
-              <span
-                v-if="errors.userPassword"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.userPassword }"
-              >
-                {{ errors.userPassword }}
-              </span>
-            </div>
+            <AuthField
+              id="userAccount"
+              v-model="form.userAccount"
+              label="用户名"
+              placeholder="请输入用户名"
+              :error="errors.userAccount"
+              :shaking="shaking.userAccount"
+              @blur="validateAccount"
+              @input="onAccountInput"
+            />
+            <AuthField
+              id="userPassword"
+              v-model="form.userPassword"
+              label="密码"
+              type="password"
+              placeholder="请输入密码"
+              :error="errors.userPassword"
+              :shaking="shaking.userPassword"
+              @blur="validatePassword"
+              @input="onPasswordInput"
+            />
             <button class="fei-btn fei-btn--primary" type="submit">登录</button>
           </form>
 
           <div class="fei-toolbar" style="margin-top: 18px; justify-content: space-between">
-            <a href="#/register">新用户注册</a>
-            <a href="#/home">返回首页</a>
+            <RouterLink to="/register">新用户注册</RouterLink>
+            <RouterLink to="/home">返回首页</RouterLink>
           </div>
         </div>
       </div>
@@ -67,152 +49,33 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import ToastMessage from '@/components/ToastMessage.vue';
+import AuthField from '@/components/auth/AuthField.vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-
-/**
- * 账号格式正则：4-10 位，第一位必须是字母，只能包含大小写字母和数字
- * 自动排除纯数字（因为第一位必须是字母）
- */
-const ACCOUNT_REGEX = /^[a-zA-Z][a-zA-Z0-9]{3,9}$/;
-/** 密码格式正则：8-16位，仅大小写字母和数字 */
-const PASSWORD_CHAR_REGEX = /^[a-zA-Z0-9]{8,16}$/;
-/** 必须包含至少一个字母 */
-const LETTER_REGEX = /[a-zA-Z]/;
-/** 必须包含至少一个数字 */
-const DIGIT_REGEX = /[0-9]/;
+import { useAuthForm } from '@/composables/useAuthForm';
+import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
 const userStore = useUserStore();
-
-const form = reactive({
-  userAccount: '',
-  userPassword: '',
-});
-
-/** 各字段的错误提示信息 */
-const errors = reactive({
-  userAccount: '',
-  userPassword: '',
-});
-
-/** 各字段的抖动动画状态 */
-const shake = reactive({
-  userAccount: false,
-  userPassword: false,
-});
-
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
-
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2200);
-};
-
-/**
- * 触发指定字段的抖动动画
- */
-const triggerShake = (field: 'userAccount' | 'userPassword') => {
-  shake[field] = false;
-  requestAnimationFrame(() => {
-    shake[field] = true;
-  });
-};
-
-/**
- * 账号输入时实时校验：任何输入都触发校验，让用户第一时间知道格式规范
- */
-const onAccountInput = () => {
-  shake.userAccount = false;
-  validateAccount();
-};
-
-/**
- * 密码输入时实时校验：任何输入都触发校验
- */
-const onPasswordInput = () => {
-  shake.userPassword = false;
-  validatePassword();
-};
-
-/**
- * 校验账号格式
- * @returns 是否合法
- */
-const validateAccount = (): boolean => {
-  const account = form.userAccount.trim();
-  if (!account) {
-    errors.userAccount = '请输入账号';
-    return false;
-  }
-  if (account.length < 4) {
-    errors.userAccount = '账号长度至少 4 位';
-    return false;
-  }
-  if (account.length > 10) {
-    errors.userAccount = '账号长度不能超过 10 位';
-    return false;
-  }
-  if (!ACCOUNT_REGEX.test(account)) {
-    errors.userAccount = '账号必须以字母开头，只能包含大小写字母和数字';
-    return false;
-  }
-  errors.userAccount = '';
-  return true;
-};
-
-/**
- * 校验密码格式
- * @returns 是否合法
- */
-const validatePassword = (): boolean => {
-  const password = form.userPassword;
-  if (!password) {
-    errors.userPassword = '请输入密码';
-    return false;
-  }
-  if (password.length < 8) {
-    errors.userPassword = '密码长度至少 8 位';
-    return false;
-  }
-  if (password.length > 16) {
-    errors.userPassword = '密码长度不能超过 16 位';
-    return false;
-  }
-  if (!PASSWORD_CHAR_REGEX.test(password) || !LETTER_REGEX.test(password) || !DIGIT_REGEX.test(password)) {
-    errors.userPassword = '密码只能包含大小写字母和数字，且必须同时包含字母和数字';
-    return false;
-  }
-  errors.userPassword = '';
-  return true;
-};
+const {
+  form,
+  errors,
+  shaking,
+  validateAccount,
+  validatePassword,
+  validate,
+  onAccountInput,
+  onPasswordInput,
+} = useAuthForm();
+const { toast, showToast } = useToast(2200);
 
 /**
  * 提交登录表单
  */
 const handleSubmit = async () => {
-  const isAccountValid = validateAccount();
-  const isPasswordValid = validatePassword();
-
-  // 校验不通过时触发抖动动画，不发送请求
-  if (!isAccountValid) {
-    triggerShake('userAccount');
-  }
-  if (!isPasswordValid) {
-    triggerShake('userPassword');
-  }
-  if (!isAccountValid || !isPasswordValid) {
+  if (!validate()) {
     return;
   }
 
@@ -226,11 +89,9 @@ const handleSubmit = async () => {
     // 延迟跳转，让用户看到成功提示
     await new Promise(resolve => setTimeout(resolve, 1200));
 
-    // 获取登录用户信息，管理员跳转后台工作台
+    // 刷新统一会话状态，管理员跳转后台工作台
     try {
-      const res = await userService.getLoginUser();
-      const user = res.data;
-      userStore.setLoginUser(user || null);
+      const user = await userStore.refreshLoginUser();
       if (user?.userRole === 'admin') {
         await router.push('/admin/dashboard');
         return;
@@ -254,34 +115,3 @@ const handleSubmit = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* 输入框错误状态 */
-.fei-input--error {
-  border-color: var(--fei-error);
-}
-
-.fei-input--error:focus {
-  border-color: var(--fei-error);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
-}
-
-/* 错误提示文字 */
-.fei-field-error {
-  display: block;
-  font-size: 13px;
-  color: var(--fei-error);
-  line-height: 1.5;
-}
-
-/* 抖动动画 */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
-}
-
-.fei-field-error--shake {
-  animation: shake 0.4s ease-in-out;
-}
-</style>

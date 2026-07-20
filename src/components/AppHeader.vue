@@ -1,7 +1,7 @@
 <template>
   <header class="fei-header">
     <div class="fei-container fei-header__inner">
-      <a class="fei-brand" href="#/home" aria-label="FeiAPI 首页">
+      <RouterLink class="fei-brand" to="/home" aria-label="FeiAPI 首页">
         <div class="fei-brand__icon">
           <svg
             width="20"
@@ -17,19 +17,19 @@
           </svg>
         </div>
         <span>FeiAPI</span>
-      </a>
+      </RouterLink>
 
       <nav class="fei-nav" aria-label="主导航">
-        <a class="fei-nav__link" :class="{ 'is-active': active === 'home' }" href="#/home">主页</a>
-        <a class="fei-nav__link" :class="{ 'is-active': active === 'market' }" href="#/market">接口广场</a>
-        <a
+        <RouterLink class="fei-nav__link" :class="{ 'is-active': active === 'home' }" to="/home">主页</RouterLink>
+        <RouterLink class="fei-nav__link" :class="{ 'is-active': active === 'market' }" to="/market">接口广场</RouterLink>
+        <RouterLink
           v-if="loginUser?.userRole === 'admin'"
           class="fei-nav__link"
           :class="{ 'is-active': active === 'admin' }"
-          href="#/admin/dashboard"
+          to="/admin/dashboard"
         >
           后台管理
-        </a>
+        </RouterLink>
       </nav>
 
       <div class="fei-nav__actions">
@@ -59,7 +59,7 @@
               </svg>
             </button>
             <div v-show="showDropdown" class="fei-dropdown">
-              <a class="fei-dropdown__item" href="#/profile/records">
+              <RouterLink class="fei-dropdown__item" to="/profile/records">
                 <svg
                   width="16"
                   height="16"
@@ -74,11 +74,11 @@
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
                 个人主页
-              </a>
-              <a
+              </RouterLink>
+              <RouterLink
                 v-if="loginUser.userRole === 'admin'"
                 class="fei-dropdown__item"
-                href="#/admin/interfaces"
+                to="/admin/interfaces"
               >
                 <svg
                   width="16"
@@ -96,7 +96,7 @@
                   <rect x="3" y="14" width="7" height="7"></rect>
                 </svg>
                 后台管理
-              </a>
+              </RouterLink>
               <div class="fei-dropdown__divider"></div>
               <button class="fei-dropdown__item fei-dropdown__item--danger" type="button" @click="handleLogoutClick">
                 <svg
@@ -121,7 +121,7 @@
 
         <!-- 未登录：登录 / 注册 按钮 -->
         <template v-else>
-          <a class="fei-btn fei-btn--ghost fei-btn--sm" href="#/login">
+          <RouterLink class="fei-btn fei-btn--ghost fei-btn--sm" to="/login">
             <svg
               width="16"
               height="16"
@@ -136,7 +136,7 @@
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
             <span>登录 / 注册</span>
-          </a>
+          </RouterLink>
         </template>
       </div>
 
