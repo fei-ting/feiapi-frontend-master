@@ -13,45 +13,27 @@
           </div>
 
           <form class="fei-form" @submit.prevent="handleSubmit">
-            <div class="fei-field">
-              <label class="fei-label" for="userAccount">用户名</label>
-              <input
-                id="userAccount"
-                v-model="form.userAccount"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.userAccount }"
-                placeholder="请输入用户名"
-                @blur="validateAccount"
-                @input="onAccountInput"
-              />
-              <span
-                v-if="errors.userAccount"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.userAccount }"
-              >
-                {{ errors.userAccount }}
-              </span>
-            </div>
-            <div class="fei-field">
-              <label class="fei-label" for="userPassword">密码</label>
-              <input
-                id="userPassword"
-                v-model="form.userPassword"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.userPassword }"
-                type="password"
-                placeholder="请输入密码"
-                @blur="validatePassword"
-                @input="onPasswordInput"
-              />
-              <span
-                v-if="errors.userPassword"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.userPassword }"
-              >
-                {{ errors.userPassword }}
-              </span>
-            </div>
+            <AuthField
+              id="userAccount"
+              v-model="form.userAccount"
+              label="用户名"
+              placeholder="请输入用户名"
+              :error="errors.userAccount"
+              :shaking="shaking.userAccount"
+              @blur="validateAccount"
+              @input="onAccountInput"
+            />
+            <AuthField
+              id="userPassword"
+              v-model="form.userPassword"
+              label="密码"
+              type="password"
+              placeholder="请输入密码"
+              :error="errors.userPassword"
+              :shaking="shaking.userPassword"
+              @blur="validatePassword"
+              @input="onPasswordInput"
+            />
             <button class="fei-btn fei-btn--primary" type="submit">登录</button>
           </form>
 
@@ -69,6 +51,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import ToastMessage from '@/components/ToastMessage.vue';
+import AuthField from '@/components/auth/AuthField.vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import { useAuthForm } from '@/composables/useAuthForm';
@@ -76,44 +59,23 @@ import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
 const userStore = useUserStore();
-const { form, errors, shakingField, validateAccount, validatePassword, validate, triggerShake } = useAuthForm();
+const {
+  form,
+  errors,
+  shaking,
+  validateAccount,
+  validatePassword,
+  validate,
+  onAccountInput,
+  onPasswordInput,
+} = useAuthForm();
 const { toast, showToast } = useToast(2200);
-
-/** 各字段的抖动状态，保持登录页原有模板契约 */
-const shake = {
-  get userAccount() { return shakingField.value === 'userAccount'; },
-  get userPassword() { return shakingField.value === 'userPassword'; },
-};
-
-/**
- * 账号输入时实时校验：任何输入都触发校验，让用户第一时间知道格式规范
- */
-const onAccountInput = () => {
-  validateAccount();
-};
-
-/**
- * 密码输入时实时校验：任何输入都触发校验
- */
-const onPasswordInput = () => {
-  validatePassword();
-};
 
 /**
  * 提交登录表单
  */
 const handleSubmit = async () => {
-  const isAccountValid = validateAccount();
-  const isPasswordValid = validatePassword();
-
-  // 校验不通过时触发抖动动画，不发送请求
-  if (!isAccountValid) {
-    triggerShake('userAccount');
-  }
-  if (!isPasswordValid) {
-    triggerShake('userPassword');
-  }
-  if (!isAccountValid || !isPasswordValid) {
+  if (!validate()) {
     return;
   }
 
@@ -153,34 +115,3 @@ const handleSubmit = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* 输入框错误状态 */
-.fei-input--error {
-  border-color: var(--fei-error);
-}
-
-.fei-input--error:focus {
-  border-color: var(--fei-error);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
-}
-
-/* 错误提示文字 */
-.fei-field-error {
-  display: block;
-  font-size: 13px;
-  color: var(--fei-error);
-  line-height: 1.5;
-}
-
-/* 抖动动画 */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
-}
-
-.fei-field-error--shake {
-  animation: shake 0.4s ease-in-out;
-}
-</style>
