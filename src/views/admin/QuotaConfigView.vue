@@ -11,8 +11,8 @@
       <div class="fei-quota-config-grid">
         <article v-for="item in quotaConfigs" :key="item.quotaType" class="fei-quota-config-card">
           <div class="fei-quota-config-card__head">
-            <span class="fei-tag" :class="quotaTagClass(item.quotaType)">
-              {{ quotaConfigText(item) }}
+            <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
+              {{ getQuotaTypeText(item.quotaType) }}
             </span>
             <span class="fei-quota-config-card__time">{{ formatTime(item.updateTime) }}</span>
           </div>
@@ -48,6 +48,7 @@
 import { onMounted, ref } from 'vue';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { useFormat } from '@/composables/useFormat';
+import { useQuota } from '@/composables/useQuota';
 import type { InterfaceQuotaConfigVO } from '@/types/api';
 
 /**
@@ -56,6 +57,7 @@ import type { InterfaceQuotaConfigVO } from '@/types/api';
  */
 
 const { formatTime } = useFormat();
+const { getQuotaTagClass, getQuotaTypeText } = useQuota();
 
 /** 配额策略列表 */
 const quotaConfigs = ref<InterfaceQuotaConfigVO[]>([]);
@@ -79,28 +81,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 const emit = defineEmits<{
   (event: 'show-toast', message: string, type: 'success' | 'error' | 'info'): void;
 }>();
-
-/**
- * 获取配额标签样式类
- * @param quotaType 配额类型
- * @returns 样式类名
- */
-const quotaTagClass = (quotaType?: string) => {
-  if (quotaType === 'FREE_UNLIMITED') return 'fei-tag--quota-free';
-  if (quotaType === 'ADVANCED_TRIAL') return 'fei-tag--quota-trial';
-  return 'fei-tag--quota-basic';
-};
-
-/**
- * 获取配额策略文本
- * @param item 配额策略信息
- * @returns 配额策略文本
- */
-const quotaConfigText = (item: InterfaceQuotaConfigVO) => {
-  if (item.quotaType === 'FREE_UNLIMITED') return '免费无限';
-  if (item.quotaType === 'ADVANCED_TRIAL') return '高级体验';
-  return '基础额度';
-};
 
 /**
  * 加载配额策略列表

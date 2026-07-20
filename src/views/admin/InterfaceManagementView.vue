@@ -17,7 +17,7 @@
         </select>
         <select v-model="interfaceQuotaType" class="fei-select">
           <option value="">全部配额</option>
-          <option v-for="item in quotaTypeOptions" :key="item.value" :value="item.value">
+          <option v-for="item in QUOTA_TYPE_OPTIONS" :key="item.value" :value="item.value">
             {{ item.label }}
           </option>
         </select>
@@ -133,7 +133,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import InterfaceConfigModal from '@/components/admin/InterfaceConfigModal.vue';
 import { interfaceService } from '@/services/interfaceInfo';
-import { useQuota } from '@/composables/useQuota';
+import { QUOTA_TYPE_OPTIONS, useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/types/api';
 
 /**
@@ -172,13 +172,6 @@ const interfacePagination = ref({
   total: 0,
   totalPages: 0,
 });
-
-/** 配额类型选项 */
-const quotaTypeOptions: { label: string; value: InterfaceQuotaType }[] = [
-  { value: 'BASIC_QUOTA', label: '基础额度' },
-  { value: 'FREE_UNLIMITED', label: '免费无限' },
-  { value: 'ADVANCED_TRIAL', label: '高级体验' },
-];
 
 /**
  * 调用总数排序按钮的无障碍标签
