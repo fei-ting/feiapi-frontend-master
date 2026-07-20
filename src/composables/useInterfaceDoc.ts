@@ -4,6 +4,7 @@
  * 抽取 InterfaceDetailView 和 InterfaceInvokeView 共享的工具函数，
  * 消除重复代码，提高可维护性。
  */
+import { useClipboard } from '@/composables/useClipboard';
 import type { InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
 
 /** Toast 通知类型 */
@@ -26,52 +27,15 @@ export function useInterfaceDoc(notifyToast?: ToastNotifier) {
     notifyToast?.(message, type);
   };
 
+  const { copyToClipboard } = useClipboard(showToast);
+
   /**
-   * 带 fallback 的文本复制。
-   * 优先使用 Clipboard API，失败时降级使用 execCommand。
+   * 使用统一剪贴板能力复制文本。
+   *
    * @param text 要复制的文本
+   * @returns 是否复制成功
    */
-  const copyText = async (text: string) => {
-    if (!text.trim()) {
-      showToast('暂无可复制内容', 'info');
-      return;
-    }
-
-    // 优先使用 Clipboard API
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast('已复制', 'success');
-        return;
-      } catch (error) {
-        console.error('[useInterfaceDoc] Clipboard API 失败，尝试降级方案:', error);
-      }
-    }
-
-    // 降级方案：使用 textarea + execCommand
-    try {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.left = '-9999px';
-      textarea.style.top = '-9999px';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
-      const success = document.execCommand('copy');
-      document.body.removeChild(textarea);
-
-      if (success) {
-        showToast('已复制', 'success');
-      } else {
-        showToast('复制失败，请手动选择内容复制', 'error');
-      }
-    } catch (error) {
-      console.error('[useInterfaceDoc] execCommand 降级方案失败:', error);
-      showToast('复制失败，请手动选择内容复制', 'error');
-    }
-  };
+  const copyText = (text: string): Promise<boolean> => copyToClipboard(text);
 
   /**
    * 判断数组是否有数据。

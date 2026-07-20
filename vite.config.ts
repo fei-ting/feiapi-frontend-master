@@ -59,6 +59,7 @@ export default defineConfig({
         'src/components/interface/**': coreCoverageThresholds,
         'src/views/InterfaceDetailView.vue': coreCoverageThresholds,
         'src/composables/useToast.ts': coreCoverageThresholds,
+        'src/composables/useClipboard.ts': coreCoverageThresholds,
       },
     },
   },

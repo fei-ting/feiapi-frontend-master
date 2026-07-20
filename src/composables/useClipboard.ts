@@ -1,46 +1,64 @@
-/**
- * 剪贴板操作组合式函数
- * 提供统一的剪贴板复制功能，支持降级方案
- */
+/** 剪贴板通知类型。 */
+type ClipboardToastType = 'success' | 'error' | 'info';
+
+/** 剪贴板通知函数。 */
+type ClipboardNotifier = (message: string, type: ClipboardToastType) => void;
+
+/** 复制成功提示。 */
+const COPY_SUCCESS_MESSAGE = '已复制';
+
+/** 复制失败提示。 */
+const COPY_ERROR_MESSAGE = '复制失败，请手动选择内容复制';
+
+/** 空内容提示。 */
+const EMPTY_CONTENT_MESSAGE = '暂无可复制内容';
 
 /**
- * 剪贴板组合式函数
+ * 剪贴板操作组合式函数。
+ * 统一管理现代 Clipboard API、降级复制和结果通知。
+ *
  * @param showToast 可选的 Toast 显示函数
  * @returns 剪贴板操作方法
  */
-export function useClipboard(showToast?: (message: string, type: 'success' | 'error' | 'info') => void) {
+export function useClipboard(showToast?: ClipboardNotifier) {
   /**
-   * 复制文本到剪贴板
-   * 优先使用 Clipboard API，失败时降级使用 execCommand
+   * 检查现代剪贴板 API 是否可用。
+   *
+   * @returns 是否可用
+   */
+  const isClipboardSupported = (): boolean => (
+    typeof navigator !== 'undefined'
+    && typeof window !== 'undefined'
+    && Boolean(navigator.clipboard)
+    && Boolean(window.isSecureContext)
+  );
+
+  /**
+   * 复制文本到剪贴板。
+   * 优先使用 Clipboard API，失败时降级使用 execCommand。
+   *
    * @param text 要复制的文本
-   * @param successMessage 成功提示消息
-   * @param errorMessage 失败提示消息
    * @returns 是否复制成功
    */
-  const copyToClipboard = async (
-    text: string,
-    successMessage = '已复制到剪贴板',
-    errorMessage = '复制失败，请手动复制'
-  ): Promise<boolean> => {
+  const copyToClipboard = async (text: string): Promise<boolean> => {
     if (!text?.trim()) {
-      showToast?.('暂无可复制内容', 'info');
+      showToast?.(EMPTY_CONTENT_MESSAGE, 'info');
       return false;
     }
 
-    // 优先使用 Clipboard API
-    if (navigator.clipboard && window.isSecureContext) {
+    if (isClipboardSupported()) {
       try {
         await navigator.clipboard.writeText(text);
-        showToast?.(successMessage, 'success');
+        showToast?.(COPY_SUCCESS_MESSAGE, 'success');
         return true;
       } catch (error) {
         console.error('[useClipboard] Clipboard API 失败，尝试降级方案:', error);
       }
     }
 
-    // 降级方案：使用 textarea + execCommand
+    let textarea: HTMLTextAreaElement | null = null;
     try {
-      const textarea = document.createElement('textarea');
+      textarea = document.createElement('textarea');
       textarea.value = text;
       textarea.style.position = 'fixed';
       textarea.style.left = '-9999px';
@@ -50,28 +68,20 @@ export function useClipboard(showToast?: (message: string, type: 'success' | 'er
       textarea.focus();
       textarea.select();
       const success = document.execCommand('copy');
-      document.body.removeChild(textarea);
 
       if (success) {
-        showToast?.(successMessage, 'success');
+        showToast?.(COPY_SUCCESS_MESSAGE, 'success');
         return true;
-      } else {
-        showToast?.(errorMessage, 'error');
-        return false;
       }
+      showToast?.(COPY_ERROR_MESSAGE, 'error');
+      return false;
     } catch (error) {
       console.error('[useClipboard] execCommand 降级方案失败:', error);
-      showToast?.(errorMessage, 'error');
+      showToast?.(COPY_ERROR_MESSAGE, 'error');
       return false;
+    } finally {
+      textarea?.remove();
     }
-  };
-
-  /**
-   * 检查剪贴板 API 是否可用
-   * @returns 是否可用
-   */
-  const isClipboardSupported = (): boolean => {
-    return Boolean(navigator.clipboard && window.isSecureContext);
   };
 
   return {
