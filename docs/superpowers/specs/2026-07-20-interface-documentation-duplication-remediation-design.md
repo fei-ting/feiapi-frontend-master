@@ -51,6 +51,8 @@ interface InterfaceDocumentationEmits {
 
 公共组件不直接访问 Clipboard API，也不发送 Toast。详情页监听 `copy-text` 后调用现有 `copyText()`；精简模式不渲染复制按钮，因此在线调用页不需要新增事件转发。
 
+复制按钮图标由详情页通过 `copy-icon` 命名插槽提供。这样公共组件不直接引入图标库，精简模式不会因为未渲染的复制按钮增加图标包体。
+
 ## 4. 模式差异
 
 | 文档区域 | `compact` 在线调用模式 | `detail` 详情模式 |
@@ -118,7 +120,11 @@ interface InterfaceDocumentationEmits {
   :doc-detail="docDetail"
   mode="detail"
   @copy-text="copyText"
-/>
+>
+  <template #copy-icon>
+    <CopyOutlined />
+  </template>
+</InterfaceDocumentation>
 ```
 
 ### `InvokeResultPanel.vue`
@@ -139,7 +145,7 @@ interface InterfaceDocumentationEmits {
 
 公共组件保留当前在线调用模式使用的 `.fei-invoke-doc` 约束，只在 `compact` 模式下应用该类，避免把在线调用面板的最大高度和滚动规则带到详情页。
 
-组件增加语义根类 `.fei-interface-documentation`，但不新增装饰性容器。详情模式继续处于详情页现有 `.fei-doc-panel` 内，复用 `detail.css` 中的文档分区、表格、空状态、示例切换和代码块样式，因此不改变页面整体结构和视觉层级。
+组件增加语义根类 `.fei-interface-documentation`，但不新增装饰性容器。详情模式继续处于详情页现有 `.fei-doc-panel` 内，复用 `detail.css` 中的文档分区、表格、空状态、示例切换和代码块样式；组件根节点显式保持原有 22px 分区间距，因此不改变页面整体结构和视觉层级。
 
 ## 8. 错误处理与兼容性
 

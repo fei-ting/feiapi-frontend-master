@@ -56,6 +56,8 @@ export default defineConfig({
         'src/views/RegisterView.vue': coreCoverageThresholds,
         'src/composables/useQuota.ts': coreCoverageThresholds,
         'src/views/admin/QuotaConfigView.vue': coreCoverageThresholds,
+        'src/components/interface/**': coreCoverageThresholds,
+        'src/views/InterfaceDetailView.vue': coreCoverageThresholds,
       },
     },
   },

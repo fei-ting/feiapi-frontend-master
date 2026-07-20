@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import InterfaceDocumentation from '@/components/interface/InterfaceDocumentation.vue';
 import InterfaceDetailView from '../InterfaceDetailView.vue';
 import type { InterfaceDocDetailVO } from '@/types/api';
 
@@ -10,10 +11,12 @@ const mocks = vi.hoisted(() => ({
   clearLoginUser: vi.fn(),
   routerPush: vi.fn(),
   routerReplace: vi.fn(),
+  routeId: '1',
+  loginUser: { id: 1, userRole: 'admin' } as { id: number; userRole: string } | null,
 }));
 
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ params: { id: '1' }, fullPath: '/interface/1' }),
+  useRoute: () => ({ params: { id: mocks.routeId }, fullPath: `/interface/${mocks.routeId}` }),
   useRouter: () => ({ push: mocks.routerPush, replace: mocks.routerReplace }),
 }));
 
@@ -32,7 +35,7 @@ vi.mock('@/services/user', () => ({
 
 vi.mock('@/stores/user', () => ({
   useUserStore: () => ({
-    loginUser: { id: 1, userRole: 'admin' },
+    loginUser: mocks.loginUser,
     clearLoginUser: mocks.clearLoginUser,
   }),
 }));
@@ -78,9 +81,11 @@ const buildDocDetail = (override: Partial<InterfaceDocDetailVO> = {}): Interface
 /**
  * 挂载接口详情页组件。
  */
-const mountView = async (docDetail: InterfaceDocDetailVO) => {
+const mountView = async (docDetail?: InterfaceDocDetailVO) => {
   mocks.getLoginUser.mockResolvedValue({ id: 1, userRole: 'admin' });
-  mocks.getDocDetail.mockResolvedValue(docDetail);
+  if (docDetail) {
+    mocks.getDocDetail.mockResolvedValue(docDetail);
+  }
   const wrapper = mount(InterfaceDetailView, {
     global: {
       stubs: {
@@ -101,6 +106,10 @@ const mountView = async (docDetail: InterfaceDocDetailVO) => {
 describe('InterfaceDetailView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getDocDetail.mockReset();
+    mocks.routerPush.mockResolvedValue(undefined);
+    mocks.routeId = '1';
+    mocks.loginUser = { id: 1, userRole: 'admin' };
   });
 
   /**
@@ -119,6 +128,7 @@ describe('InterfaceDetailView', () => {
     const wrapper = await mountView(buildDocDetail());
 
     expect(wrapper.text()).toContain('基础信息');
+    expect(wrapper.getComponent(InterfaceDocumentation).props('mode')).toBe('detail');
     expect(wrapper.text()).toContain('请求 Header');
     expect(wrapper.text()).toContain('请求参数');
     expect(wrapper.text()).toContain('响应参数');
@@ -132,6 +142,12 @@ describe('InterfaceDetailView', () => {
     await wrapper.get('button[title="复制 curl 示例"]').trigger('click');
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith('#!/usr/bin/env bash\ncurl -X "$METHOD" "$URL"');
+    expect(wrapper.emitted('show-toast')).toContainEqual(['已复制', 'success']);
+
+    const invokeButton = wrapper.findAll('button').find((button) => button.text().includes('免费调用'));
+    expect(invokeButton).toBeDefined();
+    await invokeButton?.trigger('click');
+    expect(mocks.routerPush).toHaveBeenCalledWith('/interface/1/invoke');
   });
 
   /**
@@ -153,5 +169,30 @@ describe('InterfaceDetailView', () => {
     expect(wrapper.text()).toContain('暂无响应字段说明');
     expect(wrapper.text()).toContain('暂无接口级错误码');
     expect(wrapper.text()).toContain('暂无调用示例');
+  });
+
+  it('非管理员不展示真实后端地址', async () => {
+    mocks.loginUser = { id: 2, userRole: 'user' };
+    const wrapper = await mountView(buildDocDetail());
+
+    expect(wrapper.text()).not.toContain('http://feiapi-interface:8123');
+  });
+
+  it('加载失败时展示接口不存在状态', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mocks.getDocDetail.mockRejectedValue(new Error('详情服务异常'));
+    const wrapper = await mountView();
+
+    expect(wrapper.text()).toContain('接口不存在');
+    expect(consoleError).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
+  });
+
+  it('非法接口标识不发起详情请求', async () => {
+    mocks.routeId = 'invalid';
+    const wrapper = await mountView();
+
+    expect(mocks.getDocDetail).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('接口不存在');
   });
 });
