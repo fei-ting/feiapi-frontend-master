@@ -3,6 +3,26 @@
  * 提供配额类型、状态格式化等纯函数
  */
 
+import type { InterfaceQuotaType } from '@/types/api';
+
+/** 配额类型选项。 */
+export interface QuotaTypeOption {
+  /** 配额类型。 */
+  readonly value: InterfaceQuotaType;
+  /** 配额类型中文名称。 */
+  readonly label: string;
+}
+
+/** 配额类型只读选项。 */
+export const QUOTA_TYPE_OPTIONS: readonly QuotaTypeOption[] = Object.freeze([
+  Object.freeze({ value: 'BASIC_QUOTA', label: '基础额度' }),
+  Object.freeze({ value: 'FREE_UNLIMITED', label: '免费无限' }),
+  Object.freeze({ value: 'ADVANCED_TRIAL', label: '高级体验' }),
+]);
+
+/** 默认配额类型选项。 */
+const DEFAULT_QUOTA_TYPE_OPTION = QUOTA_TYPE_OPTIONS[0];
+
 /**
  * 判断是否为免费无限配额
  * @param quotaType 配额类型
@@ -19,9 +39,11 @@ export const isFreeUnlimited = (quotaType?: string): boolean => {
  * @returns 配额类型文本
  */
 export const getQuotaTypeText = (quotaType?: string, quotaTypeText?: string): string => {
-  if (isFreeUnlimited(quotaType)) return '免费无限';
-  if (quotaType === 'ADVANCED_TRIAL') return '高级体验';
-  return quotaTypeText || '基础额度';
+  const quotaTypeOption = QUOTA_TYPE_OPTIONS.find((option) => option.value === quotaType);
+  if (quotaTypeOption && quotaTypeOption.value !== 'BASIC_QUOTA') {
+    return quotaTypeOption.label;
+  }
+  return quotaTypeText || quotaTypeOption?.label || DEFAULT_QUOTA_TYPE_OPTION.label;
 };
 
 /**

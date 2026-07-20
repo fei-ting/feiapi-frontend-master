@@ -54,6 +54,8 @@ export default defineConfig({
         'src/composables/useAuthForm.ts': coreCoverageThresholds,
         'src/views/LoginView.vue': coreCoverageThresholds,
         'src/views/RegisterView.vue': coreCoverageThresholds,
+        'src/composables/useQuota.ts': coreCoverageThresholds,
+        'src/views/admin/QuotaConfigView.vue': coreCoverageThresholds,
       },
     },
   },
