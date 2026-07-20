@@ -13,65 +13,38 @@
           </div>
 
           <form class="fei-form" @submit.prevent="handleSubmit">
-            <div class="fei-field">
-              <label class="fei-label" for="userAccount">用户名</label>
-              <input
-                id="userAccount"
-                v-model="form.userAccount"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.userAccount }"
-                placeholder="请输入账号"
-                @blur="validateAccount"
-                @input="onAccountInput"
-              />
-              <span
-                v-if="errors.userAccount"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.userAccount }"
-              >
-                {{ errors.userAccount }}
-              </span>
-            </div>
-            <div class="fei-field">
-              <label class="fei-label" for="userPassword">密码</label>
-              <input
-                id="userPassword"
-                v-model="form.userPassword"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.userPassword }"
-                type="password"
-                placeholder="请输入密码"
-                @blur="validatePassword"
-                @input="onPasswordInput"
-              />
-              <span
-                v-if="errors.userPassword"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.userPassword }"
-              >
-                {{ errors.userPassword }}
-              </span>
-            </div>
-            <div class="fei-field">
-              <label class="fei-label" for="checkPassword">确认密码</label>
-              <input
-                id="checkPassword"
-                v-model="form.checkPassword"
-                class="fei-input"
-                :class="{ 'fei-input--error': errors.checkPassword }"
-                type="password"
-                placeholder="请确认密码"
-                @blur="validateCheckPassword"
-                @input="onCheckPasswordInput"
-              />
-              <span
-                v-if="errors.checkPassword"
-                class="fei-field-error"
-                :class="{ 'fei-field-error--shake': shake.checkPassword }"
-              >
-                {{ errors.checkPassword }}
-              </span>
-            </div>
+            <AuthField
+              id="userAccount"
+              v-model="form.userAccount"
+              label="用户名"
+              placeholder="请输入账号"
+              :error="errors.userAccount"
+              :shaking="shaking.userAccount"
+              @blur="validateAccount"
+              @input="onAccountInput"
+            />
+            <AuthField
+              id="userPassword"
+              v-model="form.userPassword"
+              label="密码"
+              type="password"
+              placeholder="请输入密码"
+              :error="errors.userPassword"
+              :shaking="shaking.userPassword"
+              @blur="validatePassword"
+              @input="onPasswordInput"
+            />
+            <AuthField
+              id="checkPassword"
+              v-model="form.checkPassword"
+              label="确认密码"
+              type="password"
+              placeholder="请确认密码"
+              :error="errors.checkPassword"
+              :shaking="shaking.checkPassword"
+              @blur="validateCheckPassword"
+              @input="onCheckPasswordInput"
+            />
             <button class="fei-btn fei-btn--primary" type="submit">注册</button>
           </form>
 
@@ -89,73 +62,31 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import ToastMessage from '@/components/ToastMessage.vue';
+import AuthField from '@/components/auth/AuthField.vue';
 import { userService } from '@/services/user';
 import { useAuthForm } from '@/composables/useAuthForm';
 import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
-const { form, errors, shakingField, validateAccount, validatePassword, validateCheckPassword } = useAuthForm({ withCheckPassword: true });
+const {
+  form,
+  errors,
+  shaking,
+  validateAccount,
+  validatePassword,
+  validateCheckPassword,
+  validate,
+  onAccountInput,
+  onPasswordInput,
+  onCheckPasswordInput,
+} = useAuthForm({ withCheckPassword: true });
 const { toast, showToast } = useToast(2200);
-
-/** 各字段的抖动状态，保持注册页原有模板契约 */
-const shake = {
-  get userAccount() { return shakingField.value === 'userAccount'; },
-  get userPassword() { return shakingField.value === 'userPassword'; },
-  get checkPassword() { return shakingField.value === 'checkPassword'; },
-};
-
-/** 触发指定字段的抖动动画 */
-const triggerShake = (field: 'userAccount' | 'userPassword' | 'checkPassword') => {
-  shakingField.value = '';
-  requestAnimationFrame(() => {
-    shakingField.value = field;
-  });
-};
-
-/**
- * 账号输入时实时校验
- */
-const onAccountInput = () => {
-  validateAccount();
-};
-
-/**
- * 密码输入时实时校验
- */
-const onPasswordInput = () => {
-  validatePassword();
-  // 密码变化时，如果确认密码已有内容，同步校验确认密码
-  if (form.checkPassword) {
-    validateCheckPassword();
-  }
-};
-
-/**
- * 确认密码输入时实时校验
- */
-const onCheckPasswordInput = () => {
-  validateCheckPassword();
-};
 
 /**
  * 提交注册表单
  */
 const handleSubmit = async () => {
-  const isAccountValid = validateAccount();
-  const isPasswordValid = validatePassword();
-  const isCheckPasswordValid = validateCheckPassword();
-
-  // 校验不通过时触发对应字段的抖动动画，不发送请求
-  if (!isAccountValid) {
-    triggerShake('userAccount');
-  }
-  if (!isPasswordValid) {
-    triggerShake('userPassword');
-  }
-  if (!isCheckPasswordValid) {
-    triggerShake('checkPassword');
-  }
-  if (!isAccountValid || !isPasswordValid || !isCheckPasswordValid) {
+  if (!validate()) {
     return;
   }
 
@@ -181,34 +112,3 @@ const handleSubmit = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* 输入框错误状态 */
-.fei-input--error {
-  border-color: var(--fei-error);
-}
-
-.fei-input--error:focus {
-  border-color: var(--fei-error);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
-}
-
-/* 错误提示文字 */
-.fei-field-error {
-  display: block;
-  font-size: 13px;
-  color: var(--fei-error);
-  line-height: 1.5;
-}
-
-/* 抖动动画 */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
-}
-
-.fei-field-error--shake {
-  animation: shake 0.4s ease-in-out;
-}
-</style>
