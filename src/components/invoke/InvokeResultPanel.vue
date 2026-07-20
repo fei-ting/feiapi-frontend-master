@@ -44,7 +44,7 @@
       <pre class="fei-debug-output__content">{{ invokeResult || '暂无数据' }}</pre>
     </div>
 
-    <InterfaceDocumentation v-else :doc-detail="docDetail" />
+    <InterfaceDocumentation v-else :doc-detail="docDetail" mode="compact" />
   </aside>
 </template>
 
