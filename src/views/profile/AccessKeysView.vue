@@ -128,7 +128,7 @@ const copyKey = async (text: string) => {
  * 复制 SDK 示例代码
  */
 const copySdkSnippet = async () => {
-  await copyToClipboard(sdkSnippet, 'SDK 示例已复制到剪贴板');
+  await copyToClipboard(sdkSnippet);
 };
 
 /**

@@ -2,7 +2,7 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { defineComponent, type Component } from 'vue';
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AdminLayout from '../AdminLayout.vue';
 import AppLayout from '../AppLayout.vue';
 import ProfileLayout from '../ProfileLayout.vue';
@@ -36,7 +36,12 @@ const TestRoot = defineComponent({
 /** 可发送 Toast 通知的测试子页面 */
 const NotificationPage = defineComponent({
   emits: ['show-toast'],
-  template: '<button class="test-notify" @click="$emit(\'show-toast\', \'保存成功\', \'success\')">通知</button>',
+  template: `
+    <div>
+      <button class="test-notify" @click="$emit('show-toast', '保存成功', 'success')">通知</button>
+      <button class="test-notify-second" @click="$emit('show-toast', '保存失败', 'error')">第二条通知</button>
+    </div>
+  `,
 });
 
 /** 后台测试子页面 */
@@ -103,6 +108,7 @@ const mountLayoutRoute = async (
 
 describe('统一应用壳层路由渲染', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     serviceMocks.getLoginUser.mockResolvedValue({
       id: 1,
@@ -117,6 +123,10 @@ describe('统一应用壳层路由渲染', () => {
       averageResponseTimeMs: 10,
     });
     serviceMocks.logout.mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   /** 验证首页只通过父路由布局渲染一次应用壳层 */
@@ -136,6 +146,49 @@ describe('统一应用壳层路由渲染', () => {
 
     expect(wrapper.get('.test-toast').text()).toBe('保存成功');
     expect(wrapper.get('.test-toast').attributes('data-type')).toBe('success');
+    wrapper.unmount();
+  });
+
+  /** 验证后台子页面通知可以交给后台布局展示 */
+  it('接收后台子路由页面发出的 Toast 通知', async () => {
+    const wrapper = await mountLayoutRoute(AdminLayout, '/admin', 'interfaces', '/admin/interfaces', NotificationPage);
+
+    await wrapper.get('.test-notify').trigger('click');
+
+    expect(wrapper.get('.test-toast').text()).toBe('保存成功');
+    expect(wrapper.get('.test-toast').attributes('data-type')).toBe('success');
+    wrapper.unmount();
+  });
+
+  /** 验证个人中心子页面通知可以交给个人中心布局展示 */
+  it('接收个人中心子路由页面发出的 Toast 通知', async () => {
+    const wrapper = await mountLayoutRoute(ProfileLayout, '/profile', 'keys', '/profile/keys', NotificationPage);
+
+    await wrapper.get('.test-notify-second').trigger('click');
+
+    expect(wrapper.get('.test-toast').text()).toBe('保存失败');
+    expect(wrapper.get('.test-toast').attributes('data-type')).toBe('error');
+    wrapper.unmount();
+  });
+
+  /** 验证连续通知不会被旧定时器提前隐藏 */
+  it('连续通知保留最新消息的完整展示时长', async () => {
+    vi.useFakeTimers();
+    const wrapper = await mountLayoutRoute(AppLayout, '/', 'market', '/market', NotificationPage);
+
+    await wrapper.get('.test-notify').trigger('click');
+    await vi.advanceTimersByTimeAsync(1200);
+    await wrapper.get('.test-notify-second').trigger('click');
+    await vi.advanceTimersByTimeAsync(1200);
+
+    expect(wrapper.get('.test-toast').text()).toBe('保存失败');
+    expect(wrapper.get('.test-toast').attributes('data-visible')).toBe('true');
+
+    await vi.advanceTimersByTimeAsync(1199);
+    expect(wrapper.get('.test-toast').attributes('data-visible')).toBe('true');
+    await vi.advanceTimersByTimeAsync(1);
+    expect(wrapper.get('.test-toast').attributes('data-visible')).toBe('false');
+    wrapper.unmount();
   });
 
   /** 验证后台布局能够渲染嵌套路由页面 */

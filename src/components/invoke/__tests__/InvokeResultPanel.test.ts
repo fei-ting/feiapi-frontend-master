@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
+import InterfaceDocumentation from '@/components/interface/InterfaceDocumentation.vue';
 import InvokeResultPanel from '../InvokeResultPanel.vue';
 import type { InterfaceDocDetailVO } from '@/types/api';
 
@@ -49,7 +50,9 @@ describe('InvokeResultPanel', () => {
     });
 
     expect(wrapper.get('.fei-doc-tab.is-active').text()).toBe('接口文档');
+    expect(wrapper.getComponent(InterfaceDocumentation).props('mode')).toBe('compact');
     expect(wrapper.text()).toContain('请求 Header');
     expect(wrapper.text()).toContain('暂无调用示例');
+    expect(wrapper.text()).not.toContain('错误码');
   });
 });

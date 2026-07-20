@@ -34,7 +34,7 @@
           <label class="fei-field">
             <span class="fei-label">配额类型</span>
             <select v-model="form.quotaType" class="fei-select" required>
-              <option v-for="option in quotaOptions" :key="option.value" :value="option.value">
+              <option v-for="option in QUOTA_TYPE_OPTIONS" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
+import { QUOTA_TYPE_OPTIONS } from '@/composables/useQuota';
 import { interfaceService } from '@/services/interfaceInfo';
 import type { InterfaceInfoAddRequest, InterfaceInfoUpdateRequest, InterfaceInfoVO, InterfaceQuotaType } from '@/types/api';
 
@@ -129,13 +130,6 @@ const emit = defineEmits<{
 
 /** 请求方法选项。 */
 const requestMethods = ['GET', 'POST', 'PUT', 'DELETE'];
-
-/** 配额类型选项。 */
-const quotaOptions: Array<{ label: string; value: InterfaceQuotaType }> = [
-  { value: 'BASIC_QUOTA', label: '基础额度' },
-  { value: 'FREE_UNLIMITED', label: '免费无限' },
-  { value: 'ADVANCED_TRIAL', label: '高级体验' },
-];
 
 /** 默认配置表单。 */
 const createDefaultForm = (): InterfaceConfigForm => ({

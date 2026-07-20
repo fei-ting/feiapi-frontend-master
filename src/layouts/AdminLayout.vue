@@ -27,7 +27,7 @@
         <div class="fei-admin-content">
           <RouterView v-slot="{ Component }">
             <ErrorBoundary>
-              <component :is="Component" @show-toast="handleShowToast" />
+              <component :is="Component" @show-toast="showToast" />
             </ErrorBoundary>
           </RouterView>
         </div>
@@ -40,13 +40,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, reactive } from 'vue';
+import { computed, h } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
+import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
 
 /**
@@ -64,16 +65,10 @@ interface AdminNavItem {
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+const { toast, showToast } = useToast();
 
 /** 当前后台导航项 */
 const activeTab = computed(() => route.path.split('/')[2] || 'dashboard');
-
-/** Toast 通知状态 */
-const toast = reactive({
-  visible: false,
-  type: 'info' as 'success' | 'error' | 'info',
-  message: '',
-});
 
 /** 后台导航项 */
 const adminNavItems: AdminNavItem[] = [
@@ -134,20 +129,6 @@ const adminNavItems: AdminNavItem[] = [
 ];
 
 /**
- * 显示 Toast 通知
- * @param message 通知消息
- * @param type 通知类型
- */
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  window.setTimeout(() => {
-    toast.visible = false;
-  }, 2400);
-};
-
-/**
  * 处理退出登录
  */
 const handleLogout = async () => {
@@ -167,15 +148,6 @@ const handleLogout = async () => {
  */
 const toggleMenu = () => {
   showToast('移动端菜单已保留为简洁模式', 'info');
-};
-
-/**
- * 处理子组件的 Toast 事件
- * @param message 通知消息
- * @param type 通知类型
- */
-const handleShowToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  showToast(message, type);
 };
 
 // 暴露方法给子组件使用
