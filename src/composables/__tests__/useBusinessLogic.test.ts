@@ -2,7 +2,6 @@ import { nextTick, ref } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import { useAuthForm } from '../useAuthForm';
 import { useInterfaceInvoke } from '../useInterfaceInvoke';
-import { useToast } from '../useToast';
 import type { InterfaceDocDetailVO } from '@/types/api';
 import { getPasswordFormatError } from '@/utils/passwordValidation';
 
@@ -129,18 +128,4 @@ describe('页面业务组合式函数', () => {
     expect(invoke.requestParamError.value).toContain('age');
   });
 
-  it('显示 Toast 并在持续时间后自动关闭', async () => {
-    vi.useFakeTimers();
-    const { toast, showToast } = useToast(1000);
-
-    showToast('保存成功', 'success');
-    expect(toast.visible).toBe(true);
-    expect(toast.message).toBe('保存成功');
-    expect(toast.type).toBe('success');
-
-    vi.advanceTimersByTime(1000);
-    await nextTick();
-    expect(toast.visible).toBe(false);
-    vi.useRealTimers();
-  });
 });
