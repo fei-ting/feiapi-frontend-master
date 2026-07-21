@@ -131,7 +131,7 @@ import StatusTag from '@/components/StatusTag.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import { useQuota } from '@/composables/useQuota';
-import type { InterfaceInfoVO } from '@/types/api';
+import type { InterfaceInfoVO } from '@/types/interface';
 
 /**
  * 接口广场页面组件

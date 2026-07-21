@@ -1,5 +1,5 @@
 import { reactive, ref, type Ref } from 'vue';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 /** 在线调用支持的参数值类型 */
 export type RequestParamValue = string | number | boolean | Record<string, unknown> | unknown[];

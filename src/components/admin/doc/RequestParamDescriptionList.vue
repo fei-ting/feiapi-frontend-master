@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import type { InterfaceDocParamSaveRequest } from '@/types/api';
+import type { InterfaceDocParamSaveRequest } from '@/types/interfaceDoc';
 import type { RequestParamEditableField } from '@/types/interfaceDocEditor';
 
 /** 请求参数说明组件属性。 */

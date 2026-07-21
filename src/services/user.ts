@@ -6,7 +6,7 @@ import type {
   RegisterRequest,
   UserKeyVO,
   UserVO,
-} from '@/types/api';
+} from '@/types/user';
 
 export const userService = {
   login(data: LoginRequest) {

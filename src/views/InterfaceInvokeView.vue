@@ -81,7 +81,7 @@ import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import { useInterfaceInvoke } from '@/composables/useInterfaceInvoke';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/interfaceDoc';
 import type { InvokeTab } from '@/types/invoke';
 
 /** 在线调用弹窗动作。 */

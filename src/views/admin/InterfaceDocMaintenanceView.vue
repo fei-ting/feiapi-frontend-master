@@ -69,7 +69,7 @@ import type {
   InterfaceDocParamSaveRequest,
   InterfaceDocParamVO,
   InterfaceDocSaveRequest,
-} from '@/types/api';
+} from '@/types/interfaceDoc';
 import type {
   DocMainEditableField,
   DocMainForm,

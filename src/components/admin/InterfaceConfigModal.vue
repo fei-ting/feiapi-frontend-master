@@ -88,7 +88,8 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { QUOTA_TYPE_OPTIONS } from '@/composables/useQuota';
 import { interfaceService } from '@/services/interfaceInfo';
-import type { InterfaceInfoAddRequest, InterfaceInfoUpdateRequest, InterfaceInfoVO, InterfaceQuotaType } from '@/types/api';
+import type { InterfaceInfoAddRequest, InterfaceInfoUpdateRequest, InterfaceInfoVO } from '@/types/interface';
+import type { InterfaceQuotaType } from '@/types/quota';
 
 /** 组件属性。 */
 interface Props {

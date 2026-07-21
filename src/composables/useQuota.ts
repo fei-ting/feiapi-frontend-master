@@ -3,7 +3,7 @@
  * 提供配额类型、状态格式化等纯函数
  */
 
-import type { InterfaceQuotaType } from '@/types/api';
+import type { InterfaceQuotaType } from '@/types/quota';
 
 /** 配额类型选项。 */
 export interface QuotaTypeOption {

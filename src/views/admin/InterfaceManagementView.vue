@@ -134,7 +134,8 @@ import { useRouter } from 'vue-router';
 import InterfaceConfigModal from '@/components/admin/InterfaceConfigModal.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { QUOTA_TYPE_OPTIONS, useQuota } from '@/composables/useQuota';
-import type { InterfaceInfoVO, InterfaceQuotaType, InterfaceQuery } from '@/types/api';
+import type { InterfaceInfoVO, InterfaceQuery } from '@/types/interface';
+import type { InterfaceQuotaType } from '@/types/quota';
 
 /**
  * 接口管理页面组件

@@ -2,7 +2,7 @@ import { nextTick, ref } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import { useAuthForm } from '../useAuthForm';
 import { useInterfaceInvoke } from '../useInterfaceInvoke';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 import { getPasswordFormatError } from '@/utils/passwordValidation';
 
 /** 构造在线调用测试文档 */
