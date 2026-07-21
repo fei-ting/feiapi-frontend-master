@@ -109,7 +109,7 @@ import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import { useQuota } from '@/composables/useQuota';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/interfaceDoc';
 
 /**
  * 接口详情页面组件。

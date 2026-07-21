@@ -1,15 +1,13 @@
 import http from './http';
+import type { IdRequest, PageResult } from '@/types/common';
 import type {
-  IdRequest,
   InterfaceInfoAddRequest,
-  InterfaceDocDetailVO,
-  InterfaceDocSaveRequest,
   InterfaceInfoUpdateRequest,
   InterfaceInfoVO,
   InterfaceQuery,
-  InvokeRequest,
-  PageResult,
-} from '@/types/api';
+} from '@/types/interface';
+import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/types/interfaceDoc';
+import type { InvokeRequest } from '@/types/invoke';
 
 export const interfaceService = {
   listPage(params: InterfaceQuery) {

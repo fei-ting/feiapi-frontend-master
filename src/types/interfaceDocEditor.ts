@@ -1,4 +1,4 @@
-import type { InterfaceDocErrorCodeSaveRequest } from '@/types/api';
+import type { InterfaceDocErrorCodeSaveRequest } from '@/types/interfaceDoc';
 
 /** 页面文档主信息表单。 */
 export interface DocMainForm {

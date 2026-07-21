@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { userService } from '@/services/user';
-import type { UserVO } from '@/types/api';
+import type { UserVO } from '@/types/user';
 
 /**
  * 用户会话 Store

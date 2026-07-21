@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { getInterfaceStatusText, getQuotaTypeText } from '@/composables/useQuota';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 /** 接口文档概要组件属性。 */
 interface InterfaceDocSummaryProps {

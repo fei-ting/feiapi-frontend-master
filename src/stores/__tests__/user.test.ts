@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useUserStore } from '../user';
-import type { UserVO } from '@/types/api';
+import type { UserVO } from '@/types/user';
 
 const serviceMocks = vi.hoisted(() => ({
   getLoginUser: vi.fn(),

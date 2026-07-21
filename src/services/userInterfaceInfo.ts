@@ -1,5 +1,6 @@
 import http from './http';
-import type { PageResult, UserInterfaceInfoVO } from '@/types/api';
+import type { PageResult } from '@/types/common';
+import type { UserInterfaceInfoVO } from '@/types/quota';
 
 export const userInterfaceInfoService = {
   myListPage(params: { current?: number; pageSize?: number }) {

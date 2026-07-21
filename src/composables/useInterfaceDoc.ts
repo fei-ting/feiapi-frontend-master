@@ -5,7 +5,7 @@
  * 消除重复代码，提高可维护性。
  */
 import { useClipboard } from '@/composables/useClipboard';
-import type { InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/api';
+import type { InterfaceDocInterfaceInfoVO, InterfaceDocParamVO } from '@/types/interfaceDoc';
 
 /** Toast 通知类型 */
 type ToastType = 'success' | 'error' | 'info';

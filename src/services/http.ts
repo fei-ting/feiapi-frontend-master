@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { ResponseData } from '@/types/api';
+import type { ResponseData } from '@/types/common';
 
 /**
  * HTTP 客户端模块

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import InterfaceDocSummary from '../InterfaceDocSummary.vue';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 /** 接口文档概要测试数据。 */
 const detail: InterfaceDocDetailVO = {

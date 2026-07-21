@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { UserVO } from '@/types/api';
+import type { UserVO } from '@/types/user';
 
 defineProps<{
   loginUser: UserVO | null;
