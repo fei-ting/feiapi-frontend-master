@@ -58,6 +58,8 @@ export default defineConfig({
         'src/views/admin/QuotaConfigView.vue': coreCoverageThresholds,
         'src/components/interface/**': coreCoverageThresholds,
         'src/views/InterfaceDetailView.vue': coreCoverageThresholds,
+        'src/components/UserAvatar.vue': coreCoverageThresholds,
+        'src/utils/avatar.ts': coreCoverageThresholds,
         'src/composables/useToast.ts': coreCoverageThresholds,
         'src/composables/useClipboard.ts': coreCoverageThresholds,
       },

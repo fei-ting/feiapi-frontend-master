@@ -42,7 +42,7 @@
               :aria-expanded="showDropdown"
               @click="toggleDropdown"
             >
-              <img class="fei-avatar--sm" :src="loginUser.userAvatar || defaultAvatar" alt="" />
+              <UserAvatar class="fei-avatar--sm" :src="loginUser.userAvatar" alt="" />
               <span>{{ loginUser.userName || '用户' }}</span>
               <svg
                 class="fei-user-arrow"
@@ -149,6 +149,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 import type { UserVO } from '@/types/user';
 
 defineProps<{
@@ -184,6 +185,4 @@ const handleLogoutClick = () => {
   closeDropdown();
   emit('logout');
 };
-
-const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
 </script>
