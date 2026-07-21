@@ -16,10 +16,6 @@ export interface UserVO {
   gender?: number;
   /** 用户角色（user/admin） */
   userRole?: string;
-  /** 访问密钥 */
-  accessKey?: string;
-  /** 密钥 */
-  secretKey?: string;
   /** 创建时间 */
   createTime?: string;
 }
