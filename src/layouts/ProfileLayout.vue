@@ -10,9 +10,9 @@
     <PageContainer>
       <!-- 个人信息头部卡片 -->
       <div v-if="userStore.loginUser" class="fei-profile-header">
-        <img
+        <UserAvatar
           class="fei-profile-avatar"
-          :src="userStore.loginUser.userAvatar || defaultAvatar"
+          :src="userStore.loginUser.userAvatar"
           :alt="userStore.loginUser.userName || '用户'"
         />
         <div class="fei-profile-info">
@@ -86,6 +86,7 @@ import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
 
@@ -108,9 +109,6 @@ const { toast, showToast } = useToast();
 
 /** 当前个人中心导航项 */
 const activeTab = computed(() => route.path.split('/')[2] || 'info');
-
-/** 默认头像地址 */
-const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=feiapi';
 
 /** 个人中心导航项 */
 const profileNavItems: ProfileNavItem[] = [
