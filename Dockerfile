@@ -3,9 +3,6 @@ FROM node:20 AS builder
 
 WORKDIR /build/feiapi-frontend-master
 
-# 声明 Vite 环境变量构建参数
-ARG VITE_API_BASE=/api
-ENV VITE_API_BASE=${VITE_API_BASE}
 # 声明 npm/yarn 镜像源构建参数，默认使用国内镜像源以提升 Docker 构建稳定性
 ARG NPM_REGISTRY=https://registry.npmmirror.com
 # 禁用 husky，避免在容器内执行 git hooks
@@ -33,6 +30,8 @@ FROM nginx:1.27-alpine
 
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# 复制公共安全响应头片段，由各个 location 显式引用，避免 add_header 继承丢失
+COPY nginx/security-headers.conf /etc/nginx/conf.d/security-headers.inc
 # 复制构建产物
 COPY --from=builder /build/feiapi-frontend-master/dist /usr/share/nginx/html
 

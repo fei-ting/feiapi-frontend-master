@@ -20,6 +20,12 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 8000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9527',
+        changeOrigin: false,
+      },
+    },
   },
   test: {
     environment: 'jsdom',
