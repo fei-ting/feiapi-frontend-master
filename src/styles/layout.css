@@ -15,11 +15,33 @@
   padding: 32px 0 48px;
 }
 
+.fei-section {
+  padding: 34px 0 0;
+}
+
+.fei-section--compact {
+  padding-top: 18px;
+}
+
 .fei-card {
   background: var(--fei-surface);
   border: 1px solid var(--fei-border);
   border-radius: var(--fei-radius-lg);
   box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-panel {
+  padding: 24px;
+  background: var(--fei-surface);
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-detail__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
 }
 
 .fei-section-title {

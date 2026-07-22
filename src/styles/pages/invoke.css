@@ -144,20 +144,6 @@
   transform: translateX(0) translateY(-50%);
 }
 
-.fei-code-inline {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid var(--fei-border);
-}
-
-.fei-code-inline--block {
-  display: block;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
 .fei-detail-quota-text {
   margin-left: 8px;
   color: var(--fei-text-secondary);
@@ -306,5 +292,36 @@
   gap: 18px;
   min-height: 0;
   overflow: auto;
+}
+
+/* ========== 在线调用响应式规则 ========== */
+
+@media (max-width: 1100px) {
+  .fei-invoke-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-debug-panel {
+    min-height: 560px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fei-invoke-request,
+  .fei-invoke-result {
+    height: auto;
+    min-height: 0;
+  }
+
+  .fei-invoke-output {
+    height: 360px;
+    min-height: 360px;
+  }
+
+  .fei-invoke-request__head,
+  .fei-invoke-login-tip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 

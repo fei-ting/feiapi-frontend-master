@@ -64,28 +64,6 @@
   flex-wrap: wrap;
 }
 
-.fei-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-  line-height: 1;
-  height: 42px;
-  padding: 0 18px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: 0.2s ease;
-  box-sizing: border-box;
-}
-
-.fei-nav__actions .fei-btn {
-  min-width: 88px;
-  padding-inline: 20px;
-}
-
 /* 首页 Hero 区域按钮 - 加大尺寸使其更醒目 */
 .fei-actions .fei-btn {
   min-width: 140px;
@@ -94,43 +72,27 @@
   font-size: 15px;
 }
 
-.fei-btn--primary {
-  color: #fff;
-  background: var(--fei-primary);
-  border-color: var(--fei-primary);
+/* ========== 首页响应式规则 ========== */
+
+@media (max-width: 1100px) {
+  .fei-hero__title {
+    font-size: 52px;
+  }
 }
 
-.fei-btn--primary:hover {
-  background: var(--fei-primary-dark);
-}
+@media (max-width: 768px) {
+  .fei-hero {
+    padding: 56px 0 78px;
+  }
 
-.fei-btn--secondary {
-  color: var(--fei-text);
-  background: #fff;
-  border-color: var(--fei-border);
-}
+  .fei-hero__title {
+    font-size: 40px;
+  }
 
-.fei-btn--secondary:hover {
-  border-color: var(--fei-primary-light);
-  color: var(--fei-primary);
-}
+  .fei-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: -24px;
+  }
 
-.fei-btn--ghost {
-  color: var(--fei-text-secondary);
-  background: transparent;
-  border-color: var(--fei-border);
-}
-
-.fei-btn--ghost:hover {
-  background: var(--fei-surface-soft);
-  border-color: var(--fei-primary-light);
-  color: var(--fei-primary);
-}
-
-.fei-btn--sm {
-  height: 34px;
-  padding: 0 14px;
-  font-size: 13px;
-  border-radius: 8px;
 }
 

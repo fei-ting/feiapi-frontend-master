@@ -1,15 +1,8 @@
+/* 全局核心层样式 - 只保留设计令牌、浏览器重置、应用布局和通用组件样式 */
 @import './tokens.css';
 @import './reset.css';
 @import './layout.css';
-@import './pages/home.css';
 @import './components/navigation.css';
-@import './pages/market.css';
 @import './components/cards.css';
-@import './pages/detail.css';
-@import './pages/invoke.css';
 @import './components/common.css';
-@import './pages/admin.css';
-@import './pages/profile.css';
-@import './pages/dashboard.css';
-@import './pages/admin-tools.css';
 @import './responsive.css';
