@@ -158,3 +158,62 @@
   color: var(--fei-text-muted);
 }
 
+/* ========== 接口广场响应式规则 ========== */
+
+@media (max-width: 900px) {
+  .fei-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .fei-market-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fei-search-bar--compact {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .fei-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-api-card--v2 {
+    min-height: 0;
+  }
+
+  .fei-api-card__header,
+  .fei-api-card__footer {
+    align-items: flex-start;
+  }
+
+  .fei-api-card__header {
+    flex-wrap: wrap;
+  }
+
+  .fei-api-card__tag-stack {
+    align-items: flex-start;
+    max-width: 100%;
+  }
+
+  .fei-api-card__header > .fei-tag,
+  .fei-api-card__tag-stack > .fei-tag {
+    max-width: 100%;
+  }
+
+  .fei-api-card__body {
+    padding-left: 0;
+  }
+
+  .fei-api-card__footer {
+    flex-direction: column;
+  }
+
+  .fei-api-card__action {
+    align-self: flex-end;
+  }
+}
+

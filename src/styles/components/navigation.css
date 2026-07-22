@@ -1,5 +1,10 @@
 /* ========== 用户下拉菜单 ========== */
 
+.fei-nav__actions .fei-btn {
+  min-width: 88px;
+  padding-inline: 20px;
+}
+
 .fei-user-menu {
   position: relative;
 }

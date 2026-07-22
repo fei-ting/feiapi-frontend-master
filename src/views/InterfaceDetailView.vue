@@ -107,6 +107,8 @@ import StatusTag from '@/components/StatusTag.vue';
 import { useFormat } from '@/composables/useFormat';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import { useQuota } from '@/composables/useQuota';
+import '@/styles/features/interface-documentation.css';
+import '@/styles/pages/detail.css';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/interfaceDoc';

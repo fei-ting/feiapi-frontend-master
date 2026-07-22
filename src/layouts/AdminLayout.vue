@@ -49,6 +49,8 @@ import PageContainer from '@/components/PageContainer.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
+import '@/styles/pages/admin.css';
+import '@/styles/pages/admin-tools.css';
 
 /**
  * 后台管理布局组件

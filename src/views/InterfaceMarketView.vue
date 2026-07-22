@@ -132,6 +132,7 @@ import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import { useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO } from '@/types/interface';
+import '@/styles/pages/market.css';
 
 /**
  * 接口广场页面组件
