@@ -73,7 +73,7 @@ import { onMounted, ref } from 'vue';
 import MethodTag from '@/components/MethodTag.vue';
 import { userInterfaceInfoService } from '@/services/userInterfaceInfo';
 import { useQuota } from '@/composables/useQuota';
-import type { UserInterfaceInfoVO } from '@/types/api';
+import type { UserInterfaceInfoVO } from '@/types/quota';
 
 /**
  * 调用记录页面组件

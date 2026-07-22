@@ -173,7 +173,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
-import type { InterfaceDocDetailVO, InterfaceDocParamVO } from '@/types/api';
+import type { InterfaceDocDetailVO, InterfaceDocParamVO } from '@/types/interfaceDoc';
 
 /** 接口文档展示模式。 */
 type InterfaceDocumentationMode = 'compact' | 'detail';

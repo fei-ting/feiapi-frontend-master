@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import InterfaceDocumentation from '../InterfaceDocumentation.vue';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 /** 构建接口文档组件测试数据。 */
 const buildDocDetail = (overrides: Partial<InterfaceDocDetailVO> = {}): InterfaceDocDetailVO => ({

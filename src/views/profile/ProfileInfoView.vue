@@ -36,7 +36,7 @@ import PasswordForm from '@/components/profile/PasswordForm.vue';
 import ProfileForm from '@/components/profile/ProfileForm.vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
-import type { UserVO } from '@/types/api';
+import type { UserVO } from '@/types/user';
 import type { PasswordFormErrors, PasswordFormModel, ProfileFormModel } from '@/types/profile';
 import { getPasswordFormatError } from '@/utils/passwordValidation';
 const userStore = useUserStore();

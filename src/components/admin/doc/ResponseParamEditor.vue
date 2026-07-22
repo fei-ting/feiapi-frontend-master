@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import type { InterfaceDocParamSaveRequest } from '@/types/api';
+import type { InterfaceDocParamSaveRequest } from '@/types/interfaceDoc';
 import type { EditorFieldValue, ResponseParamEditableField } from '@/types/interfaceDocEditor';
 
 /** 响应字段编辑器属性。 */

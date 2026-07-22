@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import InterfaceDocumentation from '@/components/interface/InterfaceDocumentation.vue';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 import type { InvokeTab } from '@/types/invoke';
 
 /** 调用结果面板组件属性。 */

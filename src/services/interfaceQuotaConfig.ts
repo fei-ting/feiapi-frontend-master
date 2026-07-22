@@ -1,5 +1,5 @@
 import http from './http';
-import type { InterfaceQuotaConfigUpdateRequest, InterfaceQuotaConfigVO } from '@/types/api';
+import type { InterfaceQuotaConfigUpdateRequest, InterfaceQuotaConfigVO } from '@/types/quota';
 
 export const interfaceQuotaConfigService = {
   /**

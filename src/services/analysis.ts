@@ -1,5 +1,5 @@
 import http from './http';
-import type { InterfaceInfoVO } from '@/types/api';
+import type { InterfaceInfoVO } from '@/types/interface';
 
 export const analysisService = {
   topInvoke() {

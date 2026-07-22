@@ -1,7 +1,7 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InterfaceDocMaintenanceView from '../InterfaceDocMaintenanceView.vue';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 const mocks = vi.hoisted(() => ({
   routeParams: { id: '1' },

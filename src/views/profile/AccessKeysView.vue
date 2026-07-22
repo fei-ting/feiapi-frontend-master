@@ -57,7 +57,7 @@ import { onMounted, ref, computed } from 'vue';
 import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import { useClipboard } from '@/composables/useClipboard';
-import type { UserKeyVO } from '@/types/api';
+import type { UserKeyVO } from '@/types/user';
 
 /**
  * 密钥管理页面组件

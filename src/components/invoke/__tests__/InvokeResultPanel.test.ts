@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import InterfaceDocumentation from '@/components/interface/InterfaceDocumentation.vue';
 import InvokeResultPanel from '../InvokeResultPanel.vue';
-import type { InterfaceDocDetailVO } from '@/types/api';
+import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 /** 结果面板使用的最小接口文档。 */
 const docDetail: InterfaceDocDetailVO = {

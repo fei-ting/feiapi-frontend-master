@@ -49,7 +49,7 @@ import { onMounted, ref } from 'vue';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { useFormat } from '@/composables/useFormat';
 import { useQuota } from '@/composables/useQuota';
-import type { InterfaceQuotaConfigVO } from '@/types/api';
+import type { InterfaceQuotaConfigVO } from '@/types/quota';
 
 /**
  * 配额策略配置页面组件
