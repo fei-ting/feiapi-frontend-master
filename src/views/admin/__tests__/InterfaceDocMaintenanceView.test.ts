@@ -140,6 +140,7 @@ describe('InterfaceDocMaintenanceView', () => {
     const child = payload.params.find((param: { name: string }) => param.name === 'name');
     expect(payload.params.some((param: { name: string }) => param.name === 'data')).toBe(false);
     expect(child.parentParamKey).toBeUndefined();
+    expect(child).not.toHaveProperty('parentParamKey');
   });
 
   it('格式化合法JSON并保留非法JSON原值', async () => {

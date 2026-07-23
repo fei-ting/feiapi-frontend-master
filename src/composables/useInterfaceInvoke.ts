@@ -31,15 +31,18 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
     if (!doc || doc.structuredDocMissing) return [];
     return (doc.requestParams || [])
       .filter((param) => param.name)
-      .map((param) => ({
-        name: param.name as string,
-        type: param.type || 'string',
-        example: param.exampleValue || param.defaultValue || '',
-        required: param.required !== false,
-        defaultValue: param.defaultValue,
-        description: param.description,
-        validationRule: param.validationRule,
-      }));
+      .map((param) => {
+        const field: RequestParamField = {
+          name: param.name as string,
+          type: param.type || 'string',
+          example: param.exampleValue || param.defaultValue || '',
+          required: param.required !== false,
+        };
+        if (param.defaultValue !== undefined) field.defaultValue = param.defaultValue;
+        if (param.description !== undefined) field.description = param.description;
+        if (param.validationRule !== undefined) field.validationRule = param.validationRule;
+        return field;
+      });
   };
 
   /** 将输入文本转换为字段声明的类型 */

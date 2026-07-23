@@ -9,7 +9,7 @@ import { DEFAULT_AVATAR_URL, resolveAvatarUrl } from '@/utils/avatar';
 /** 用户头像组件属性。 */
 interface UserAvatarProps {
   /** 后端返回的头像地址。 */
-  src?: string;
+  src?: string | undefined;
   /** 图片替代文本。 */
   alt: string;
 }

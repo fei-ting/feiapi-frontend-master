@@ -13,12 +13,12 @@ export interface QuotaTypeOption {
   readonly label: string;
 }
 
-/** 配额类型只读选项。 */
-export const QUOTA_TYPE_OPTIONS: readonly QuotaTypeOption[] = Object.freeze([
+/** 配额类型只读非空选项。 */
+export const QUOTA_TYPE_OPTIONS = Object.freeze([
   Object.freeze({ value: 'BASIC_QUOTA', label: '基础额度' }),
   Object.freeze({ value: 'FREE_UNLIMITED', label: '免费无限' }),
   Object.freeze({ value: 'ADVANCED_TRIAL', label: '高级体验' }),
-]);
+] satisfies [QuotaTypeOption, ...QuotaTypeOption[]]);
 
 /** 默认配额类型选项。 */
 const DEFAULT_QUOTA_TYPE_OPTION = QUOTA_TYPE_OPTIONS[0];

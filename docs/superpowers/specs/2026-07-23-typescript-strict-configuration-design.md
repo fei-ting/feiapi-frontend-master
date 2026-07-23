@@ -2,7 +2,7 @@
 
 ## 背景
 
-前端工程已启用 `strict: true`，当前类型检查通过，但 `tsconfig.json` 仍使用已弃用的 `moduleResolution: "Node"`，并通过 `ignoreDeprecations: "6.0"` 隐藏提示。`exclude` 还保留 18 个已经不存在的 Umi/React 历史路径。
+前端工程已启用 `strict: true`，当前类型检查通过，但 `tsconfig.json` 仍使用已弃用的 `moduleResolution: "Node"` 和 `baseUrl`，并通过 `ignoreDeprecations: "6.0"` 隐藏提示。`exclude` 还保留 18 个已经不存在的 Umi/React 历史路径。
 
 以下不属于 `strict` 自动启用范围的增强选项尚未配置：
 
@@ -40,9 +40,10 @@
 `tsconfig.json` 调整如下：
 
 1. 将 `moduleResolution` 从 `Node` 改为 `Bundler`。
-2. 删除 `ignoreDeprecations`，不再隐藏旧模块解析策略的弃用提示。
-3. 显式启用 `noUncheckedIndexedAccess`、`noImplicitOverride` 和 `exactOptionalPropertyTypes`。
-4. 删除全部 18 个不存在的 Umi/React 历史 `exclude` 路径；现有 `include` 已明确限定参与编译的 Vue 前端源码。
+2. 删除 `baseUrl`，并将 `paths` 目标改为显式相对路径 `./src/*`，保持 `@/*` 映射目标不变。
+3. 删除 `ignoreDeprecations`，不再隐藏旧配置的弃用提示。
+4. 显式启用 `noUncheckedIndexedAccess`、`noImplicitOverride` 和 `exactOptionalPropertyTypes`。
+5. 删除全部 18 个不存在的 Umi/React 历史 `exclude` 路径；现有 `include` 已明确限定参与编译的 Vue 前端源码。
 
 ## 索引访问整改
 
