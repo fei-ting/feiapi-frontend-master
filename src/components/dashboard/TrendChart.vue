@@ -119,10 +119,9 @@ const yAxisMax = computed(() => {
 
 /** 当前趋势的最新值。 */
 const latestTrend = computed<string | number>(() => {
-  if (!currentTrendData.value.length) {
-    return '-';
-  }
-  return currentTrendData.value[currentTrendData.value.length - 1].value;
+  const trendData = currentTrendData.value;
+  const latestPoint = trendData[trendData.length - 1];
+  return latestPoint?.value ?? '-';
 });
 
 /**

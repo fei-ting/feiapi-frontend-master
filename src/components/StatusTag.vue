@@ -9,7 +9,7 @@
 import { computed } from 'vue';
 
 const props = defineProps<{
-  status?: number;
+  status?: number | undefined;
 }>();
 
 const tagClass = computed(() => {

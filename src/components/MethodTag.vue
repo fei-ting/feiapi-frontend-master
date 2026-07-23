@@ -6,7 +6,7 @@
 import { computed } from 'vue';
 
 const props = defineProps<{
-  method?: string;
+  method?: string | undefined;
 }>();
 
 const methodLabel = computed(() => (props.method || 'GET').toUpperCase());
