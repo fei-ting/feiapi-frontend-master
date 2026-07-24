@@ -1,4 +1,4 @@
-name: 前端 CI（依赖审计 + 类型检查 + 覆盖率 + 构建）
+name: 前端 CI（依赖审计 + 类型检查 + 覆盖率 + 构建性能预算）
 
 on:
   push:
@@ -50,6 +50,9 @@ jobs:
 
       - name: 前端构建
         run: yarn build
+
+      - name: 构建体积门禁
+        run: yarn check:size
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
