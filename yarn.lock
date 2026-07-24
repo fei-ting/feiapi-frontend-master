@@ -814,7 +814,7 @@ data-urls@^6.0.0:
     whatwg-mimetype "^5.0.0"
     whatwg-url "^15.1.0"
 
-dayjs@^1.10.5, dayjs@^1.11.13:
+dayjs@^1.10.5:
   version "1.11.21"
   resolved "https://registry.npmmirror.com/dayjs/-/dayjs-1.11.21.tgz"
   integrity sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==

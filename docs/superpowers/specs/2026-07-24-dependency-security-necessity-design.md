@@ -94,6 +94,23 @@
 7. 执行 `yarn build`，确认 Vue 类型检查和 Vite 生产构建通过。
 8. 检查 Git 差异，确认本地忽略的其他包管理器锁文件未进入提交。
 
+## 实现与验证结果
+
+2026-07-24 已按本设计完成实现，实际结果如下：
+
+- `package.json` 已删除 `dayjs` 直接依赖，`yarn.lock` 仅保留 `ant-design-vue` 所需的 `dayjs@^1.10.5` 选择器。
+- 源码和运行配置未发现 `dayjs` 的静态导入、动态导入或 CommonJS 加载；`yarn why dayjs` 确认依赖原因仅剩 `ant-design-vue#dayjs`。
+- `yarn audit:dependencies` 通过，当前锁文件未命中审计源登记的中危及以上已知漏洞。
+- `yarn install --frozen-lockfile` 通过，依赖声明与锁文件一致。
+- CI 工作流已配置为在项目依赖安装前执行安全审计，并增加每周一北京时间 10:00 的定时触发；定时任务将在工作流合入默认分支后生效。
+- CI YAML 格式检查通过。
+- `yarn typecheck` 通过。
+- `yarn test` 通过，45 个测试文件、244 个测试全部通过。
+- `yarn coverage` 通过，45 个测试文件、244 个测试全部通过，覆盖率门禁未回退。
+- `yarn build` 通过，Vue 类型检查和 Vite 生产构建成功。
+
+覆盖率命令仍会尝试解析本地被 Git 忽略的历史 `.umi` 和 `.umi-production` 生成目录并输出排除警告，但命令最终通过。这些目录未进入本次提交，警告不是本次依赖整改引入的问题。
+
 ## 预计修改文件
 
 - `package.json`

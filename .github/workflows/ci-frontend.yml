@@ -1,10 +1,12 @@
-name: 前端 CI（类型检查 + 覆盖率 + 构建）
+name: 前端 CI（依赖审计 + 类型检查 + 覆盖率 + 构建）
 
 on:
   push:
     branches: [dev, main, master]
   pull_request:
     branches: [dev, main, master]
+  schedule:
+    - cron: '0 2 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -21,6 +23,9 @@ jobs:
           node-version: '22'
           cache: 'yarn'
           cache-dependency-path: yarn.lock
+
+      - name: 依赖安全审计
+        run: yarn audit:dependencies
 
       - name: 安装依赖
         run: yarn install --frozen-lockfile
