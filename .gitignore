@@ -28,11 +28,6 @@ pnpm-lock.yaml
 functions/*
 .temp/**
 
-# umi
-.umi
-.umi-production
-.umi-test
-
 # screenshot
 screenshot
 .firebase
