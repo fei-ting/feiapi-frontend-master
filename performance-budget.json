@@ -1,0 +1,10 @@
+{
+  "baseline": {
+    "totalRawBytes": 428733,
+    "totalGzipBytes": 162168,
+    "largestJavaScriptRawBytes": 151970,
+    "largestJavaScriptGzipBytes": 56906
+  },
+  "warningGrowthRate": 0.1,
+  "failureGrowthRate": 0.25
+}

@@ -10,7 +10,8 @@
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
-    "audit:dependencies": "npx --yes audit-ci@7.1.0 --config ./audit-ci.jsonc"
+    "audit:dependencies": "npx --yes audit-ci@7.1.0 --config ./audit-ci.jsonc",
+    "check:size": "node scripts/check-build-size.mjs"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
