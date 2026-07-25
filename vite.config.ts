@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { configDefaults } from 'vitest/config';
 
 /** 已完成组件化整改的核心模块覆盖率阈值。 */
 const coreCoverageThresholds = {
@@ -30,6 +31,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    exclude: [...configDefaults.exclude, 'tests/e2e/**'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,vue}'],
