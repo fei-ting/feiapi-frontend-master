@@ -23,6 +23,7 @@
 - 不覆盖注册、退出、分页筛选和全部异常页面流程；这些作为后续增量场景。
 - 不通过测试专用分支、测试后门或内部状态注入改变生产代码行为。
 - 不为了提高覆盖率增加没有业务价值的测试。
+- 不实现多管理员同时修改配额的版本控制、乐观锁或其他服务端并发控制；当前项目只有开发者本人担任管理员。
 
 ## 测试真实性原则
 
@@ -75,7 +76,7 @@ Cypress 的交互式调试成熟，但依赖和运行器更重。项目当前没
 
 采用方案一。新增 `@playwright/test@1.62.0`，其 Node.js 要求为 `>=20`，兼容本地 Node.js 20.20.2 和 CI Node.js 22，许可证为 Apache-2.0。
 
-Playwright 自动启动固定地址 `http://127.0.0.1:8000` 的 Vite。CI 禁止复用已有服务，防止测试连接到错误进程；本地允许复用开发者已经启动的同地址服务。
+Playwright 自动启动固定地址 `http://127.0.0.1:4173` 的 Vite。该端口与项目日常开发和 Docker 映射端口隔离；本地和 CI 均禁止复用已有服务，确保测试运行的始终是当前工作区代码。
 
 ## 测试架构
 
@@ -94,11 +95,17 @@ tests/
 ### Playwright 配置
 
 - 首批只运行 Chromium，避免在基础设施建立阶段扩大浏览器矩阵。
-- 使用 `http://127.0.0.1:8000` 作为基础地址。
+- 使用 E2E 专用地址 `http://127.0.0.1:4173` 作为基础地址。
 - 使用 Vite `webServer`，端口被占用时直接失败。
 - 本地测试允许并行；CI 使用单工作进程和最多两次重试。
 - 首次失败时保留 Trace，最终失败时保留截图和视频。
 - 生成 HTML 报告和机器可读测试结果。
+
+### 测试运行器边界
+
+- Playwright 只发现并执行 `tests/e2e/**` 下的端到端测试。
+- Vitest 的用例发现范围排除 `tests/e2e/**`，防止把 Playwright `*.spec.ts` 当作单元测试加载。
+- Vitest 覆盖率仍统计原有 `src/**/*.{ts,vue}` 生产代码，不因隔离 E2E 用例而缩小范围或降低门禁。
 
 ### API Mock
 
@@ -177,11 +184,11 @@ E2E 只覆盖配额成功主链路。输入边界、取消、请求失败和重�
 
 在 `QuotaConfigView.vue` 中使用现有 `ConfirmDialog` 恢复以下行为：
 
-1. 保存前将输入转换为数字，并校验为大于 0 的整数。
+1. 点击页面保存按钮时将输入转换为数字，并校验为大于 0 的整数；此时不得发送更新请求。
 2. 校验失败时显示错误提示，不打开确认弹窗、不发送请求。
-3. 确认弹窗展示配额类型和即将保存的新额度。
-4. 确认后调用 `interfaceQuotaConfigService.update()`。
-5. 保存期间禁用当前配额的保存按钮和确认操作，防止重复提交。
+3. 校验成功后打开确认弹窗，展示配额类型和即将保存的新额度；打开弹窗本身不得发送更新请求。
+4. 只有点击弹窗中的“确认保存”按钮后，才调用 `interfaceQuotaConfigService.update()`。
+5. 请求期间禁用当前配额的保存按钮和弹窗确认按钮，避免同一次人工操作因重复点击产生重复请求；该保护不属于多管理员并发控制。
 6. 成功后关闭弹窗、清理确认状态、显示成功提示并重新加载配额列表。
 7. 失败时保留弹窗和输入值，显示失败提示，允许用户重试或取消。
 8. 为有限额度输入框提供包含配额类型的无障碍名称，使真实用户和自动化工具都能明确识别字段。
@@ -219,6 +226,8 @@ E2E 只覆盖配额成功主链路。输入边界、取消、请求失败和重�
 
 报告和失败产物保留 7 天。Playwright 浏览器只访问本地 Vite 和被拦截的同源 `/api/**`，测试不访问真实业务服务或外部网络。
 
+实施期间依赖审计识别到 2026-07-24 新发布的 `postcss` 路径遍历公告和 `brace-expansion` 拒绝服务公告。两者均为既有传递依赖，不由 Playwright 引入。为保持安全门禁失败关闭，使用 Yarn `resolutions` 固定已修复的 `postcss@8.5.18` 和 `brace-expansion@5.0.8`，不加入审计白名单；升级后必须复跑全部组件测试、E2E、类型检查和构建，验证跨主版本的测试工具传递依赖兼容性。
+
 ## 验收标准
 
 - 配额回归测试先在占位实现上因没有更新请求和数据刷新而失败。
@@ -237,12 +246,14 @@ E2E 只覆盖配额成功主链路。输入边界、取消、请求失败和重�
 - `.github/workflows/ci-frontend.yml`
 - `package.json`
 - `yarn.lock`
+- `vite.config.ts`
 - `playwright.config.ts`
 - `tests/e2e/fixtures/apiMock.ts`
 - `tests/e2e/fixtures/testData.ts`
 - `tests/e2e/auth.spec.ts`
 - `tests/e2e/interface-management.spec.ts`
 - `tests/e2e/quota-config.spec.ts`
+- `src/components/common/ConfirmDialog.vue`
+- `src/components/common/__tests__/ConfirmDialog.test.ts`
 - `src/views/admin/QuotaConfigView.vue`
 - `src/views/admin/__tests__/QuotaConfigView.test.ts`
-

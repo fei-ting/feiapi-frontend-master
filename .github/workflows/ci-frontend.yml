@@ -1,4 +1,4 @@
-name: 前端 CI（依赖审计 + 类型检查 + 覆盖率 + 构建性能预算）
+name: 前端 CI（依赖审计 + 类型检查 + 覆盖率 + E2E + 构建性能预算）
 
 on:
   push:
@@ -53,6 +53,24 @@ jobs:
 
       - name: 构建体积门禁
         run: yarn check:size
+
+      - name: 安装 Playwright Chromium
+        run: yarn playwright install --with-deps chromium
+
+      - name: 关键业务端到端测试
+        run: yarn e2e
+
+      - name: 上传端到端测试报告与失败产物
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-e2e
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
