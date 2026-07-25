@@ -15,6 +15,26 @@ const mountOpenDialog = () => mount(ConfirmDialog, {
 });
 
 describe('ConfirmDialog', () => {
+  it('禁用确认按钮时不触发确认事件', async () => {
+    const wrapper = mount(ConfirmDialog, {
+      props: {
+        open: true,
+        title: '保存配额',
+        message: '确认保存当前配额吗？',
+        primaryText: '确认保存',
+        confirmDisabled: true,
+      },
+      attachTo: document.body,
+    });
+
+    const confirmButton = wrapper.get('.fei-btn--primary');
+    expect(confirmButton.attributes('disabled')).toBeDefined();
+    await confirmButton.trigger('click');
+    expect(wrapper.emitted('confirm')).toBeUndefined();
+
+    wrapper.unmount();
+  });
+
   afterEach(() => {
     document.body.innerHTML = '';
   });
