@@ -1,10 +1,12 @@
-name: 前端 CI（类型检查 + 覆盖率 + 构建）
+name: 前端 CI（依赖审计 + 类型检查 + 覆盖率 + E2E + 构建性能预算）
 
 on:
   push:
     branches: [dev, main, master]
   pull_request:
     branches: [dev, main, master]
+  schedule:
+    - cron: '0 2 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -22,10 +24,16 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: yarn.lock
 
+      - name: 依赖安全审计
+        run: yarn audit:dependencies
+
       - name: 安装依赖
         run: yarn install --frozen-lockfile
         env:
           HUSKY: 0
+
+      - name: ESLint 静态检查
+        run: yarn lint
 
       - name: TypeScript 类型检查
         run: yarn typecheck
@@ -45,6 +53,27 @@ jobs:
 
       - name: 前端构建
         run: yarn build
+
+      - name: 构建体积门禁
+        run: yarn check:size
+
+      - name: 安装 Playwright Chromium
+        run: yarn playwright install --with-deps chromium
+
+      - name: 关键业务端到端测试
+        run: yarn e2e
+
+      - name: 上传端到端测试报告与失败产物
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-e2e
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4

@@ -181,7 +181,7 @@ const submitForm = async () => {
     const payload: InterfaceInfoAddRequest = {
       name: form.name,
       description: form.description,
-      url: form.url || undefined,
+      ...(form.url ? { url: form.url } : {}),
       path: form.path,
       targetHost: form.targetHost,
       requestParams: form.requestParams,

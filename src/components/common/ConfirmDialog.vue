@@ -14,7 +14,12 @@
       <h2 :id="titleId">{{ title }}</h2>
       <p>{{ message }}</p>
       <div class="fei-confirm-dialog__footer">
-        <button class="fei-btn fei-btn--primary" type="button" @click="confirm">
+        <button
+          class="fei-btn fei-btn--primary"
+          type="button"
+          :disabled="confirmDisabled"
+          @click="confirm"
+        >
           {{ primaryText }}
         </button>
         <button class="fei-btn fei-btn--secondary" type="button" @click="cancel">
@@ -41,6 +46,8 @@ interface ConfirmDialogProps {
   primaryText: string;
   /** 取消按钮文本。 */
   cancelText?: string;
+  /** 是否禁用确认按钮。 */
+  confirmDisabled?: boolean;
   /** 标题元素 ID。 */
   titleId?: string;
 }
@@ -55,6 +62,7 @@ interface ConfirmDialogEmits {
 
 const props = withDefaults(defineProps<ConfirmDialogProps>(), {
   cancelText: '取消',
+  confirmDisabled: false,
   titleId: 'confirm-dialog-title',
 });
 const emit = defineEmits<ConfirmDialogEmits>();

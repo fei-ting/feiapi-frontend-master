@@ -25,6 +25,13 @@ describe('统一错误上报服务', () => {
     expect(report).not.toHaveProperty('secretKey');
   });
 
+  it('省略未提供的可选上下文字段', () => {
+    const report = createErrorReport('请求失败', { source: 'window-error' });
+
+    expect(report).not.toHaveProperty('component');
+    expect(report).not.toHaveProperty('info');
+  });
+
   it('Reporter 自身日志失败时不向外抛出', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {
       throw new Error('日志不可用');

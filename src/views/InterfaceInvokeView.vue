@@ -79,6 +79,8 @@ import MethodTag from '@/components/MethodTag.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
 import { useInterfaceInvoke } from '@/composables/useInterfaceInvoke';
+import '@/styles/features/interface-documentation.css';
+import '@/styles/pages/invoke.css';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/interfaceDoc';

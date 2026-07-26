@@ -15,6 +15,8 @@ npm-debug.log*
 yarn-error.log
 
 /coverage
+/playwright-report
+/test-results
 .idea
 package-lock.json
 pnpm-lock.yaml
@@ -27,11 +29,6 @@ pnpm-lock.yaml
 *.log
 functions/*
 .temp/**
-
-# umi
-.umi
-.umi-production
-.umi-test
 
 # screenshot
 screenshot

@@ -48,6 +48,7 @@ import SectionHeader from '@/components/SectionHeader.vue';
 import { homeStatsService } from '@/services/homeStats';
 import { useUserStore } from '@/stores/user';
 import type { HomeStats } from '@/types/home';
+import '@/styles/pages/home.css';
 
 /**
  * 首页组件

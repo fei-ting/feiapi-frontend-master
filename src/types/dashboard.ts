@@ -63,15 +63,3 @@ export interface ChangedInterface {
   /** 变更时间 */
   time: string;
 }
-
-/** Dashboard 完整数据 */
-export interface DashboardData {
-  /** 概览统计 */
-  overview: DashboardOverview;
-  /** 趋势数据 */
-  trends: DashboardTrends;
-  /** 重点关注 */
-  alerts: AlertInterface[];
-  /** 最近变更 */
-  changes: ChangedInterface[];
-}

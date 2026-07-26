@@ -9,7 +9,7 @@
     </div>
     <h2 class="fei-error-boundary__title">页面渲染出错</h2>
     <p class="fei-error-boundary__desc">
-      {{ errorMessage || '页面遇到了意外错误，请尝试刷新页面。' }}
+      页面遇到了意外错误，请刷新页面后重试，或返回首页。
     </p>
     <div class="fei-error-boundary__actions">
       <button class="fei-btn fei-btn--primary" type="button" @click="handleReload">
@@ -29,7 +29,7 @@ import { useRouter } from 'vue-router';
 
 /**
  * 错误边界组件
- * 捕获子组件的渲染错误，显示友好的错误提示。
+ * 捕获子组件的渲染错误，显示固定的友好错误提示。
  * 错误继续向上传播，由应用级错误处理器统一上报。
  */
 
@@ -38,16 +38,13 @@ const router = useRouter();
 /** 是否有错误 */
 const hasError = ref(false);
 
-/** 错误消息 */
-const errorMessage = ref('');
-
 /**
  * 捕获子组件错误
+ * 只更新 hasError 状态，不存储原始错误消息。
  * 不返回 false，确保错误继续进入应用级错误处理器。
  */
-onErrorCaptured((err: Error, instance, info) => {
+onErrorCaptured((_err: Error, _instance, _info) => {
   hasError.value = true;
-  errorMessage.value = err.message || '页面遇到了意外错误';
 });
 
 /**
@@ -62,7 +59,6 @@ const handleReload = () => {
  */
 const handleGoHome = () => {
   hasError.value = false;
-  errorMessage.value = '';
   router.push('/home');
 };
 </script>

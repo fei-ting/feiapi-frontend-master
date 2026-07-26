@@ -3,17 +3,18 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "ignoreDeprecations": "6.0",
+    "moduleResolution": "Bundler",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "types": ["vite/client", "node", "vitest/globals"]
   },
@@ -24,7 +25,6 @@
     "src/components/**/*.vue",
     "src/router/**/*.ts",
     "src/services/http.ts",
-    "src/services/analysis.ts",
     "src/services/interfaceInfo.ts",
     "src/services/user.ts",
     "src/services/userInterfaceInfo.ts",
@@ -32,25 +32,5 @@
     "src/styles/**/*.css",
     "src/types/**/*.ts",
     "src/views/**/*.vue"
-  ],
-  "exclude": [
-    "src/access.ts",
-    "src/app.tsx",
-    "src/global.less",
-    "src/global.tsx",
-    "src/manifest.json",
-    "src/requestConfig.ts",
-    "src/service-worker.js",
-    "src/typings.d.ts",
-    "src/components/Footer/**",
-    "src/components/HeaderDropdown/**",
-    "src/components/HeaderSearch/**",
-    "src/components/NoticeIcon/**",
-    "src/components/RightContent/**",
-    "src/pages/**",
-    "src/services/ant-design-pro/**",
-    "src/services/feiapi-backend/**",
-    "src/services/swagger/**",
-    "src/utils/loginAttemptLimiter.ts"
   ]
 }

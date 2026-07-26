@@ -56,19 +56,20 @@ const toError = (value: unknown): Error => {
  */
 export const createErrorReport = (error: unknown, context: ErrorReportContext): ErrorReport => {
   const normalizedError = toError(error);
-  return {
+  const report: ErrorReport = {
     name: normalizedError.name || 'Error',
     message: normalizedError.message || '未知错误',
-    stack: normalizedError.stack,
     source: context.source,
-    component: context.component,
-    info: context.info,
     url: typeof window === 'undefined' ? '' : window.location.href,
     environment: import.meta.env.MODE === 'test'
       ? 'test'
       : (import.meta.env.DEV ? 'development' : 'production'),
     timestamp: new Date().toISOString(),
   };
+  if (normalizedError.stack !== undefined) report.stack = normalizedError.stack;
+  if (context.component !== undefined) report.component = context.component;
+  if (context.info !== undefined) report.info = context.info;
+  return report;
 };
 
 /**

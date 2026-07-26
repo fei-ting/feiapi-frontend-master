@@ -6,7 +6,6 @@
  */
 
 import http from './http';
-import type { InterfaceInfoVO } from '@/types/interface';
 import type {
   DashboardOverview,
   DashboardTrends,
@@ -95,18 +94,5 @@ export const dashboardService = {
       () => http.get<ChangedInterface[]>('/analysis/dashboard/changes'),
       getMockChanges,
     );
-  },
-
-  /**
-   * 获取调用次数 TOP 接口
-   *
-   * 真实接口：GET /analysis/top/interface/invoke
-   */
-  async getTopInterfaces(): Promise<InterfaceInfoVO[]> {
-    try {
-      return await http.get<InterfaceInfoVO[]>('/analysis/top/interface/invoke');
-    } catch {
-      return [];
-    }
   },
 };

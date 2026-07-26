@@ -26,6 +26,7 @@
                 type="number"
                 min="1"
                 step="1"
+                :aria-label="`${getQuotaTypeText(item.quotaType)}初始额度`"
               />
               <button
                 class="fei-btn fei-btn--primary fei-btn--sm"
@@ -42,14 +43,28 @@
       <div v-if="!quotaConfigs.length" class="fei-empty">暂无配额策略数据</div>
     </div>
   </div>
+
+  <ConfirmDialog
+    :open="pendingQuota !== null"
+    title="确认修改配额策略"
+    :message="quotaConfirmMessage"
+    :primary-text="quotaSavingType ? '保存中...' : '确认保存'"
+    cancel-text="取消"
+    :confirm-disabled="quotaSavingType !== null"
+    title-id="quota-confirm-dialog-title"
+    @confirm="saveQuotaConfig"
+    @cancel="closeQuotaConfirmModal"
+  />
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ReloadOutlined } from '@ant-design/icons-vue';
+import { computed, onMounted, ref } from 'vue';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import { interfaceQuotaConfigService } from '@/services/interfaceQuotaConfig';
 import { useFormat } from '@/composables/useFormat';
 import { useQuota } from '@/composables/useQuota';
-import type { InterfaceQuotaConfigVO } from '@/types/quota';
+import type { InterfaceQuotaConfigVO, InterfaceQuotaType } from '@/types/quota';
 
 /**
  * 配额策略配置页面组件
@@ -66,7 +81,22 @@ const quotaConfigs = ref<InterfaceQuotaConfigVO[]>([]);
 const quotaEditMap = ref<Record<string, number>>({});
 
 /** 正在保存的配额类型 */
-const quotaSavingType = ref<string | null>(null);
+const quotaSavingType = ref<InterfaceQuotaType | null>(null);
+
+/** 待确认的配额修改。 */
+const pendingQuota = ref<{
+  /** 配额类型。 */
+  quotaType: InterfaceQuotaType;
+  /** 新的初始额度。 */
+  initialQuota: number;
+} | null>(null);
+
+/** 配额确认弹窗正文。 */
+const quotaConfirmMessage = computed(() => {
+  if (!pendingQuota.value) return '';
+  const quotaTypeText = getQuotaTypeText(pendingQuota.value.quotaType);
+  return `确定将${quotaTypeText}的初始额度修改为 ${pendingQuota.value.initialQuota} 吗？`;
+});
 
 /**
  * 显示 Toast 通知（通过父组件）
@@ -100,11 +130,45 @@ const loadQuotaConfigs = async () => {
 };
 
 /**
- * 打开配额确认弹窗（占位实现）
+ * 校验配额并打开确认弹窗，此操作不发送更新请求
  * @param quotaType 配额类型
  */
-const openQuotaConfirmModal = (quotaType: string) => {
-  showToast(`保存配额策略: ${quotaType}`, 'info');
+const openQuotaConfirmModal = (quotaType: InterfaceQuotaType) => {
+  const initialQuota = Number(quotaEditMap.value[quotaType]);
+  if (!Number.isInteger(initialQuota) || initialQuota <= 0) {
+    showToast('初始额度必须是大于 0 的整数', 'error');
+    return;
+  }
+
+  pendingQuota.value = { quotaType, initialQuota };
+};
+
+/** 关闭配额确认弹窗。 */
+const closeQuotaConfirmModal = () => {
+  if (quotaSavingType.value) return;
+  pendingQuota.value = null;
+};
+
+/**
+ * 确认并保存配额配置
+ * 只有用户点击确认弹窗的主操作后才会发送更新请求
+ */
+const saveQuotaConfig = async () => {
+  if (!pendingQuota.value || quotaSavingType.value) return;
+
+  const updateRequest = { ...pendingQuota.value };
+  quotaSavingType.value = updateRequest.quotaType;
+  try {
+    await interfaceQuotaConfigService.update(updateRequest);
+    pendingQuota.value = null;
+    showToast('配额策略已更新', 'success');
+    await loadQuotaConfigs();
+  } catch (error) {
+    console.error('[QuotaConfigView] 更新配额策略失败:', error);
+    showToast('配额策略更新失败', 'error');
+  } finally {
+    quotaSavingType.value = null;
+  }
 };
 
 onMounted(async () => {

@@ -89,3 +89,19 @@
   border-bottom-color: var(--fei-primary);
 }
 
+/* ========== 后台/个人中心响应式规则 ========== */
+
+@media (min-width: 1024px) {
+  .fei-admin-layout {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .fei-admin-sidebar {
+    display: block;
+  }
+
+  .fei-admin-tabs {
+    display: none;
+  }
+}
+

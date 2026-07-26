@@ -89,6 +89,8 @@ import ToastMessage from '@/components/ToastMessage.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
+import '@/styles/pages/admin.css';
+import '@/styles/pages/profile.css';
 
 /**
  * 个人中心布局组件

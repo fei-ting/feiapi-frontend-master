@@ -1,0 +1,13 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  // 显式审计项目唯一使用的 Yarn 锁文件。
+  "package-manager": "yarn",
+  // 中危、高危和严重漏洞均阻断持续集成。
+  "moderate": true,
+  // 使用摘要报告保留关键信息并控制日志体积。
+  "report-type": "summary",
+  // 初始不放行任何已知漏洞，临时放行必须单独评估并记录。
+  "allowlist": [],
+  // 审计源不可用不等于安全，无法完成审计时保持失败状态。
+  "pass-enoaudit": false
+}

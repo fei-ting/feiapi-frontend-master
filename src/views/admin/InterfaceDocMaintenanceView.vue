@@ -143,20 +143,24 @@ const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++k
 /** 将接口参数转换为保存请求，并保留父子关系。 */
 const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response'): InterfaceDocParamSaveRequest[] => {
   const keyMap = new Map(params.filter((param) => param.id).map((param) => [param.id as number, `${scene}-${param.id}`]));
-  return params.map((param, index) => ({
-    paramKey: param.id ? `${scene}-${param.id}` : nextClientKey(scene),
-    parentParamKey: param.parentId ? keyMap.get(param.parentId) : undefined,
-    paramScene: scene === 'response' ? 'RESPONSE' : param.paramScene === 'QUERY' ? 'QUERY' : 'BODY',
-    name: param.name ?? '',
-    type: param.type ?? 'string',
-    required: param.required ?? false,
-    nullable: scene === 'response' ? (param.nullable ?? false) : param.nullable,
-    defaultValue: param.defaultValue ?? '',
-    exampleValue: param.exampleValue ?? '',
-    description: param.description ?? '',
-    validationRule: param.validationRule ?? '',
-    sortOrder: param.sortOrder ?? index + 1,
-  }));
+  return params.map((param, index) => {
+    const parentParamKey = param.parentId ? keyMap.get(param.parentId) : undefined;
+    const nullable = scene === 'response' ? (param.nullable ?? false) : param.nullable;
+    return {
+      paramKey: param.id ? `${scene}-${param.id}` : nextClientKey(scene),
+      ...(parentParamKey !== undefined ? { parentParamKey } : {}),
+      paramScene: scene === 'response' ? 'RESPONSE' : param.paramScene === 'QUERY' ? 'QUERY' : 'BODY',
+      name: param.name ?? '',
+      type: param.type ?? 'string',
+      required: param.required ?? false,
+      ...(nullable !== undefined ? { nullable } : {}),
+      defaultValue: param.defaultValue ?? '',
+      exampleValue: param.exampleValue ?? '',
+      description: param.description ?? '',
+      validationRule: param.validationRule ?? '',
+      sortOrder: param.sortOrder ?? index + 1,
+    };
+  });
 };
 
 /** 加载接口文档并初始化编辑快照。 */
@@ -208,10 +212,9 @@ const buildSaveRequest = (): InterfaceDocSaveRequest => ({
   successExample: form.successExample,
   failExample: form.failExample,
   remark: form.remark,
-  params: [...requestParams.value, ...responseParams.value].map(({ ...param }) => ({
-    ...param,
-    parentParamKey: param.parentParamKey || undefined,
-  })),
+  params: [...requestParams.value, ...responseParams.value].map(({ parentParamKey, ...param }) => (
+    parentParamKey ? { ...param, parentParamKey } : param
+  )),
   errorCodes: errorCodes.value.map(({ clientKey: _clientKey, ...errorCode }) => errorCode),
 });
 
@@ -292,7 +295,11 @@ const addResponseParam = (): void => {
 const removeResponseParam = (paramKey: string): void => {
   responseParams.value = responseParams.value
     .filter((param) => param.paramKey !== paramKey)
-    .map((param) => param.parentParamKey === paramKey ? { ...param, parentParamKey: undefined } : param);
+    .map((param) => {
+      if (param.parentParamKey !== paramKey) return param;
+      const { parentParamKey: _removedParentParamKey, ...rootParam } = param;
+      return rootParam;
+    });
 };
 
 /** 新增接口错误码。 */

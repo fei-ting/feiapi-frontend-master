@@ -4,11 +4,13 @@ import QuotaConfigView from '../QuotaConfigView.vue';
 
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),
+  update: vi.fn(),
 }));
 
 vi.mock('@/services/interfaceQuotaConfig', () => ({
   interfaceQuotaConfigService: {
     list: mocks.list,
+    update: mocks.update,
   },
 }));
 
@@ -46,6 +48,7 @@ describe('配额策略配置页面', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.list.mockResolvedValue(buildQuotaConfigs());
+    mocks.update.mockResolvedValue(true);
   });
 
   it('使用共享规则展示配额名称、标签和编辑状态', async () => {
@@ -67,11 +70,122 @@ describe('配额策略配置页面', () => {
     expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
     expect(cards[1].get('.fei-quota-edit-value').text()).toBe('无限次');
 
-    await cards[0].get('button').trigger('click');
+    expect(cards[0].get('input').attributes('aria-label')).toBe('基础额度初始额度');
+    wrapper.unmount();
+  });
+
+  it.each([0, -1, 1.5])('拒绝无效的有限额度 %s', async (initialQuota) => {
+    const wrapper = mount(QuotaConfigView, { global });
+    await flushPromises();
+
+    const card = wrapper.findAll('.fei-quota-config-card')[0]!;
+    await card.get('input').setValue(initialQuota);
+    await card.get('button').trigger('click');
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
     expect(wrapper.emitted('show-toast')).toContainEqual([
-      '保存配额策略: BASIC_QUOTA',
-      'info',
+      '初始额度必须是大于 0 的整数',
+      'error',
     ]);
+    wrapper.unmount();
+  });
+
+  it('有效额度只打开确认弹窗且确认前不发送更新请求', async () => {
+    const wrapper = mount(QuotaConfigView, { global, attachTo: document.body });
+    await flushPromises();
+
+    const card = wrapper.findAll('.fei-quota-config-card')[0]!;
+    await card.get('input').setValue(250);
+    await card.get('button').trigger('click');
+
+    const dialog = wrapper.get('[role="dialog"]');
+    expect(dialog.text()).toContain('基础额度');
+    expect(dialog.text()).toContain('250');
+    expect(mocks.update).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it('取消确认时不发送请求并保留编辑值', async () => {
+    const wrapper = mount(QuotaConfigView, { global, attachTo: document.body });
+    await flushPromises();
+
+    const card = wrapper.findAll('.fei-quota-config-card')[0]!;
+    await card.get('input').setValue(250);
+    await card.get('button').trigger('click');
+    await wrapper.get('[role="dialog"] .fei-btn--secondary').trigger('click');
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect((card.get('input').element as HTMLInputElement).value).toBe('250');
+    wrapper.unmount();
+  });
+
+  it('确认后发送正确请求，成功时关闭弹窗并刷新数据', async () => {
+    const updatedConfigs = buildQuotaConfigs();
+    updatedConfigs[0]!.initialQuota = 250;
+    mocks.list
+      .mockResolvedValueOnce(buildQuotaConfigs())
+      .mockResolvedValueOnce(updatedConfigs);
+    const wrapper = mount(QuotaConfigView, { global, attachTo: document.body });
+    await flushPromises();
+
+    const card = wrapper.findAll('.fei-quota-config-card')[0]!;
+    await card.get('input').setValue(250);
+    await card.get('button').trigger('click');
+    await wrapper.get('[role="dialog"] .fei-btn--primary').trigger('click');
+    await flushPromises();
+
+    expect(mocks.update).toHaveBeenCalledWith({
+      quotaType: 'BASIC_QUOTA',
+      initialQuota: 250,
+    });
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(wrapper.emitted('show-toast')).toContainEqual(['配额策略已更新', 'success']);
+    expect((wrapper.findAll('.fei-quota-config-card')[0]!.get('input').element as HTMLInputElement).value).toBe('250');
+    wrapper.unmount();
+  });
+
+  it('请求失败时保留确认状态和编辑值并允许重试', async () => {
+    mocks.update.mockRejectedValue(new Error('配额服务异常'));
+    const wrapper = mount(QuotaConfigView, { global, attachTo: document.body });
+    await flushPromises();
+
+    const card = wrapper.findAll('.fei-quota-config-card')[0]!;
+    await card.get('input').setValue(250);
+    await card.get('button').trigger('click');
+    await wrapper.get('[role="dialog"] .fei-btn--primary').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+    expect((card.get('input').element as HTMLInputElement).value).toBe('250');
+    expect(wrapper.get('[role="dialog"] .fei-btn--primary').attributes('disabled')).toBeUndefined();
+    expect(wrapper.emitted('show-toast')).toContainEqual(['配额策略更新失败', 'error']);
+    wrapper.unmount();
+  });
+
+  it('请求进行期间禁用确认操作并避免重复提交', async () => {
+    let resolveUpdate: ((value: boolean) => void) | undefined;
+    mocks.update.mockImplementation(() => new Promise<boolean>((resolve) => {
+      resolveUpdate = resolve;
+    }));
+    const wrapper = mount(QuotaConfigView, { global, attachTo: document.body });
+    await flushPromises();
+
+    const card = wrapper.findAll('.fei-quota-config-card')[0]!;
+    await card.get('input').setValue(250);
+    await card.get('button').trigger('click');
+    const confirmButton = wrapper.get('[role="dialog"] .fei-btn--primary');
+    await confirmButton.trigger('click');
+    await confirmButton.trigger('click');
+
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(confirmButton.attributes('disabled')).toBeDefined();
+
+    resolveUpdate?.(true);
+    await flushPromises();
     wrapper.unmount();
   });
 
