@@ -32,6 +32,9 @@ jobs:
         env:
           HUSKY: 0
 
+      - name: ESLint 静态检查
+        run: yarn lint
+
       - name: TypeScript 类型检查
         run: yarn typecheck
 

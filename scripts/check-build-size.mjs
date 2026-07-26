@@ -132,7 +132,7 @@ export const readPerformanceBudget = (budgetPath) => {
     parsedBudget = JSON.parse(readFileSync(budgetPath, 'utf8'));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`无法读取性能预算配置：${message}`);
+    throw new Error(`无法读取性能预算配置：${message}`, { cause: error });
   }
 
   return validatePerformanceBudget(parsedBudget);

@@ -129,7 +129,6 @@ import { useRouter } from 'vue-router';
 import LoadingBlock from '@/components/LoadingBlock.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import { interfaceService } from '@/services/interfaceInfo';
-import { useUserStore } from '@/stores/user';
 import { useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO } from '@/types/interface';
 import '@/styles/pages/market.css';
@@ -140,8 +139,7 @@ import '@/styles/pages/market.css';
  */
 
 const router = useRouter();
-const userStore = useUserStore();
-const { isFreeUnlimited, getQuotaTagClass, getQuotaTypeText } = useQuota();
+const { getQuotaTagClass, getQuotaTypeText } = useQuota();
 
 /** 接口列表 */
 const list = ref<InterfaceInfoVO[]>([]);
