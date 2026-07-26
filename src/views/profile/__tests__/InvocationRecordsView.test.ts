@@ -52,4 +52,42 @@ describe('InvocationRecordsView', () => {
     expect(link.attributes('href')).toBe('/interface/7');
     expect(link.attributes('href')).not.toContain('#');
   });
+
+  /** 验证个人额度列表使用服务端分页，并在翻页后请求对应页码。 */
+  it('翻页后请求对应页的十条额度记录', async () => {
+    mocks.getListPage
+      .mockResolvedValueOnce({
+        records: [{ id: 1, interfaceInfoId: 7, interfaceName: '天气接口' }],
+        total: 11,
+        size: 10,
+        current: 1,
+      })
+      .mockResolvedValueOnce({
+        records: [{ id: 2, interfaceInfoId: 8, interfaceName: '库存接口' }],
+        total: 11,
+        size: 10,
+        current: 2,
+      });
+
+    const wrapper = mount(InvocationRecordsView, {
+      global: {
+        stubs: {
+          MethodTag: { template: '<span />' },
+          RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
+        },
+      },
+    });
+    await flushPromises();
+
+    expect(mocks.getListPage).toHaveBeenNthCalledWith(1, { current: 1, pageSize: 10 });
+    expect(wrapper.get('.fei-pagination__info').text()).toBe('第 1 页 / 共 2 页');
+
+    const nextButton = wrapper.findAll('.fei-pagination__btn')[1];
+    await nextButton?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.getListPage).toHaveBeenNthCalledWith(2, { current: 2, pageSize: 10 });
+    expect(wrapper.text()).toContain('库存接口');
+    expect(wrapper.get('.fei-pagination__info').text()).toBe('第 2 页 / 共 2 页');
+  });
 });

@@ -25,36 +25,12 @@
   flex-shrink: 0;
 }
 
-/* ========== 表格操作 ========== */
-
-.fei-table-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.fei-table-actions a,
-.fei-table-actions button {
-  font-size: 13px;
-  color: var(--fei-primary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.fei-table-actions a:hover,
-.fei-table-actions button:hover {
-  text-decoration: underline;
-}
-
 .fei-table-actions .fei-action--danger {
   color: var(--fei-error);
 }
 
-.fei-table-actions button:disabled {
+.fei-table-text-muted {
   color: var(--fei-text-muted);
-  cursor: not-allowed;
-  text-decoration: none;
 }
 
 .fei-form-grid {

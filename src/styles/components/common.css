@@ -103,6 +103,115 @@
   background: #fff;
 }
 
+.fei-table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fei-table-actions a,
+.fei-table-actions button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--fei-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fei-table-actions a:hover,
+.fei-table-actions button:hover {
+  text-decoration: underline;
+}
+
+.fei-table-actions button:disabled {
+  color: var(--fei-text-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* ========== 公共固定分页表格 ========== */
+
+.fei-data-table {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  background: #fff;
+}
+
+.fei-data-table__viewport {
+  height: calc(45px + var(--fei-table-body-height));
+  overflow: auto;
+  background: #fff;
+}
+
+.fei-data-table__viewport .fei-table tbody tr {
+  height: 56px;
+}
+
+.fei-data-table__empty {
+  display: grid;
+  height: var(--fei-table-body-height);
+  padding: 20px;
+  place-items: center;
+}
+
+.fei-data-table__pagination {
+  min-height: 70px;
+  margin-top: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--fei-border);
+}
+
+/* ========== 公共分页 ========== */
+
+.fei-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 32px;
+}
+
+.fei-pagination__btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fei-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fei-pagination__btn:hover:not(:disabled) {
+  border-color: var(--fei-primary-light);
+  color: var(--fei-primary);
+}
+
+.fei-pagination__btn.is-active {
+  border-color: var(--fei-primary);
+  background: var(--fei-primary);
+  color: #fff;
+}
+
+.fei-pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fei-pagination__info {
+  color: var(--fei-text-secondary);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.fei-pagination__ellipsis {
+  padding: 0 4px;
+  color: var(--fei-text-muted);
+}
+
 .fei-tabbar {
   display: flex;
   gap: 8px;
