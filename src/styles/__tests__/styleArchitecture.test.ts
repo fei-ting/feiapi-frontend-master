@@ -162,12 +162,17 @@ describe('样式架构', () => {
       expect(invokeCss).toContain('.fei-debug-panel');
     });
 
-    it('后台布局响应式规则在 admin.css 中', () => {
+    it('后台布局响应式规则在 admin.css 中且导航样式由公共组件维护', () => {
       const adminCss = readFile('styles/pages/admin.css');
+      const sectionNavigation = readFile('components/SectionNavigation.vue');
 
       expect(adminCss).toContain('.fei-admin-layout');
-      expect(adminCss).toContain('.fei-admin-sidebar');
-      expect(adminCss).toContain('.fei-admin-tabs');
+      expect(adminCss).not.toContain('.fei-admin-sidebar');
+      expect(adminCss).not.toContain('.fei-admin-tabs');
+      expect(adminCss).not.toContain('.fei-admin-nav-link');
+      expect(sectionNavigation).toContain('.fei-section-navigation');
+      expect(sectionNavigation).toContain('.fei-section-navigation__link');
+      expect(sectionNavigation).toContain('@media (min-width: 1024px)');
     });
 
     it('后台工具响应式规则在 admin-tools.css 中', () => {
@@ -208,12 +213,14 @@ describe('样式架构', () => {
       const adminLayout = readFile('layouts/AdminLayout.vue');
       expect(adminLayout).toContain("import '@/styles/pages/admin.css'");
       expect(adminLayout).toContain("import '@/styles/pages/admin-tools.css'");
+      expect(adminLayout).toContain("import SectionNavigation from '@/components/SectionNavigation.vue'");
     });
 
     it('ProfileLayout.vue 导入 admin.css 和 profile.css', () => {
       const profileLayout = readFile('layouts/ProfileLayout.vue');
       expect(profileLayout).toContain("import '@/styles/pages/admin.css'");
       expect(profileLayout).toContain("import '@/styles/pages/profile.css'");
+      expect(profileLayout).toContain("import SectionNavigation from '@/components/SectionNavigation.vue'");
     });
   });
 });
