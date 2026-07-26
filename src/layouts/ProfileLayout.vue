@@ -30,39 +30,14 @@
 
       <!-- 侧边栏 + 内容区布局 -->
       <div class="fei-admin-layout">
-        <!-- 桌面端侧边栏 -->
-        <aside class="fei-admin-sidebar">
-          <div class="fei-card">
-            <nav class="fei-admin-sidebar-nav" style="padding: 8px">
-              <RouterLink
-                v-for="item in profileNavItems"
-                :key="item.key"
-                class="fei-admin-nav-link"
-                :class="{ 'is-active': activeTab === item.key }"
-                :to="`/profile/${item.key}`"
-              >
-                <component :is="item.icon" class="fei-admin-navigation__icon" aria-hidden="true" />
-                <span>{{ item.label }}</span>
-              </RouterLink>
-            </nav>
-          </div>
-        </aside>
+        <SectionNavigation
+          label="个人中心导航"
+          :active-key="activeTab"
+          :items="profileNavItems"
+        />
 
         <!-- 内容区 -->
         <div class="fei-admin-content">
-          <!-- 移动端 Tab 导航 -->
-          <div class="fei-admin-tabs">
-            <button
-              v-for="item in profileNavItems"
-              :key="item.key"
-              class="fei-admin-tab"
-              :class="{ 'is-active': activeTab === item.key }"
-              @click="switchTab(item.key)"
-            >
-              {{ item.label }}
-            </button>
-          </div>
-
           <!-- 内容插槽 -->
           <RouterView v-slot="{ Component }">
             <ErrorBoundary>
@@ -85,10 +60,12 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
+import SectionNavigation from '@/components/SectionNavigation.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
+import type { SectionNavigationItem } from '@/types/navigation';
 import '@/styles/pages/admin.css';
 import '@/styles/pages/profile.css';
 
@@ -96,13 +73,6 @@ import '@/styles/pages/profile.css';
  * 个人中心布局组件
  * 统一管理个人中心导航、页头、页脚、用户会话和 Toast 通知
  */
-
-/** 导航项配置 */
-interface ProfileNavItem {
-  key: string;
-  label: string;
-  icon: () => ReturnType<typeof h>;
-}
 
 const router = useRouter();
 const route = useRoute();
@@ -113,10 +83,11 @@ const { toast, showToast } = useToast();
 const activeTab = computed(() => route.path.split('/')[2] || 'info');
 
 /** 个人中心导航项 */
-const profileNavItems: ProfileNavItem[] = [
+const profileNavItems: SectionNavigationItem[] = [
   {
     key: 'info',
     label: '个人信息',
+    to: '/profile/info',
     icon: () => h('svg', {
       width: 18,
       height: 18,
@@ -134,6 +105,7 @@ const profileNavItems: ProfileNavItem[] = [
   {
     key: 'records',
     label: '我的额度/调用',
+    to: '/profile/records',
     icon: () => h('svg', {
       width: 18,
       height: 18,
@@ -153,6 +125,7 @@ const profileNavItems: ProfileNavItem[] = [
   {
     key: 'keys',
     label: '密钥管理',
+    to: '/profile/keys',
     icon: () => h('svg', {
       width: 18,
       height: 18,
@@ -197,14 +170,6 @@ const handleLogout = async () => {
  */
 const toggleMenu = () => {
   showToast('移动端菜单已保留为简洁模式', 'info');
-};
-
-/**
- * 切换标签页
- * @param tab 标签页名称
- */
-const switchTab = (tab: string) => {
-  router.push(`/profile/${tab}`);
 };
 
 // 暴露方法给子组件使用
