@@ -43,7 +43,7 @@ const hasError = ref(false);
  * 只更新 hasError 状态，不存储原始错误消息。
  * 不返回 false，确保错误继续进入应用级错误处理器。
  */
-onErrorCaptured((err: Error, instance, info) => {
+onErrorCaptured((_err: Error, _instance, _info) => {
   hasError.value = true;
 });
 

@@ -80,7 +80,7 @@ import type { UserInterfaceInfoVO } from '@/types/quota';
  * 展示用户的接口调用额度和记录
  */
 
-const { isFreeUnlimited, getQuotaTypeText, getQuotaLeftText, getQuotaTagClass, getUserInterfaceStatusText } = useQuota();
+const { getQuotaTypeText, getQuotaLeftText, getQuotaTagClass, getUserInterfaceStatusText } = useQuota();
 
 /** 调用记录列表 */
 const records = ref<UserInterfaceInfoVO[]>([]);
