@@ -25,99 +25,76 @@
         <button class="fei-btn fei-btn--primary fei-btn--sm" @click="openAddModal">新增接口</button>
       </div>
     </div>
-    <div class="fei-table-wrap fei-table-wrap--borderless">
-      <table class="fei-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>接口名称</th>
-            <th>请求地址</th>
-            <th>配额类型</th>
-            <th>初始额度</th>
-            <th>状态</th>
-            <th>操作</th>
-            <th>
-              <button
-                class="fei-sort-header"
-                :class="{ 'is-active': totalNumSortOrder !== '' }"
-                type="button"
-                :aria-label="totalNumSortLabel"
-                @click="toggleTotalNumSort"
-              >
-                <span>调用总数</span>
-                <span class="fei-sort-indicator" aria-hidden="true">
-                  <span class="fei-sort-caret fei-sort-caret--up" :class="{ 'is-active': totalNumSortOrder === 'ascend' }"></span>
-                  <span class="fei-sort-caret fei-sort-caret--down" :class="{ 'is-active': totalNumSortOrder === 'descend' }"></span>
-                </span>
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in interfaces" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td style="color: var(--fei-text-muted)">{{ item.url }}</td>
-            <td>
-              <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
-                {{ getQuotaTypeText(item.quotaType, item.quotaTypeText) }}
-              </span>
-            </td>
-            <td>
-              <span class="fei-quota-value">{{ getInitialQuotaText(item.quotaType, item.initialQuota) }}</span>
-            </td>
-            <td>
-              <span
-                class="fei-tag"
-                :class="{
-                  'fei-tag--online': item.status === 1,
-                  'fei-tag--publishing': item.status === 2,
-                  'fei-tag--offline': item.status !== 1 && item.status !== 2,
-                }"
-              >
-                {{ getInterfaceStatusText(item.status) }}
-              </span>
-            </td>
-            <td>
-              <div class="fei-table-actions">
-                <button class="fei-action-btn" :disabled="item.status !== 0" @click="openEditModal(item)">编辑</button>
-                <button class="fei-action-btn" @click="openDocumentPage(item.id)">维护文档</button>
-                <button v-if="item.status === 0" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
-                <button v-else-if="item.status === 1" class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
-                <button v-else class="fei-action-btn" disabled>发布中</button>
-                <button
-                  class="fei-action-btn fei-action-btn--danger"
-                  :disabled="item.status !== 0"
-                  @click="openDeleteModal(item)"
-                >删除</button>
-              </div>
-            </td>
-            <td>{{ item.totalNum ?? 0 }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div v-if="!interfaces.length" class="fei-empty">暂无接口数据</div>
-    <!-- 分页控件 -->
-    <div v-if="interfaces.length" class="fei-pagination">
-      <button
-        class="fei-pagination__btn"
-        :disabled="interfacePagination.current <= 1"
-        @click="changePage(interfacePagination.current - 1)"
-      >
-        上一页
-      </button>
-      <span class="fei-pagination__info">
-        第 {{ interfacePagination.current }} 页 / 共 {{ interfacePagination.totalPages }} 页
-      </span>
-      <button
-        class="fei-pagination__btn"
-        :disabled="interfacePagination.current >= interfacePagination.totalPages"
-        @click="changePage(interfacePagination.current + 1)"
-      >
-        下一页
-      </button>
-    </div>
+    <DataTable
+      :columns="interfaceColumns"
+      :rows="interfaces"
+      row-key="id"
+      :pagination="interfacePagination"
+      empty-text="暂无接口数据"
+      @page-change="changePage"
+    >
+      <template #header-totalNum>
+        <button
+          class="fei-sort-header"
+          :class="{ 'is-active': totalNumSortOrder !== '' }"
+          type="button"
+          :aria-label="totalNumSortLabel"
+          @click="toggleTotalNumSort"
+        >
+          <span>调用总数</span>
+          <span class="fei-sort-indicator" aria-hidden="true">
+            <span
+              class="fei-sort-caret fei-sort-caret--up"
+              :class="{ 'is-active': totalNumSortOrder === 'ascend' }"
+            ></span>
+            <span
+              class="fei-sort-caret fei-sort-caret--down"
+              :class="{ 'is-active': totalNumSortOrder === 'descend' }"
+            ></span>
+          </span>
+        </button>
+      </template>
+      <template #cell-url="{ row: item }">
+        <span class="fei-table-text-muted">{{ item.url || '-' }}</span>
+      </template>
+      <template #cell-quotaType="{ row: item }">
+        <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
+          {{ getQuotaTypeText(item.quotaType, item.quotaTypeText) }}
+        </span>
+      </template>
+      <template #cell-initialQuota="{ row: item }">
+        <span class="fei-quota-value">{{ getInitialQuotaText(item.quotaType, item.initialQuota) }}</span>
+      </template>
+      <template #cell-status="{ row: item }">
+        <span
+          class="fei-tag"
+          :class="{
+            'fei-tag--online': item.status === 1,
+            'fei-tag--publishing': item.status === 2,
+            'fei-tag--offline': item.status !== 1 && item.status !== 2,
+          }"
+        >
+          {{ getInterfaceStatusText(item.status) }}
+        </span>
+      </template>
+      <template #cell-actions="{ row: item }">
+        <div class="fei-table-actions">
+          <button class="fei-action-btn" :disabled="item.status !== 0" @click="openEditModal(item)">编辑</button>
+          <button class="fei-action-btn" @click="openDocumentPage(item.id)">维护文档</button>
+          <button v-if="item.status === 0" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
+          <button v-else-if="item.status === 1" class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
+          <button v-else class="fei-action-btn" disabled>发布中</button>
+          <button
+            class="fei-action-btn fei-action-btn--danger"
+            :disabled="item.status !== 0"
+            @click="openDeleteModal(item)"
+          >删除</button>
+        </div>
+      </template>
+      <template #cell-totalNum="{ row: item }">
+        {{ item.totalNum ?? 0 }}
+      </template>
+    </DataTable>
   </div>
 
   <InterfaceConfigModal
@@ -132,10 +109,12 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import InterfaceConfigModal from '@/components/admin/InterfaceConfigModal.vue';
+import DataTable from '@/components/common/DataTable.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { QUOTA_TYPE_OPTIONS, useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO, InterfaceQuery } from '@/types/interface';
 import type { InterfaceQuotaType } from '@/types/quota';
+import type { DataTableColumn } from '@/types/table';
 
 /**
  * 接口管理页面组件
@@ -147,6 +126,18 @@ const { getQuotaTagClass, getQuotaTypeText, getInitialQuotaText, getInterfaceSta
 
 /** 接口列表 */
 const interfaces = ref<InterfaceInfoVO[]>([]);
+
+/** 接口管理列表列配置。 */
+const interfaceColumns: DataTableColumn[] = [
+  { key: 'id', title: 'ID', minWidth: 50 },
+  { key: 'name', title: '接口名称', minWidth: 90 },
+  { key: 'url', title: '请求地址', minWidth: 210 },
+  { key: 'quotaType', title: '配额类型', minWidth: 90 },
+  { key: 'initialQuota', title: '初始额度', minWidth: 85 },
+  { key: 'status', title: '状态', minWidth: 75 },
+  { key: 'actions', title: '操作', minWidth: 190 },
+  { key: 'totalNum', title: '调用总数', minWidth: 90 },
+];
 
 /** 接口搜索关键词 */
 const interfaceSearch = ref('');
