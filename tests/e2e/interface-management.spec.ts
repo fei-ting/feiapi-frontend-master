@@ -21,22 +21,53 @@ test('管理员新增接口并完成发布、下线和删除', async ({ page, ap
 
   await expect(page).toHaveURL(/#\/admin\/interfaces\/103\/document$/);
   await expect(page.getByText(NEW_INTERFACE.name, { exact: true })).toBeVisible();
+  await expect(page.getByText('草稿', { exact: true })).toBeVisible();
   const addRequests = apiMock.requestsFor('POST', '/api/interfaceInfo/add');
   expect(addRequests).toHaveLength(1);
   expect(addRequests[0]?.body).toMatchObject(NEW_INTERFACE);
 
+  await page.getByLabel('成功响应示例', { exact: true }).fill('{"ok":true}');
+  await page.getByRole('button', { name: '完成维护' }).first().click();
+  await expect(page.getByText('文档维护已完成', { exact: true })).toBeVisible();
+  expect(apiMock.requestsFor('POST', '/api/interfaceDoc/save')[0]?.body).toMatchObject({
+    interfaceInfoId: 103,
+    docStatus: 'READY',
+  });
+
   await page.getByRole('button', { name: '返回列表' }).click();
   await expect(page).toHaveURL(/#\/admin\/interfaces$/);
+
+  const weatherRow = page.getByRole('row').filter({ hasText: NEW_INTERFACE.name });
+  await weatherRow.getByRole('button', { name: '发布', exact: true }).click();
+  await expect(weatherRow).toContainText('已上线');
+
+  await weatherRow.getByRole('button', { name: '下线', exact: true }).click();
+  await expect(weatherRow).toContainText('已下线');
+  await weatherRow.getByRole('button', { name: '编辑', exact: true }).click();
+  const editDialog = page.getByRole('dialog', { name: '编辑接口' });
+  await editDialog.getByLabel('接口描述').fill('更新后的天气预警公开说明');
+  await editDialog.getByRole('button', { name: '保存配置', exact: true }).click();
+  await expect(editDialog).toBeHidden();
+  await expect(weatherRow).toContainText('文档待完善');
+  const weatherPublishButton = weatherRow.getByRole('button', { name: '发布', exact: true });
+  await expect(weatherPublishButton).toBeDisabled();
+  await expect(weatherPublishButton).toHaveAttribute('title', '请先完成文档维护');
+  expect(apiMock.requestsFor('POST', '/api/interfaceInfo/update')[0]?.body).toMatchObject({
+    id: 103,
+    description: '更新后的天气预警公开说明',
+  });
 
   let inventoryRow = page.getByRole('row').filter({ hasText: '库存查询' });
   await inventoryRow.getByRole('button', { name: '发布', exact: true }).click();
   await expect(inventoryRow).toContainText('已上线');
-  expect(apiMock.requestsFor('POST', '/api/interfaceInfo/online')[0]?.body).toEqual({ id: 101 });
+  expect(apiMock.requestsFor('POST', '/api/interfaceInfo/online').map((request) => request.body))
+    .toContainEqual({ id: 101 });
 
   inventoryRow = page.getByRole('row').filter({ hasText: '库存查询' });
   await inventoryRow.getByRole('button', { name: '下线', exact: true }).click();
   await expect(inventoryRow).toContainText('已下线');
-  expect(apiMock.requestsFor('POST', '/api/interfaceInfo/offline')[0]?.body).toEqual({ id: 101 });
+  expect(apiMock.requestsFor('POST', '/api/interfaceInfo/offline').map((request) => request.body))
+    .toContainEqual({ id: 101 });
 
   page.once('dialog', async (dialog) => {
     expect(dialog.message()).toContain('库存查询');

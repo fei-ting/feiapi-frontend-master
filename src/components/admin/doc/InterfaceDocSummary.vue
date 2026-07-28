@@ -11,6 +11,12 @@
       <div><span>当前状态</span><strong>{{ getInterfaceStatusText(detail.interfaceInfo.status) }}</strong></div>
       <div><span>配额类型</span><strong>{{ getQuotaTypeText(detail.interfaceInfo.quotaType, detail.interfaceInfo.quotaTypeText) }}</strong></div>
       <div><span>SDK 方法</span><strong>{{ detail.interfaceInfo.sdkMethodName || '-' }}</strong></div>
+      <div>
+        <span>文档状态</span>
+        <strong class="fei-doc-status" :class="`fei-doc-status--${detail.docStatus.toLowerCase()}`">
+          {{ detail.docStatus === 'READY' ? '已完成' : '草稿' }}
+        </strong>
+      </div>
     </div>
     <p v-if="!editable" class="fei-doc-summary__notice">
       当前接口不可编辑。请先返回接口列表执行下线操作，再维护运行时配置或接口文档。

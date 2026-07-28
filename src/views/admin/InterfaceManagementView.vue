@@ -57,6 +57,12 @@
       <template #cell-url="{ row: item }">
         <span class="fei-table-text-muted">{{ item.url || '-' }}</span>
       </template>
+      <template #cell-name="{ row: item }">
+        <span class="fei-interface-name-cell">
+          <span>{{ item.name }}</span>
+          <span v-if="item.docStatus === 'DRAFT'" class="fei-tag fei-tag--doc-draft">文档待完善</span>
+        </span>
+      </template>
       <template #cell-quotaType="{ row: item }">
         <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
           {{ getQuotaTypeText(item.quotaType, item.quotaTypeText) }}
@@ -81,7 +87,13 @@
         <div class="fei-table-actions">
           <button class="fei-action-btn" :disabled="item.status !== 0" @click="openEditModal(item)">编辑</button>
           <button class="fei-action-btn" @click="openDocumentPage(item.id)">维护文档</button>
-          <button v-if="item.status === 0" class="fei-action-btn" @click="onlineInterface(item.id)">发布</button>
+          <button
+            v-if="item.status === 0"
+            class="fei-action-btn"
+            :disabled="item.docStatus !== 'READY'"
+            :title="item.docStatus === 'READY' ? '发布接口' : '请先完成文档维护'"
+            @click="onlineInterface(item.id)"
+          >发布</button>
           <button v-else-if="item.status === 1" class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
           <button v-else class="fei-action-btn" disabled>发布中</button>
           <button
@@ -256,7 +268,7 @@ const onlineInterface = async (id: number) => {
     await loadInterfaces();
   } catch (error) {
     console.error('[InterfaceManagementView] 接口上线失败:', error);
-    showToast('上线失败', 'error');
+    showToast(error instanceof Error ? error.message : '上线失败', 'error');
   }
 };
 

@@ -28,6 +28,7 @@ vi.mock('@/services/interfaceInfo', () => ({
 
 /** 构建接口文档维护测试数据。 */
 const buildDetail = (status = 0): InterfaceDocDetailVO => ({
+  docStatus: 'DRAFT',
   interfaceInfo: {
     id: 1, name: '用户接口', method: 'POST', path: '/api/user', status,
     quotaType: 'BASIC_QUOTA', quotaTypeText: '基础额度接口', sdkMethodName: 'getUser',
@@ -116,8 +117,8 @@ describe('InterfaceDocMaintenanceView', () => {
 
     expect(wrapper.text()).toContain('当前接口不可编辑');
     expect(wrapper.get('fieldset').attributes()).toHaveProperty('disabled');
-    const saveButtons = wrapper.findAll('button').filter((button) => button.text() === '保存文档');
-    expect(saveButtons).toHaveLength(2);
+    const saveButtons = wrapper.findAll('button').filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
+    expect(saveButtons).toHaveLength(4);
     expect(saveButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
   });
 
@@ -126,14 +127,14 @@ describe('InterfaceDocMaintenanceView', () => {
     await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
 
     expect(wrapper.text()).toContain('存在未保存修改');
-    expect(wrapper.findAll('button').find((button) => button.text() === '保存文档')?.attributes()).not.toHaveProperty('disabled');
+    expect(wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.attributes()).not.toHaveProperty('disabled');
   });
 
   it('删除响应父字段时清除子字段引用并保持保存载荷', async () => {
     const wrapper = await mountView();
     const responseSection = sectionByTitle(wrapper, '响应字段');
     await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
-    await wrapper.findAll('button').find((button) => button.text() === '保存文档')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
 
     const payload = mocks.saveDoc.mock.calls[0][0];
@@ -160,7 +161,7 @@ describe('InterfaceDocMaintenanceView', () => {
 
   it('依次拦截主信息、响应字段和错误码必填错误', async () => {
     const wrapper = await mountView();
-    const saveButton = () => wrapper.findAll('button').find((button) => button.text() === '保存文档');
+    const saveButton = () => wrapper.findAll('button').find((button) => button.text() === '保存草稿');
 
     await sectionByTitle(wrapper, '文档主信息').get('input').setValue('');
     await saveButton()?.trigger('click');
@@ -181,20 +182,21 @@ describe('InterfaceDocMaintenanceView', () => {
   it('保存成功后重新加载并发送成功通知', async () => {
     const wrapper = await mountView();
     await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
-    await wrapper.findAll('button').find((button) => button.text() === '保存文档')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
 
     expect(mocks.saveDoc).toHaveBeenCalledOnce();
     expect(mocks.saveDoc.mock.calls[0][0].docVersion).toBe('v2');
+    expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('DRAFT');
     expect(mocks.getDocDetail).toHaveBeenCalledTimes(2);
-    expect(wrapper.emitted('show-toast')).toContainEqual(['接口文档已保存', 'success']);
+    expect(wrapper.emitted('show-toast')).toContainEqual(['草稿已保存', 'success']);
   });
 
   it('保存失败时保留编辑状态和服务错误', async () => {
     mocks.saveDoc.mockRejectedValue(new Error('保存服务失败'));
     const wrapper = await mountView();
     await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
-    await wrapper.findAll('button').find((button) => button.text() === '保存文档')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
 
     expect(wrapper.text()).toContain('保存服务失败');
@@ -218,6 +220,7 @@ describe('InterfaceDocMaintenanceView', () => {
   it('缺省文档映射稳定键并支持区块增删和返回列表', async () => {
     mocks.getDocDetail.mockResolvedValue({
       interfaceInfo: { id: 1, name: '缺省文档接口', status: 0 },
+      docStatus: 'DRAFT',
       requestParams: [{ name: 'keyword', paramScene: 'QUERY' }],
       responseParams: [{ paramScene: 'RESPONSE' }],
       errorCodes: [{}],
@@ -264,9 +267,47 @@ describe('InterfaceDocMaintenanceView', () => {
     await flushPromises();
     mocks.saveDoc.mockRejectedValue(null);
     await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
-    await wrapper.findAll('button').find((button) => button.text() === '保存文档')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
 
     expect(wrapper.text()).toContain('接口文档保存失败');
+  });
+
+  it('草稿无正文变化时仍可完成维护并提交READY', async () => {
+    const detail = buildDetail();
+    detail.responseParams?.forEach((param) => { param.description = `${param.name}说明`; });
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const completeButton = wrapper.findAll('button').find((button) => button.text() === '完成维护');
+
+    expect(completeButton?.attributes()).not.toHaveProperty('disabled');
+    await completeButton?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('READY');
+    expect(wrapper.emitted('show-toast')).toContainEqual(['文档维护已完成', 'success']);
+  });
+
+  it('完成维护时拦截请求参数占位说明、响应说明和JSON成功示例', async () => {
+    const detail = buildDetail();
+    detail.requestParams![0].description = '由接口运行时参数模板自动生成';
+    detail.doc!.successExample = '';
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const completeButton = () => wrapper.findAll('button').find((button) => button.text() === '完成维护');
+
+    await completeButton()?.trigger('click');
+    expect(wrapper.text()).toContain('请求参数必须填写有效的公开说明');
+
+    await sectionByTitle(wrapper, '请求参数说明').findAll('input')[0].setValue('用户标识');
+    await completeButton()?.trigger('click');
+    expect(wrapper.text()).toContain('响应字段必须填写有效的公开说明');
+
+    const responseInputs = sectionByTitle(wrapper, '响应字段').findAll('input');
+    await responseInputs[4].setValue('响应数据');
+    await responseInputs[12].setValue('用户名称');
+    await completeButton()?.trigger('click');
+    expect(wrapper.text()).toContain('JSON 响应必须填写成功响应示例');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
   });
 });

@@ -78,10 +78,12 @@
 .fei-method-badge { display: inline-grid; min-width: 58px; height: 30px; place-items: center; border-radius: 6px; background: #b8f36b; color: #101828; font-size: 12px; font-weight: 900; }
 .fei-doc-summary__path { margin: 0 0 4px; color: #98a2b3; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
 .fei-doc-summary h1 { margin: 0; font-size: 26px; letter-spacing: 0; }
-.fei-doc-summary__meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fei-doc-summary__meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .fei-doc-summary__meta div { display: grid; gap: 5px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); }
 .fei-doc-summary__meta span { color: #98a2b3; font-size: 12px; }
 .fei-doc-summary__meta strong { overflow: hidden; color: #f2f4f7; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.fei-doc-status--draft { color: #fbbf24 !important; }
+.fei-doc-status--ready { color: #6ee7b7 !important; }
 .fei-doc-summary__notice { margin: 0; padding: 10px 12px; border: 1px solid rgba(248,113,113,.32); border-radius: 8px; color: #fecaca; font-size: 13px; }
 .fei-doc-editor__fieldset { display: grid; gap: 18px; min-width: 0; padding: 0; border: 0; }
 .fei-doc-section { padding: 22px; border: 1px solid var(--fei-border); border-radius: 14px; background: #fff; }
