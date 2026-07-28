@@ -8,6 +8,19 @@ import {
 } from './testData';
 import type { TestInterface, TestQuotaConfig, TestUser } from './testData';
 
+/** 会触发文档重新维护的接口受控配置字段。 */
+const CONTROLLED_CONFIG_FIELDS = [
+  'name',
+  'description',
+  'method',
+  'path',
+  'targetHost',
+  'url',
+  'quotaType',
+  'sdkMethodName',
+  'requestParams',
+] as const satisfies readonly (keyof TestInterface)[];
+
 /** HTTP Mock 记录的公开请求。 */
 export interface RecordedRequest {
   /** HTTP 方法。 */
@@ -233,18 +246,43 @@ export class ApiMockController {
 
     if (key === 'POST /api/interfaceInfo/add') {
       if (!await this.requireCsrf(route, request)) return;
-      const body = request.body as Omit<TestInterface, 'id' | 'status' | 'totalNum' | 'initialQuota' | 'updateTime'>;
+      const body = request.body as Omit<TestInterface, 'id' | 'status' | 'totalNum' | 'initialQuota' | 'docStatus' | 'updateTime'>;
       const id = this.state.nextInterfaceId++;
       this.state.interfaces.push({
         ...body,
         id,
         status: 0,
         totalNum: 0,
+        docStatus: 'DRAFT',
         initialQuota: body.quotaType === 'ADVANCED_TRIAL' ? 20 : 100,
         url: body.url ?? body.path,
         updateTime: '2026-07-25T09:00:00',
       });
       await this.fulfillJson(route, success(id));
+      return;
+    }
+
+    if (key === 'POST /api/interfaceInfo/update') {
+      if (!await this.requireCsrf(route, request)) return;
+      const body = request.body as Partial<TestInterface> & { id?: number };
+      const target = this.state.interfaces.find((item) => item.id === body.id);
+      if (!target) {
+        await this.fulfillJson(route, { code: 40400, data: null, message: '接口不存在' });
+        return;
+      }
+      const controlledConfigChanged = CONTROLLED_CONFIG_FIELDS.some((field) => (
+        body[field] !== undefined && body[field] !== target[field]
+      ));
+      CONTROLLED_CONFIG_FIELDS.forEach((field) => {
+        if (body[field] !== undefined) {
+          target[field] = body[field] as never;
+        }
+      });
+      if (controlledConfigChanged) {
+        target.docStatus = 'DRAFT';
+      }
+      target.updateTime = '2026-07-28T10:00:00';
+      await this.fulfillJson(route, success(true));
       return;
     }
 
@@ -254,6 +292,10 @@ export class ApiMockController {
       const target = this.state.interfaces.find((item) => item.id === body.id);
       if (!target) {
         await this.fulfillJson(route, { code: 40400, data: null, message: '接口不存在' });
+        return;
+      }
+      if (key.endsWith('/online') && target.docStatus !== 'READY') {
+        await this.fulfillJson(route, { code: 50001, data: null, message: '接口文档待完善，请先完成文档维护' });
         return;
       }
       target.status = key.endsWith('/online') ? 1 : 0;
@@ -273,12 +315,26 @@ export class ApiMockController {
       const interfaceInfoId = Number(request.query.interfaceInfoId);
       const interfaceInfo = this.state.interfaces.find((item) => item.id === interfaceInfoId);
       await this.fulfillJson(route, success({
+        docStatus: interfaceInfo?.docStatus ?? 'DRAFT',
         interfaceInfo,
         doc: null,
         requestParams: [],
         responseParams: [],
         errorCodes: [],
       }));
+      return;
+    }
+
+    if (key === 'POST /api/interfaceDoc/save') {
+      if (!await this.requireCsrf(route, request)) return;
+      const body = request.body as { interfaceInfoId?: number; docStatus?: 'DRAFT' | 'READY' };
+      const interfaceInfo = this.state.interfaces.find((item) => item.id === body.interfaceInfoId);
+      if (!interfaceInfo || !body.docStatus) {
+        await this.fulfillJson(route, { code: 40000, data: null, message: '文档保存参数错误' });
+        return;
+      }
+      interfaceInfo.docStatus = body.docStatus;
+      await this.fulfillJson(route, success(true));
       return;
     }
 

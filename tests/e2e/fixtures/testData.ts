@@ -38,6 +38,8 @@ export interface TestInterface {
   status: number;
   /** 累计调用次数。 */
   totalNum: number;
+  /** 文档维护状态。 */
+  docStatus: 'DRAFT' | 'READY';
   /** 更新时间。 */
   updateTime: string;
 }
@@ -93,6 +95,7 @@ export const createInterfaces = (): TestInterface[] => [
     initialQuota: 100,
     status: 0,
     totalNum: 18,
+    docStatus: 'READY',
     updateTime: '2026-07-25T08:00:00',
   },
   {
@@ -109,6 +112,7 @@ export const createInterfaces = (): TestInterface[] => [
     initialQuota: 20,
     status: 1,
     totalNum: 31,
+    docStatus: 'READY',
     updateTime: '2026-07-25T08:30:00',
   },
 ];
