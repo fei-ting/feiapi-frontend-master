@@ -130,6 +130,17 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.attributes()).not.toHaveProperty('disabled');
   });
 
+  it('请求参数映射始终提交nullable为false', async () => {
+    const wrapper = await mountView();
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    const requestParam = mocks.saveDoc.mock.calls[0][0].params
+      .find((param: { paramScene: string }) => param.paramScene !== 'RESPONSE');
+    expect(requestParam.nullable).toBe(false);
+  });
+
   it('删除响应父字段时清除子字段引用并保持保存载荷', async () => {
     const wrapper = await mountView();
     const responseSection = sectionByTitle(wrapper, '响应字段');
@@ -190,6 +201,25 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('DRAFT');
     expect(mocks.getDocDetail).toHaveBeenCalledTimes(2);
     expect(wrapper.emitted('show-toast')).toContainEqual(['草稿已保存', 'success']);
+  });
+
+  it('保存期间禁用操作按钮并阻止重复提交', async () => {
+    let resolveSave: ((value: boolean) => void) | undefined;
+    mocks.saveDoc.mockImplementation(() => new Promise<boolean>((resolve) => { resolveSave = resolve; }));
+    const wrapper = await mountView();
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    const saveButton = wrapper.findAll('button').find((button) => button.text() === '保存草稿');
+    const completeButton = wrapper.findAll('button').find((button) => button.text() === '完成维护');
+
+    const firstClick = saveButton?.trigger('click');
+    const secondClick = saveButton?.trigger('click');
+    await Promise.all([firstClick, secondClick]);
+    expect(saveButton?.attributes()).toHaveProperty('disabled');
+    expect(completeButton?.attributes()).toHaveProperty('disabled');
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+
+    resolveSave?.(true);
+    await flushPromises();
   });
 
   it('保存失败时保留编辑状态和服务错误', async () => {
@@ -301,7 +331,7 @@ describe('InterfaceDocMaintenanceView', () => {
 
     await sectionByTitle(wrapper, '请求参数说明').findAll('input')[0].setValue('用户标识');
     await completeButton()?.trigger('click');
-    expect(wrapper.text()).toContain('响应字段必须填写有效的公开说明');
+    expect(wrapper.text()).toContain('响应字段 data 必须填写有效的公开说明');
 
     const responseInputs = sectionByTitle(wrapper, '响应字段').findAll('input');
     await responseInputs[4].setValue('响应数据');

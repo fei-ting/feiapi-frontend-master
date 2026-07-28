@@ -78,3 +78,25 @@ test('管理员新增接口并完成发布、下线和删除', async ({ page, ap
   await expect(page.getByRole('row').filter({ hasText: '库存查询' })).toHaveCount(0);
   expect(apiMock.requestsFor('POST', '/api/interfaceInfo/delete')[0]?.body).toEqual({ id: 101 });
 });
+
+test('文档存在未保存修改时离开页面需要二次确认', async ({ page, apiMock }) => {
+  await apiMock.authenticateAs(ADMIN_USER);
+  await page.goto('/#/admin/interfaces/101/document');
+  const docVersionInput = page.getByLabel('文档版本');
+  await expect(docVersionInput).toBeVisible();
+  await docVersionInput.fill('v2');
+
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toBe('当前文档存在未保存修改，确定离开吗？');
+    await dialog.dismiss();
+  });
+  await page.getByRole('button', { name: '返回列表' }).click();
+  await expect(page).toHaveURL(/#\/admin\/interfaces\/101\/document$/);
+
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toBe('当前文档存在未保存修改，确定离开吗？');
+    await dialog.accept();
+  });
+  await page.getByRole('button', { name: '返回列表' }).click();
+  await expect(page).toHaveURL(/#\/admin\/interfaces$/);
+});

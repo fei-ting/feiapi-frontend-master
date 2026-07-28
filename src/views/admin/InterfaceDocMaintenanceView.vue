@@ -158,7 +158,7 @@ const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response')
   const keyMap = new Map(params.filter((param) => param.id).map((param) => [param.id as number, `${scene}-${param.id}`]));
   return params.map((param, index) => {
     const parentParamKey = param.parentId ? keyMap.get(param.parentId) : undefined;
-    const nullable = scene === 'response' ? (param.nullable ?? false) : param.nullable;
+    const nullable = scene === 'response' ? (param.nullable ?? false) : false;
     return {
       paramKey: param.id ? `${scene}-${param.id}` : nextClientKey(scene),
       ...(parentParamKey !== undefined ? { parentParamKey } : {}),
@@ -255,7 +255,8 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
     const description = param.description?.trim() ?? '';
     return !description || description === '由接口运行时参数模板自动生成';
   })) return '请求参数必须填写有效的公开说明';
-  if (responseParams.value.some((param) => !param.description?.trim())) return '响应字段必须填写有效的公开说明';
+  const incompleteResponseParam = responseParams.value.find((param) => !param.description?.trim());
+  if (incompleteResponseParam) return `响应字段 ${incompleteResponseParam.name} 必须填写有效的公开说明`;
   if (form.responseContentType.toLowerCase() === 'application/json' && !form.successExample.trim()) {
     return 'JSON 响应必须填写成功响应示例';
   }
@@ -264,6 +265,7 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
 
 /** 保存结构化接口文档。 */
 const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => {
+  if (saving.value) return;
   const validationMessage = validateForm(targetStatus);
   if (validationMessage) {
     saveError.value = validationMessage;
