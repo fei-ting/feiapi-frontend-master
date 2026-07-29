@@ -4,6 +4,7 @@
 
 import type { InterfaceQuotaType } from '@/types/quota';
 import type { SortOrder } from '@/types/common';
+import type { InterfaceDocStatus } from '@/types/interfaceDoc';
 
 /** 接口信息视图对象 */
 export interface InterfaceInfoVO {
@@ -43,6 +44,8 @@ export interface InterfaceInfoVO {
   updateTime?: string;
   /** 累计调用次数 */
   totalNum?: number;
+  /** 文档维护状态 */
+  docStatus: InterfaceDocStatus;
 }
 
 /**

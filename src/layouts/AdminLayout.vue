@@ -9,19 +9,11 @@
 
     <PageContainer>
       <div class="fei-admin-layout">
-        <!-- 桌面端和移动端共用同一组导航，布局由 CSS 响应式切换 -->
-        <nav class="fei-admin-navigation" aria-label="管理后台导航">
-          <RouterLink
-            v-for="item in adminNavItems"
-            :key="item.key"
-            class="fei-admin-navigation__link"
-            :class="{ 'is-active': activeTab === item.key }"
-            :to="`/admin/${item.key}`"
-          >
-            <component :is="item.icon" class="fei-admin-navigation__icon" aria-hidden="true" />
-            <span>{{ item.label }}</span>
-          </RouterLink>
-        </nav>
+        <SectionNavigation
+          label="管理后台导航"
+          :active-key="activeTab"
+          :items="adminNavItems"
+        />
 
         <!-- 内容区 -->
         <div class="fei-admin-content">
@@ -46,9 +38,11 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import PageContainer from '@/components/PageContainer.vue';
+import SectionNavigation from '@/components/SectionNavigation.vue';
 import ToastMessage from '@/components/ToastMessage.vue';
 import { useToast } from '@/composables/useToast';
 import { useUserStore } from '@/stores/user';
+import type { SectionNavigationItem } from '@/types/navigation';
 import '@/styles/pages/admin.css';
 import '@/styles/pages/admin-tools.css';
 
@@ -56,13 +50,6 @@ import '@/styles/pages/admin-tools.css';
  * 后台管理布局组件
  * 统一管理后台导航、页头、页脚、用户会话和 Toast 通知
  */
-
-/** 导航项配置 */
-interface AdminNavItem {
-  key: string;
-  label: string;
-  icon: () => ReturnType<typeof h>;
-}
 
 const router = useRouter();
 const route = useRoute();
@@ -73,10 +60,11 @@ const { toast, showToast } = useToast();
 const activeTab = computed(() => route.path.split('/')[2] || 'dashboard');
 
 /** 后台导航项 */
-const adminNavItems: AdminNavItem[] = [
+const adminNavItems: SectionNavigationItem[] = [
   {
     key: 'dashboard',
     label: '工作台',
+    to: '/admin/dashboard',
     icon: () => h('svg', {
       width: 18,
       height: 18,
@@ -96,6 +84,7 @@ const adminNavItems: AdminNavItem[] = [
   {
     key: 'interfaces',
     label: '接口管理',
+    to: '/admin/interfaces',
     icon: () => h('svg', {
       width: 18,
       height: 18,
@@ -113,6 +102,7 @@ const adminNavItems: AdminNavItem[] = [
   {
     key: 'quotas',
     label: '配额策略',
+    to: '/admin/quotas',
     icon: () => h('svg', {
       width: 18,
       height: 18,

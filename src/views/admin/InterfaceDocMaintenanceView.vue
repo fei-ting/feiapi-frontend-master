@@ -4,8 +4,11 @@
       <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" @click="backToList">返回列表</button>
       <div class="fei-doc-editor__actions">
         <span v-if="dirty" class="fei-save-state">存在未保存修改</span>
-        <button class="fei-btn fei-btn--primary fei-btn--sm" type="button" :disabled="!canSave" @click="saveDocument">
-          {{ saving ? '保存中...' : '保存文档' }}
+        <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" :disabled="!canSaveDraft" @click="saveDocument('DRAFT')">
+          {{ saving ? '保存中...' : '保存草稿' }}
+        </button>
+        <button class="fei-btn fei-btn--primary fei-btn--sm" type="button" :disabled="!canComplete" @click="saveDocument('READY')">
+          {{ saving ? '保存中...' : '完成维护' }}
         </button>
       </div>
     </div>
@@ -22,6 +25,7 @@
 
       <fieldset class="fei-doc-editor__fieldset" :disabled="!editable || saving">
         <DocumentMainInfoForm :model-value="form" :content-types="contentTypes" @update-field="updateMainField" />
+        <SystemRequestHeaderSummary :request-content-type="form.requestContentType" />
         <RequestParamDescriptionList :params="requestParams" @update-param="updateRequestParam" />
         <ResponseParamEditor
           :params="responseParams"
@@ -46,9 +50,14 @@
 
       <div class="fei-doc-editor__bottom-actions">
         <span v-if="saveError" class="fei-form-error" role="alert">{{ saveError }}</span>
-        <button class="fei-btn fei-btn--primary" type="button" :disabled="!canSave" @click="saveDocument">
-          {{ saving ? '保存中...' : '保存文档' }}
-        </button>
+        <div class="fei-doc-editor__actions">
+          <button class="fei-btn fei-btn--secondary" type="button" :disabled="!canSaveDraft" @click="saveDocument('DRAFT')">
+            {{ saving ? '保存中...' : '保存草稿' }}
+          </button>
+          <button class="fei-btn fei-btn--primary" type="button" :disabled="!canComplete" @click="saveDocument('READY')">
+            {{ saving ? '保存中...' : '完成维护' }}
+          </button>
+        </div>
       </div>
     </template>
   </div>
@@ -63,12 +72,14 @@ import InterfaceDocSummary from '@/components/admin/doc/InterfaceDocSummary.vue'
 import JsonExampleEditor from '@/components/admin/doc/JsonExampleEditor.vue';
 import RequestParamDescriptionList from '@/components/admin/doc/RequestParamDescriptionList.vue';
 import ResponseParamEditor from '@/components/admin/doc/ResponseParamEditor.vue';
+import SystemRequestHeaderSummary from '@/components/admin/doc/SystemRequestHeaderSummary.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import type {
   InterfaceDocDetailVO,
   InterfaceDocParamSaveRequest,
   InterfaceDocParamVO,
   InterfaceDocSaveRequest,
+  InterfaceDocStatus,
 } from '@/types/interfaceDoc';
 import type {
   DocMainEditableField,
@@ -133,11 +144,15 @@ const interfaceInfoId = computed(() => Number(route.params.id));
 /** 当前接口是否允许编辑。 */
 const editable = computed(() => detail.value?.interfaceInfo.status === 0);
 /** 当前编辑状态序列化快照。 */
-const currentSnapshot = computed(() => JSON.stringify(buildSaveRequest()));
+const currentSnapshot = computed(() => JSON.stringify(buildSaveRequest(detail.value?.docStatus ?? 'DRAFT')));
 /** 当前页面是否存在未保存修改。 */
 const dirty = computed(() => Boolean(detail.value) && currentSnapshot.value !== baseline.value);
 /** 当前页面是否允许保存。 */
-const canSave = computed(() => editable.value && !loading.value && !loadError.value && !saving.value && dirty.value);
+const canOperate = computed(() => editable.value && !loading.value && !loadError.value && !saving.value);
+/** 当前页面是否允许保存草稿。 */
+const canSaveDraft = computed(() => canOperate.value && dirty.value);
+/** 当前页面是否允许完成维护。 */
+const canComplete = computed(() => canOperate.value && (dirty.value || detail.value?.docStatus === 'DRAFT'));
 /** 生成前端稳定键。 */
 const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++keySequence.value}`;
 /** 将接口参数转换为保存请求，并保留父子关系。 */
@@ -145,7 +160,7 @@ const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response')
   const keyMap = new Map(params.filter((param) => param.id).map((param) => [param.id as number, `${scene}-${param.id}`]));
   return params.map((param, index) => {
     const parentParamKey = param.parentId ? keyMap.get(param.parentId) : undefined;
-    const nullable = scene === 'response' ? (param.nullable ?? false) : param.nullable;
+    const nullable = scene === 'response' ? (param.nullable ?? false) : false;
     return {
       paramKey: param.id ? `${scene}-${param.id}` : nextClientKey(scene),
       ...(parentParamKey !== undefined ? { parentParamKey } : {}),
@@ -194,7 +209,7 @@ const loadDocument = async (): Promise<void> => {
       solution: item.solution ?? '',
       sortOrder: item.sortOrder ?? index + 1,
     }));
-    baseline.value = JSON.stringify(buildSaveRequest());
+    baseline.value = JSON.stringify(buildSaveRequest(data.docStatus));
   } catch (error) {
     detail.value = null;
     loadError.value = error instanceof Error ? error.message : '接口文档加载失败';
@@ -204,8 +219,9 @@ const loadDocument = async (): Promise<void> => {
 };
 
 /** 构建文档聚合保存请求。 */
-const buildSaveRequest = (): InterfaceDocSaveRequest => ({
+const buildSaveRequest = (docStatus: InterfaceDocStatus): InterfaceDocSaveRequest => ({
   interfaceInfoId: interfaceInfoId.value,
+  docStatus,
   docVersion: form.docVersion,
   requestContentType: form.requestContentType,
   responseContentType: form.responseContentType,
@@ -219,16 +235,40 @@ const buildSaveRequest = (): InterfaceDocSaveRequest => ({
 });
 
 /** 校验表单中的必填字段。 */
-const validateForm = (): string => {
+const validateForm = (targetStatus: InterfaceDocStatus): string => {
   if (!form.docVersion || !form.requestContentType || !form.responseContentType) return '文档版本和内容格式不能为空';
   if (responseParams.value.some((param) => !param.name || !param.type)) return '响应字段名称和类型不能为空';
   if (errorCodes.value.some((item) => !item.errorCode || !item.errorMessage)) return '错误码和错误信息不能为空';
+  const invalidJsonField = ([
+    ['成功响应示例', form.successExample],
+    ['失败响应示例', form.failExample],
+  ] as const).find(([, value]) => {
+    if (!value.trim()) return false;
+    try {
+      JSON.parse(value);
+      return false;
+    } catch {
+      return true;
+    }
+  });
+  if (invalidJsonField) return `${invalidJsonField[0]}不是合法 JSON`;
+  if (targetStatus === 'DRAFT') return '';
+  if (requestParams.value.some((param) => {
+    const description = param.description?.trim() ?? '';
+    return !description || description === '由接口运行时参数模板自动生成';
+  })) return '请求参数必须填写有效的公开说明';
+  const incompleteResponseParam = responseParams.value.find((param) => !param.description?.trim());
+  if (incompleteResponseParam) return `响应字段 ${incompleteResponseParam.name} 必须填写有效的公开说明`;
+  if (form.responseContentType.toLowerCase() === 'application/json' && !form.successExample.trim()) {
+    return 'JSON 响应必须填写成功响应示例';
+  }
   return '';
 };
 
 /** 保存结构化接口文档。 */
-const saveDocument = async (): Promise<void> => {
-  const validationMessage = validateForm();
+const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => {
+  if (saving.value) return;
+  const validationMessage = validateForm(targetStatus);
   if (validationMessage) {
     saveError.value = validationMessage;
     return;
@@ -236,9 +276,9 @@ const saveDocument = async (): Promise<void> => {
   saving.value = true;
   saveError.value = '';
   try {
-    await interfaceService.saveDoc(buildSaveRequest());
+    await interfaceService.saveDoc(buildSaveRequest(targetStatus));
     await loadDocument();
-    emit('show-toast', '接口文档已保存', 'success');
+    emit('show-toast', targetStatus === 'READY' ? '文档维护已完成' : '草稿已保存', 'success');
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : '接口文档保存失败';
   } finally {

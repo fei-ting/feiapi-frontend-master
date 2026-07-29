@@ -5,8 +5,9 @@ import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
 /** 接口文档概要测试数据。 */
 const detail: InterfaceDocDetailVO = {
+  docStatus: 'DRAFT',
   interfaceInfo: {
-    id: 1, name: '用户接口', method: 'POST', path: '/api/user', status: 0,
+    id: 1, name: '用户接口', description: '查询并返回用户公开资料', method: 'POST', path: '/api/user', status: 0,
     quotaType: 'BASIC_QUOTA', quotaTypeText: '基础额度接口', sdkMethodName: 'getUser',
   },
 };
@@ -18,8 +19,10 @@ describe('InterfaceDocSummary', () => {
     expect(wrapper.text()).toContain('POST');
     expect(wrapper.text()).toContain('/api/user');
     expect(wrapper.text()).toContain('用户接口');
+    expect(wrapper.text()).toContain('查询并返回用户公开资料');
     expect(wrapper.text()).toContain('基础额度接口');
     expect(wrapper.text()).toContain('getUser');
+    expect(wrapper.text()).toContain('草稿');
     expect(wrapper.text()).not.toContain('当前接口不可编辑');
   });
 

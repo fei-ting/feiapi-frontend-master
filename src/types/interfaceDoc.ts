@@ -4,6 +4,9 @@
 
 import type { InterfaceQuotaType } from '@/types/quota';
 
+/** 接口文档维护状态。 */
+export type InterfaceDocStatus = 'DRAFT' | 'READY';
+
 /**
  * 接口文档页面使用的接口基础信息
  */
@@ -54,8 +57,6 @@ export interface InterfaceDocVO {
   requestContentType?: string;
   /** 响应内容类型 */
   responseContentType?: string;
-  /** 鉴权说明 */
-  authDescription?: string;
   /** 成功响应示例 */
   successExample?: string;
   /** 失败响应示例 */
@@ -124,6 +125,8 @@ export interface InterfaceDocErrorCodeVO {
  * 接口文档聚合详情
  */
 export interface InterfaceDocDetailVO {
+  /** 文档维护状态 */
+  docStatus: InterfaceDocStatus;
   /** 接口基础信息 */
   interfaceInfo: InterfaceDocInterfaceInfoVO;
   /** 文档主信息 */
@@ -140,6 +143,8 @@ export interface InterfaceDocDetailVO {
   responseParams?: InterfaceDocParamVO[];
   /** 错误码列表 */
   errorCodes?: InterfaceDocErrorCodeVO[];
+  /** Java SDK 示例 */
+  javaSdkExample?: string;
   /** curl 示例 */
   curlExample?: string;
 }
@@ -190,6 +195,8 @@ export interface InterfaceDocErrorCodeSaveRequest {
 export interface InterfaceDocSaveRequest {
   /** 接口信息 ID */
   interfaceInfoId: number;
+  /** 目标文档状态 */
+  docStatus: InterfaceDocStatus;
   /** 文档版本 */
   docVersion: string;
   /** 请求内容类型 */

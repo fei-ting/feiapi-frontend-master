@@ -284,6 +284,21 @@
   background: #fef3c7;
 }
 
+.fei-interface-name-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.fei-tag--doc-draft {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+  white-space: nowrap;
+}
+
 .fei-tag--quota-free {
   color: #0369a1;
   background: #e0f2fe;

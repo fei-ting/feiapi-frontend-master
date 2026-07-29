@@ -1,18 +1,18 @@
 <template>
   <section class="fei-doc-section">
     <div class="fei-doc-section__heading">
-      <div><span>04</span><h2>JSON 示例</h2></div>
+      <div><span>05</span><h2>JSON 示例</h2></div>
       <p>示例只能使用模拟数据或固定脱敏占位符</p>
     </div>
     <div class="fei-form-grid fei-form-grid--two">
-      <label class="fei-field">
-        <span class="fei-label-row"><span class="fei-label">成功响应示例</span><button type="button" @click="requestFormat('successExample')">格式化</button></span>
-        <textarea class="fei-textarea fei-code-input" spellcheck="false" :value="successExample" @input="updateExample('successExample', $event)"></textarea>
-      </label>
-      <label class="fei-field">
-        <span class="fei-label-row"><span class="fei-label">失败响应示例</span><button type="button" @click="requestFormat('failExample')">格式化</button></span>
-        <textarea class="fei-textarea fei-code-input" spellcheck="false" :value="failExample" @input="updateExample('failExample', $event)"></textarea>
-      </label>
+      <div class="fei-field">
+        <span class="fei-label-row"><label class="fei-label" for="success-response-example">成功响应示例</label><button type="button" aria-label="格式化成功响应示例" @click="requestFormat('successExample')">格式化</button></span>
+        <textarea id="success-response-example" class="fei-textarea fei-code-input" spellcheck="false" :value="successExample" @input="updateExample('successExample', $event)"></textarea>
+      </div>
+      <div class="fei-field">
+        <span class="fei-label-row"><label class="fei-label" for="fail-response-example">失败响应示例</label><button type="button" aria-label="格式化失败响应示例" @click="requestFormat('failExample')">格式化</button></span>
+        <textarea id="fail-response-example" class="fei-textarea fei-code-input" spellcheck="false" :value="failExample" @input="updateExample('failExample', $event)"></textarea>
+      </div>
     </div>
   </section>
 </template>

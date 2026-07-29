@@ -114,50 +114,6 @@
   white-space: nowrap;
 }
 
-/* ========== 分页 ========== */
-
-.fei-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 32px;
-}
-
-.fei-pagination__btn {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid var(--fei-border);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--fei-text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.fei-pagination__btn:hover:not(:disabled) {
-  border-color: var(--fei-primary-light);
-  color: var(--fei-primary);
-}
-
-.fei-pagination__btn.is-active {
-  background: var(--fei-primary);
-  border-color: var(--fei-primary);
-  color: #fff;
-}
-
-.fei-pagination__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.fei-pagination__ellipsis {
-  padding: 0 4px;
-  color: var(--fei-text-muted);
-}
-
 /* ========== 接口广场响应式规则 ========== */
 
 @media (max-width: 900px) {

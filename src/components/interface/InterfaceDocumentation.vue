@@ -154,18 +154,42 @@
 
     <div class="fei-doc-section">
       <div v-if="isDetailMode" class="fei-doc-section__head">
-        <h3 class="fei-doc-heading">curl 调用示例</h3>
+        <h3 class="fei-doc-heading">调用示例</h3>
         <button
           class="fei-icon-btn"
           type="button"
-          title="复制 curl 示例"
-          @click="requestCopy(docDetail.curlExample || '')"
+          :title="activeInvocationCopyTitle"
+          :disabled="!hasText(activeInvocationText)"
+          @click="requestCopy(activeInvocationText)"
         >
           <slot name="copy-icon" />
         </button>
       </div>
       <h3 v-else class="fei-doc-heading">curl 调用示例</h3>
-      <pre class="fei-code">{{ docDetail.curlExample || '暂无调用示例' }}</pre>
+      <div v-if="isDetailMode" class="fei-example-switch" role="tablist" aria-label="调用示例类型">
+        <button
+          class="fei-example-switch__button"
+          :class="{ 'is-active': invocationTab === 'java' }"
+          type="button"
+          role="tab"
+          :aria-selected="invocationTab === 'java'"
+          @click="invocationTab = 'java'"
+        >
+          Java SDK
+        </button>
+        <button
+          class="fei-example-switch__button"
+          :class="{ 'is-active': invocationTab === 'curl' }"
+          type="button"
+          role="tab"
+          :aria-selected="invocationTab === 'curl'"
+          @click="invocationTab = 'curl'"
+        >
+          curl
+        </button>
+      </div>
+      <pre v-if="hasText(activeInvocationText)" class="fei-code">{{ activeInvocationText }}</pre>
+      <div v-else class="fei-doc-empty">暂无调用示例</div>
     </div>
   </div>
 </template>
@@ -203,6 +227,9 @@ const isDetailMode = computed(() => props.mode === 'detail');
 /** 当前选中的 JSON 示例标签。 */
 const exampleTab = ref<'success' | 'fail'>('success');
 
+/** 当前选中的调用示例标签。 */
+const invocationTab = ref<'java' | 'curl'>('java');
+
 /** 当前展示的 JSON 示例。 */
 const activeExampleText = computed(() => {
   if (isDetailMode.value && exampleTab.value === 'fail') {
@@ -220,6 +247,19 @@ const activeExampleEmptyText = computed(() => {
 /** 当前 JSON 示例复制按钮标题。 */
 const activeExampleCopyTitle = computed(() => (
   exampleTab.value === 'fail' ? '复制失败示例' : '复制成功示例'
+));
+
+/** 当前展示的调用示例。 */
+const activeInvocationText = computed(() => {
+  if (!isDetailMode.value || invocationTab.value === 'curl') {
+    return props.docDetail.curlExample || '';
+  }
+  return props.docDetail.javaSdkExample || '';
+});
+
+/** 当前调用示例复制按钮标题。 */
+const activeInvocationCopyTitle = computed(() => (
+  invocationTab.value === 'java' ? '复制 Java SDK 示例' : '复制 curl 示例'
 ));
 
 /** 响应参数 ID 与字段名映射。 */
