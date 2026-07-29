@@ -25,6 +25,7 @@
 
       <fieldset class="fei-doc-editor__fieldset" :disabled="!editable || saving">
         <DocumentMainInfoForm :model-value="form" :content-types="contentTypes" @update-field="updateMainField" />
+        <SystemRequestHeaderSummary :request-content-type="form.requestContentType" />
         <RequestParamDescriptionList :params="requestParams" @update-param="updateRequestParam" />
         <ResponseParamEditor
           :params="responseParams"
@@ -71,6 +72,7 @@ import InterfaceDocSummary from '@/components/admin/doc/InterfaceDocSummary.vue'
 import JsonExampleEditor from '@/components/admin/doc/JsonExampleEditor.vue';
 import RequestParamDescriptionList from '@/components/admin/doc/RequestParamDescriptionList.vue';
 import ResponseParamEditor from '@/components/admin/doc/ResponseParamEditor.vue';
+import SystemRequestHeaderSummary from '@/components/admin/doc/SystemRequestHeaderSummary.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import type {
   InterfaceDocDetailVO,

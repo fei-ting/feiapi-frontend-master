@@ -76,10 +76,6 @@
             <span class="fei-info-label">真实后端地址</span>
             <span class="fei-code-inline fei-code-inline--block">{{ detail.targetHost }}</span>
           </div>
-          <div class="fei-doc-info-item fei-doc-info-item--wide">
-            <span class="fei-info-label">鉴权说明</span>
-            <span>{{ docDetail.doc?.authDescription || '通过平台签名鉴权，由网关统一校验。' }}</span>
-          </div>
         </div>
       </div>
 

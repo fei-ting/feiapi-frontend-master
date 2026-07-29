@@ -30,7 +30,7 @@ vi.mock('@/services/interfaceInfo', () => ({
 const buildDetail = (status = 0): InterfaceDocDetailVO => ({
   docStatus: 'DRAFT',
   interfaceInfo: {
-    id: 1, name: '用户接口', method: 'POST', path: '/api/user', status,
+    id: 1, name: '用户接口', description: '查询用户公开资料', method: 'POST', path: '/api/user', status,
     quotaType: 'BASIC_QUOTA', quotaTypeText: '基础额度接口', sdkMethodName: 'getUser',
   },
   doc: {
@@ -85,10 +85,27 @@ describe('InterfaceDocMaintenanceView', () => {
 
     expect(mocks.getDocDetail).toHaveBeenCalledWith(1);
     expect(wrapper.text()).toContain('用户接口');
+    expect(wrapper.text()).toContain('查询用户公开资料');
+    expect(sectionByTitle(wrapper, '请求 Header').text()).toContain('Content-Type');
+    expect(sectionByTitle(wrapper, '请求 Header').text()).toContain('application/json');
     expect((sectionByTitle(wrapper, '请求参数说明').findAll('input')[0].element as HTMLInputElement).value).toBe('用户标识');
     expect((sectionByTitle(wrapper, '接口错误码').findAll('input')[1].element as HTMLInputElement).value).toBe('参数错误');
     expect((sectionByTitle(wrapper, '文档主信息').get('input').element as HTMLInputElement).value).toBe('v1');
     expect(wrapper.get('fieldset').attributes()).not.toHaveProperty('disabled');
+  });
+
+  it('请求格式变化时更新只读Header且保存载荷不提交Header参数', async () => {
+    const wrapper = await mountView();
+    const mainSection = sectionByTitle(wrapper, '文档主信息');
+
+    await mainSection.findAll('select')[0].setValue('text/plain');
+    expect(sectionByTitle(wrapper, '请求 Header').text()).toContain('text/plain');
+
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc.mock.calls[0][0].params)
+      .not.toContainEqual(expect.objectContaining({ paramScene: 'HEADER' }));
   });
 
   it('非法接口ID不请求服务并展示加载错误', async () => {

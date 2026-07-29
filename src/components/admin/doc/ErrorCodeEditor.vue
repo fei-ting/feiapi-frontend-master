@@ -1,7 +1,7 @@
 <template>
   <section class="fei-doc-section">
     <div class="fei-doc-section__heading fei-doc-section__heading--action">
-      <div><span>05</span><h2>接口错误码</h2></div>
+      <div><span>06</span><h2>接口错误码</h2></div>
       <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" @click="requestAdd">新增错误码</button>
     </div>
     <div v-if="!errorCodes.length" class="fei-doc-empty">当前接口没有专属错误码</div>

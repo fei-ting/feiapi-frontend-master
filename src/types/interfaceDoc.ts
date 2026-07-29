@@ -57,8 +57,6 @@ export interface InterfaceDocVO {
   requestContentType?: string;
   /** 响应内容类型 */
   responseContentType?: string;
-  /** 鉴权说明 */
-  authDescription?: string;
   /** 成功响应示例 */
   successExample?: string;
   /** 失败响应示例 */
@@ -145,6 +143,8 @@ export interface InterfaceDocDetailVO {
   responseParams?: InterfaceDocParamVO[];
   /** 错误码列表 */
   errorCodes?: InterfaceDocErrorCodeVO[];
+  /** Java SDK 示例 */
+  javaSdkExample?: string;
   /** curl 示例 */
   curlExample?: string;
 }
