@@ -61,7 +61,6 @@ const buildDocDetail = (override: Partial<InterfaceDocDetailVO> = {}): Interface
     docVersion: 'v1',
     requestContentType: 'application/json',
     responseContentType: 'application/json',
-    authDescription: '签名鉴权',
     successExample: '{bad json',
     failExample: '{"ok":false}',
   },
@@ -74,6 +73,7 @@ const buildDocDetail = (override: Partial<InterfaceDocDetailVO> = {}): Interface
     { id: 4, name: 'optionalButNotNullable', paramScene: 'RESPONSE', type: 'string', required: false, nullable: false },
   ],
   errorCodes: [{ id: 1, errorCode: 'A001', errorMessage: '参数错误', solution: '检查请求参数' }],
+  javaSdkExample: 'FeiApiClient client = new FeiApiClient();\nclient.getUsernameByPost(requestParam);',
   curlExample: '#!/usr/bin/env bash\ncurl -X "$METHOD" "$URL"',
   ...override,
 });
@@ -138,7 +138,15 @@ describe('InterfaceDetailView', () => {
     expect(wrapper.text()).toContain('optionalButNotNullable');
     expect(wrapper.text()).toContain('requiredButNullablestring是');
     expect(wrapper.text()).toContain('optionalButNotNullablestring否');
+    expect(wrapper.text()).not.toContain('鉴权说明');
+    expect(wrapper.text()).toContain('client.getUsernameByPost(requestParam)');
 
+    await wrapper.get('button[title="复制 Java SDK 示例"]').trigger('click');
+    await flushPromises();
+    expect(writeText).toHaveBeenCalledWith('FeiApiClient client = new FeiApiClient();\nclient.getUsernameByPost(requestParam);');
+
+    const invocationSwitch = wrapper.get('[aria-label="调用示例类型"]');
+    await invocationSwitch.findAll('button')[1].trigger('click');
     await wrapper.get('button[title="复制 curl 示例"]').trigger('click');
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith('#!/usr/bin/env bash\ncurl -X "$METHOD" "$URL"');
@@ -160,6 +168,7 @@ describe('InterfaceDetailView', () => {
       requestParams: [],
       responseParams: [],
       errorCodes: [],
+      javaSdkExample: '',
       curlExample: '',
     }));
 

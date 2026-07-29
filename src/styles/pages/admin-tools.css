@@ -78,6 +78,7 @@
 .fei-method-badge { display: inline-grid; min-width: 58px; height: 30px; place-items: center; border-radius: 6px; background: #b8f36b; color: #101828; font-size: 12px; font-weight: 900; }
 .fei-doc-summary__path { margin: 0 0 4px; color: #98a2b3; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
 .fei-doc-summary h1 { margin: 0; font-size: 26px; letter-spacing: 0; }
+.fei-doc-summary__description { max-width: 760px; margin: 7px 0 0; color: #d0d5dd; font-size: 13px; line-height: 1.6; }
 .fei-doc-summary__meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .fei-doc-summary__meta div { display: grid; gap: 5px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); }
 .fei-doc-summary__meta span { color: #98a2b3; font-size: 12px; }
@@ -101,6 +102,11 @@
 .fei-doc-record { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--fei-border); border-radius: 10px; background: #fbfcfe; }
 .fei-doc-record__toolbar strong { font-size: 14px; }
 .fei-doc-empty { padding: 22px; border: 1px dashed var(--fei-border); border-radius: 10px; color: var(--fei-text-muted); font-size: 13px; text-align: center; }
+.fei-system-header { display: grid; grid-template-columns: 1fr .7fr .55fr 1.4fr 2.2fr; gap: 1px; overflow: hidden; border: 1px solid var(--fei-border); border-radius: 8px; background: var(--fei-border); }
+.fei-system-header > div { display: grid; min-width: 0; gap: 7px; padding: 13px 14px; background: #fbfcfe; }
+.fei-system-header span { color: var(--fei-text-muted); font-size: 11px; font-weight: 700; }
+.fei-system-header strong { color: var(--fei-text); font-size: 13px; overflow-wrap: anywhere; }
+.fei-system-header__value { font-family: 'SFMono-Regular', Consolas, monospace; }
 .fei-inline-checks { display: flex; gap: 18px; color: var(--fei-text-secondary); font-size: 13px; }
 .fei-inline-checks input { accent-color: var(--fei-primary); }
 .fei-label-row button { border: 0; background: transparent; color: var(--fei-primary); cursor: pointer; font-size: 12px; }
@@ -116,6 +122,8 @@
   .fei-doc-summary__meta { grid-template-columns: 1fr; }
 
   .fei-doc-param-row { grid-template-columns: 1fr 1fr; }
+  .fei-system-header { grid-template-columns: 1fr 1fr; }
+  .fei-system-header__description { grid-column: 1 / -1; }
   .fei-doc-param-row__identity { grid-column: 1 / -1; }
   .fei-doc-section__heading { flex-direction: column; }
   .fei-doc-section__heading p { text-align: left; }

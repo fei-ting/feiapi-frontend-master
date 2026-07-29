@@ -31,6 +31,7 @@ const buildDocDetail = (overrides: Partial<InterfaceDocDetailVO> = {}): Interfac
     { id: 5, parentId: 99, name: 'legacy', type: 'string', nullable: false, description: '历史字段' },
   ],
   errorCodes: [{ id: 1, errorCode: 'A001', errorMessage: '参数错误', solution: '检查请求参数' }],
+  javaSdkExample: 'FeiApiClient client = new FeiApiClient();\nclient.getUser();',
   curlExample: 'curl -X POST /api/doc',
   ...overrides,
 });
@@ -77,14 +78,21 @@ describe('InterfaceDocumentation', () => {
     });
 
     await wrapper.get('button[title="复制成功示例"]').trigger('click');
-    await wrapper.findAll('.fei-example-switch__button')[1].trigger('click');
+    const exampleSwitch = wrapper.get('[aria-label="返回示例类型"]');
+    await exampleSwitch.findAll('.fei-example-switch__button')[1].trigger('click');
     expect(wrapper.get('pre.fei-code').text()).toContain('"ok": false');
     await wrapper.get('button[title="复制失败示例"]').trigger('click');
+    expect(wrapper.text()).toContain('FeiApiClient client');
+    await wrapper.get('button[title="复制 Java SDK 示例"]').trigger('click');
+    const invocationSwitch = wrapper.get('[aria-label="调用示例类型"]');
+    await invocationSwitch.findAll('.fei-example-switch__button')[1].trigger('click');
+    expect(wrapper.text()).toContain('curl -X POST /api/doc');
     await wrapper.get('button[title="复制 curl 示例"]').trigger('click');
 
     expect(wrapper.emitted('copy-text')).toEqual([
       ['{"ok":true}'],
       ['{"ok":false}'],
+      ['FeiApiClient client = new FeiApiClient();\nclient.getUser();'],
       ['curl -X POST /api/doc'],
     ]);
   });
@@ -97,6 +105,7 @@ describe('InterfaceDocumentation', () => {
           requestHeaders: [],
           requestParams: [],
           responseParams: [],
+          javaSdkExample: '',
           curlExample: '',
         }),
       },
@@ -122,7 +131,8 @@ describe('InterfaceDocumentation', () => {
 
     expect(wrapper.get('pre.fei-code').text()).toBe('{bad json');
     expect(wrapper.text()).toContain('暂无接口级错误码');
-    await wrapper.findAll('.fei-example-switch__button')[1].trigger('click');
+    const exampleSwitch = wrapper.get('[aria-label="返回示例类型"]');
+    await exampleSwitch.findAll('.fei-example-switch__button')[1].trigger('click');
     expect(wrapper.text()).toContain('暂无失败 JSON 示例');
     expect(wrapper.get('button[title="复制失败示例"]').attributes()).toHaveProperty('disabled');
   });

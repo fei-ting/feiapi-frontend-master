@@ -5,6 +5,7 @@
       <div>
         <p class="fei-doc-summary__path">{{ detail.interfaceInfo.path || '-' }}</p>
         <h1>{{ detail.interfaceInfo.name }}</h1>
+        <p class="fei-doc-summary__description">{{ detail.interfaceInfo.description || '暂无接口描述' }}</p>
       </div>
     </div>
     <div class="fei-doc-summary__meta">
