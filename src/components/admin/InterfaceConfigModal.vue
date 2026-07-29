@@ -173,8 +173,31 @@ const closeModal = () => {
   if (!submitting.value) emit('close');
 };
 
+/** 校验运行时请求参数模板的结构和参数名称。 */
+const validateRequestParamsTemplate = (): string => {
+  if (!form.requestParams.trim()) return '';
+  try {
+    const template = JSON.parse(form.requestParams) as unknown;
+    if (template === null || Array.isArray(template) || typeof template !== 'object') {
+      return '请求参数模板必须是 JSON 对象';
+    }
+    const invalidName = Object.keys(template).find((name) => name.length === 0 || /^\s|\s$/u.test(name));
+    if (invalidName === undefined) return '';
+    return invalidName.length === 0
+      ? '请求参数名称不能为空'
+      : `请求参数名称不能包含首尾空白：${JSON.stringify(invalidName)}`;
+  } catch {
+    return '请求参数模板必须是合法 JSON';
+  }
+};
+
 /** 提交接口运行时配置。 */
 const submitForm = async () => {
+  const templateError = validateRequestParamsTemplate();
+  if (templateError) {
+    errorMessage.value = templateError;
+    return;
+  }
   submitting.value = true;
   errorMessage.value = '';
   try {
