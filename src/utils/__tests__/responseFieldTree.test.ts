@@ -84,11 +84,16 @@ describe('responseFieldTree', () => {
       .toBe('响应字段父级不存在：missing-a -> [name, age]；missing-b -> [detail]');
   });
 
-  it('拒绝标量父级、循环引用和同级重名', () => {
+  it('一次性返回全部标量父级', () => {
     expect(validateResponseFieldTree([
       field('data', 'data', 'string'),
       field('name', 'name', 'string', 'data'),
-    ]).message).toBe('响应字段 data 的类型 string 不能拥有子字段');
+      field('count', 'count', 'number'),
+      field('unit', 'unit', 'string', 'count'),
+    ]).message).toBe('以下响应字段不是容器类型，不能拥有子字段：data(string)、count(number)');
+  });
+
+  it('拒绝循环引用和同级重名', () => {
 
     expect(validateResponseFieldTree([
       field('a', 'a', 'object', 'b'),
@@ -100,6 +105,15 @@ describe('responseFieldTree', () => {
       field('first', 'name', 'string', 'data'),
       field('second', 'name', 'string', 'data'),
     ]).message).toBe('同级响应字段名称不能重复');
+  });
+
+  it('不同父级作用域不会因组合文本相同而误判为同级重名', () => {
+    expect(validateResponseFieldTree([
+      field('parent:a', 'first', 'object'),
+      field('parent', 'second', 'object'),
+      field('first-child', 'value', 'string', 'parent:a'),
+      field('second-child', 'a:value', 'string', 'parent'),
+    ])).toEqual({ valid: true, message: '' });
   });
 
   it('允许八层并拒绝九层响应字段树', () => {

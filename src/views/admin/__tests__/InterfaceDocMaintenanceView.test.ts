@@ -241,7 +241,7 @@ describe('InterfaceDocMaintenanceView', () => {
     await typeSelect.setValue('string');
 
     expect((typeSelect.element as HTMLSelectElement).value).toBe('object');
-    expect(wrapper.text()).toContain('响应字段 data 的类型 string 不能拥有子字段');
+    expect(wrapper.text()).toContain('以下响应字段不是容器类型，不能拥有子字段：data(string)');
   });
 
   it('保存前拒绝后端加载的标量父字段异常结构', async () => {
@@ -253,7 +253,7 @@ describe('InterfaceDocMaintenanceView', () => {
     await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
     await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
 
-    expect(wrapper.text()).toContain('响应字段 data 的类型 string 不能拥有子字段');
+    expect(wrapper.text()).toContain('以下响应字段不是容器类型，不能拥有子字段：data(string)');
     expect(mocks.saveDoc).not.toHaveBeenCalled();
   });
 

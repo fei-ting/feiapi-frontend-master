@@ -128,6 +128,8 @@ const contentTypes = [
 ];
 /** 支持的接口参数类型。 */
 const paramTypes = ['string', 'number', 'boolean', 'object', 'array'];
+/** 响应字段快照操作上下文。 */
+type SnapshotContext = 'dialog' | 'inline';
 /** 页面加载状态。 */
 const loading = ref(true);
 /** 页面保存状态。 */
@@ -388,7 +390,7 @@ const addResponseParam = (): void => {
 const removeResponseParam = (paramKey: string): void => {
   const descendants = getResponseFieldDescendants(responseParams.value, paramKey);
   if (!descendants.length) {
-    applyResponseFieldSnapshot(deleteResponseFieldSubtree(responseParams.value, paramKey), false);
+    applyResponseFieldSnapshot(deleteResponseFieldSubtree(responseParams.value, paramKey), 'inline');
     return;
   }
   responseFieldDeleteState.value = {
@@ -402,11 +404,11 @@ const removeResponseParam = (paramKey: string): void => {
 /** 校验并应用响应字段树候选快照。 */
 const applyResponseFieldSnapshot = (
   candidate: InterfaceDocParamSaveRequest[],
-  dialogOperation: boolean,
+  context: SnapshotContext,
 ): boolean => {
   const validation = validateResponseFieldTree(candidate);
   if (!validation.valid) {
-    if (dialogOperation) responseFieldDeleteError.value = validation.message;
+    if (context === 'dialog') responseFieldDeleteError.value = validation.message;
     else saveError.value = validation.message;
     return false;
   }
@@ -421,7 +423,7 @@ const confirmDeleteResponseSubtree = (): void => {
   const state = responseFieldDeleteState.value;
   if (!state) return;
   const candidate = deleteResponseFieldSubtree(responseParams.value, state.paramKey);
-  if (applyResponseFieldSnapshot(candidate, true)) responseFieldDeleteState.value = null;
+  if (applyResponseFieldSnapshot(candidate, 'dialog')) responseFieldDeleteState.value = null;
 };
 
 /** 确认删除当前响应字段并提升直接子字段。 */
@@ -429,7 +431,7 @@ const confirmPromoteResponseChildren = (): void => {
   const state = responseFieldDeleteState.value;
   if (!state) return;
   const candidate = promoteResponseFieldChildren(responseParams.value, state.paramKey);
-  if (applyResponseFieldSnapshot(candidate, true)) responseFieldDeleteState.value = null;
+  if (applyResponseFieldSnapshot(candidate, 'dialog')) responseFieldDeleteState.value = null;
 };
 
 /** 取消删除非叶子响应字段。 */
