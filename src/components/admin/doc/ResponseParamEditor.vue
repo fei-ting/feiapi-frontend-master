@@ -14,7 +14,7 @@
         <div class="fei-form-grid fei-form-grid--four">
           <label class="fei-field"><span class="fei-label">字段名</span><input class="fei-input" :value="param.name" maxlength="128" required @input="updateText(param.paramKey, 'name', $event, true)" /></label>
           <label class="fei-field"><span class="fei-label">类型</span><select class="fei-select" :value="param.type" @change="updateText(param.paramKey, 'type', $event)"><option v-for="type in paramTypes" :key="type" :value="type">{{ type }}</option></select></label>
-          <label class="fei-field"><span class="fei-label">父字段</span><select class="fei-select" :value="param.parentParamKey || ''" @change="updateText(param.paramKey, 'parentParamKey', $event)"><option value="">根节点</option><option v-for="parent in parentOptions(param.paramKey)" :key="parent.paramKey" :value="parent.paramKey">{{ parent.name || '未命名字段' }}</option></select></label>
+          <label class="fei-field"><span class="fei-label">父字段</span><select class="fei-select" :value="param.parentParamKey || ''" @change="updateText(param.paramKey, 'parentParamKey', $event)"><option value="">根节点</option><option v-for="parent in parentOptions(param.paramKey)" :key="parent.paramKey" :value="parent.paramKey">{{ parent.label }}</option></select></label>
           <label class="fei-field"><span class="fei-label">排序</span><input class="fei-input" type="number" :value="param.sortOrder" @input="updateNumber(param.paramKey, 'sortOrder', $event)" /></label>
         </div>
         <div class="fei-inline-checks">
@@ -33,8 +33,10 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from 'vue';
 import type { InterfaceDocParamSaveRequest } from '@/types/interfaceDoc';
 import type { EditorFieldValue, ResponseParamEditableField } from '@/types/interfaceDocEditor';
+import { getResponseFieldParentOptions, type ResponseFieldParentOption } from '@/utils/responseFieldTree';
 
 /** 响应字段编辑器属性。 */
 interface ResponseParamEditorProps {
@@ -57,15 +59,22 @@ interface ResponseParamEditorEmits {
 const props = defineProps<ResponseParamEditorProps>();
 const emit = defineEmits<ResponseParamEditorEmits>();
 
-/** 获取排除当前字段后的父字段选项。 */
-const parentOptions = (currentKey: string): InterfaceDocParamSaveRequest[] => (
-  props.params.filter((param) => param.paramKey !== currentKey)
+/** 获取当前字段的合法父字段选项。 */
+const parentOptions = (currentKey: string): ResponseFieldParentOption[] => (
+  getResponseFieldParentOptions(props.params, currentKey)
 );
 
 /** 更新响应字段文本。 */
 const updateText = (paramKey: string, field: ResponseParamEditableField, event: Event, trim = false): void => {
-  const value = (event.target as HTMLInputElement | HTMLSelectElement).value;
+  const target = event.target as HTMLInputElement | HTMLSelectElement;
+  const value = target.value;
   emit('update-param', paramKey, field, trim ? value.trim() : value);
+  if (field === 'type' || field === 'parentParamKey') {
+    nextTick(() => {
+      const currentParam = props.params.find((param) => param.paramKey === paramKey);
+      target.value = String(currentParam?.[field] ?? '');
+    });
+  }
 };
 
 /** 更新响应字段数字。 */

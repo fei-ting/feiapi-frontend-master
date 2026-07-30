@@ -34,6 +34,15 @@
           @remove="removeResponseParam"
           @update-param="updateResponseParam"
         />
+        <ResponseFieldDeleteDialog
+          :open="Boolean(responseFieldDeleteState)"
+          :target-path="responseFieldDeleteState?.targetPath ?? ''"
+          :descendant-paths="responseFieldDeleteState?.descendantPaths ?? []"
+          :error-message="responseFieldDeleteError"
+          @delete-subtree="confirmDeleteResponseSubtree"
+          @promote-children="confirmPromoteResponseChildren"
+          @cancel="cancelResponseFieldDelete"
+        />
         <JsonExampleEditor
           :success-example="form.successExample"
           :fail-example="form.failExample"
@@ -71,6 +80,7 @@ import ErrorCodeEditor from '@/components/admin/doc/ErrorCodeEditor.vue';
 import InterfaceDocSummary from '@/components/admin/doc/InterfaceDocSummary.vue';
 import JsonExampleEditor from '@/components/admin/doc/JsonExampleEditor.vue';
 import RequestParamDescriptionList from '@/components/admin/doc/RequestParamDescriptionList.vue';
+import ResponseFieldDeleteDialog from '@/components/admin/doc/ResponseFieldDeleteDialog.vue';
 import ResponseParamEditor from '@/components/admin/doc/ResponseParamEditor.vue';
 import SystemRequestHeaderSummary from '@/components/admin/doc/SystemRequestHeaderSummary.vue';
 import { interfaceService } from '@/services/interfaceInfo';
@@ -89,8 +99,16 @@ import type {
   ErrorCodeEditableField,
   JsonExampleField,
   RequestParamEditableField,
+  ResponseFieldDeleteState,
   ResponseParamEditableField,
 } from '@/types/interfaceDocEditor';
+import {
+  deleteResponseFieldSubtree,
+  getResponseFieldDescendants,
+  getResponseFieldPath,
+  promoteResponseFieldChildren,
+  validateResponseFieldTree,
+} from '@/utils/responseFieldTree';
 const route = useRoute();
 const router = useRouter();
 const emit = defineEmits<{
@@ -126,6 +144,10 @@ const requestParams = ref<InterfaceDocParamSaveRequest[]>([]);
 const responseParams = ref<InterfaceDocParamSaveRequest[]>([]);
 /** 接口错误码。 */
 const errorCodes = ref<EditableErrorCode[]>([]);
+/** 当前非叶子响应字段删除状态。 */
+const responseFieldDeleteState = ref<ResponseFieldDeleteState | null>(null);
+/** 非叶子响应字段删除操作错误。 */
+const responseFieldDeleteError = ref('');
 /** 最近加载或保存后的文档快照。 */
 const baseline = ref('');
 /** 新增记录稳定键序号。 */
@@ -158,8 +180,16 @@ const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++k
 /** 将接口参数转换为保存请求，并保留父子关系。 */
 const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response'): InterfaceDocParamSaveRequest[] => {
   const keyMap = new Map(params.filter((param) => param.id).map((param) => [param.id as number, `${scene}-${param.id}`]));
+  const missingParentKeyMap = new Map<number, string>();
   return params.map((param, index) => {
-    const parentParamKey = param.parentId ? keyMap.get(param.parentId) : undefined;
+    let parentParamKey = param.parentId ? keyMap.get(param.parentId) : undefined;
+    if (scene === 'response' && param.parentId && parentParamKey === undefined) {
+      parentParamKey = missingParentKeyMap.get(param.parentId);
+      if (!parentParamKey) {
+        parentParamKey = nextClientKey('response-missing-parent');
+        missingParentKeyMap.set(param.parentId, parentParamKey);
+      }
+    }
     const nullable = scene === 'response' ? (param.nullable ?? false) : false;
     return {
       paramKey: param.id ? `${scene}-${param.id}` : nextClientKey(scene),
@@ -201,6 +231,8 @@ const loadDocument = async (): Promise<void> => {
     });
     requestParams.value = mapParams(data.requestParams ?? [], 'request');
     responseParams.value = mapParams(data.responseParams ?? [], 'response');
+    responseFieldDeleteState.value = null;
+    responseFieldDeleteError.value = '';
     errorCodes.value = (data.errorCodes ?? []).map((item, index) => ({
       clientKey: item.id ? `error-${item.id}` : nextClientKey('error'),
       errorCode: item.errorCode ?? '',
@@ -238,6 +270,8 @@ const buildSaveRequest = (docStatus: InterfaceDocStatus): InterfaceDocSaveReques
 const validateForm = (targetStatus: InterfaceDocStatus): string => {
   if (!form.docVersion || !form.requestContentType || !form.responseContentType) return '文档版本和内容格式不能为空';
   if (responseParams.value.some((param) => !param.name || !param.type)) return '响应字段名称和类型不能为空';
+  const responseTreeValidation = validateResponseFieldTree(responseParams.value);
+  if (!responseTreeValidation.valid) return responseTreeValidation.message;
   if (errorCodes.value.some((item) => !item.errorCode || !item.errorMessage)) return '错误码和错误信息不能为空';
   const invalidJsonField = ([
     ['成功响应示例', form.successExample],
@@ -300,7 +334,26 @@ const updateRequestParam = (paramKey: string, field: RequestParamEditableField, 
 /** 更新响应字段。 */
 const updateResponseParam = (paramKey: string, field: ResponseParamEditableField, value: EditorFieldValue): void => {
   const param = responseParams.value.find((item) => item.paramKey === paramKey);
-  if (param) Object.assign(param, { [field]: value });
+  if (!param) return;
+  if (field !== 'type' && field !== 'parentParamKey') {
+    Object.assign(param, { [field]: value });
+    return;
+  }
+  const candidate = responseParams.value.map((item) => {
+    if (item.paramKey !== paramKey) return { ...item };
+    if (field === 'parentParamKey' && !value) {
+      const { parentParamKey: _parentParamKey, ...rootField } = item;
+      return rootField;
+    }
+    return { ...item, [field]: value };
+  });
+  const validation = validateResponseFieldTree(candidate);
+  if (!validation.valid) {
+    saveError.value = validation.message;
+    return;
+  }
+  responseParams.value = candidate;
+  saveError.value = '';
 };
 
 /** 更新 JSON 示例。 */
@@ -331,15 +384,58 @@ const addResponseParam = (): void => {
   });
 };
 
-/** 删除响应字段及引用该字段父级关系的配置。 */
+/** 请求删除响应字段。 */
 const removeResponseParam = (paramKey: string): void => {
-  responseParams.value = responseParams.value
-    .filter((param) => param.paramKey !== paramKey)
-    .map((param) => {
-      if (param.parentParamKey !== paramKey) return param;
-      const { parentParamKey: _removedParentParamKey, ...rootParam } = param;
-      return rootParam;
-    });
+  const descendants = getResponseFieldDescendants(responseParams.value, paramKey);
+  if (!descendants.length) {
+    applyResponseFieldSnapshot(deleteResponseFieldSubtree(responseParams.value, paramKey), false);
+    return;
+  }
+  responseFieldDeleteState.value = {
+    paramKey,
+    targetPath: getResponseFieldPath(responseParams.value, paramKey),
+    descendantPaths: descendants.map((field) => getResponseFieldPath(responseParams.value, field.paramKey)),
+  };
+  responseFieldDeleteError.value = '';
+};
+
+/** 校验并应用响应字段树候选快照。 */
+const applyResponseFieldSnapshot = (
+  candidate: InterfaceDocParamSaveRequest[],
+  dialogOperation: boolean,
+): boolean => {
+  const validation = validateResponseFieldTree(candidate);
+  if (!validation.valid) {
+    if (dialogOperation) responseFieldDeleteError.value = validation.message;
+    else saveError.value = validation.message;
+    return false;
+  }
+  responseParams.value = candidate;
+  saveError.value = '';
+  responseFieldDeleteError.value = '';
+  return true;
+};
+
+/** 确认删除当前响应字段及全部后代。 */
+const confirmDeleteResponseSubtree = (): void => {
+  const state = responseFieldDeleteState.value;
+  if (!state) return;
+  const candidate = deleteResponseFieldSubtree(responseParams.value, state.paramKey);
+  if (applyResponseFieldSnapshot(candidate, true)) responseFieldDeleteState.value = null;
+};
+
+/** 确认删除当前响应字段并提升直接子字段。 */
+const confirmPromoteResponseChildren = (): void => {
+  const state = responseFieldDeleteState.value;
+  if (!state) return;
+  const candidate = promoteResponseFieldChildren(responseParams.value, state.paramKey);
+  if (applyResponseFieldSnapshot(candidate, true)) responseFieldDeleteState.value = null;
+};
+
+/** 取消删除非叶子响应字段。 */
+const cancelResponseFieldDelete = (): void => {
+  responseFieldDeleteState.value = null;
+  responseFieldDeleteError.value = '';
 };
 
 /** 新增接口错误码。 */

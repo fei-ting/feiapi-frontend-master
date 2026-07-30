@@ -14,6 +14,11 @@ const params = [
     parentParamKey: 'response-1', sortOrder: 2, required: false, nullable: true,
     description: '名称', exampleValue: 'alice', defaultValue: '', validationRule: '',
   },
+  {
+    paramKey: 'response-3', paramScene: 'RESPONSE' as const, name: 'meta', type: 'object',
+    parentParamKey: '', sortOrder: 3, required: false, nullable: true,
+    description: '元数据', exampleValue: '{}', defaultValue: '', validationRule: '',
+  },
 ];
 
 describe('ResponseParamEditor', () => {
@@ -24,10 +29,10 @@ describe('ResponseParamEditor', () => {
     expect(wrapper.emitted('add')).toHaveLength(1);
   });
 
-  it('删除事件携带稳定键且父字段排除自身', async () => {
+  it('删除事件携带稳定键且父字段排除自身、后代和标量字段', async () => {
     const wrapper = mount(ResponseParamEditor, { props: { params, paramTypes: ['string', 'object'] } });
     const parentOptions = wrapper.findAll('select')[1].findAll('option').map((option) => option.text());
-    expect(parentOptions).toEqual(['根节点', 'name']);
+    expect(parentOptions).toEqual(['根节点', 'meta']);
 
     await wrapper.findAll('.fei-action-btn--danger')[0].trigger('click');
     expect(wrapper.emitted('remove')).toEqual([['response-1']]);

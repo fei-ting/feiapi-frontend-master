@@ -158,10 +158,41 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(requestParam.nullable).toBe(false);
   });
 
-  it('删除响应父字段时清除子字段引用并保持保存载荷', async () => {
+  it('删除非叶子响应字段时展示全部路径并支持取消', async () => {
     const wrapper = await mountView();
     const responseSection = sectionByTitle(wrapper, '响应字段');
     await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+
+    const dialog = wrapper.get('[role="dialog"]');
+    expect(dialog.text()).toContain('data');
+    expect(dialog.text()).toContain('data.name');
+    expect(dialog.text()).toContain('受影响子字段（1）');
+    await dialog.findAll('button').find((button) => button.text() === '取消')?.trigger('click');
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(2);
+  });
+
+  it('删除整个响应字段子树后保存全量快照', async () => {
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+    await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    await wrapper.get('[role="dialog"]').findAll('button')
+      .find((button) => button.text() === '删除整个子树')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    const payload = mocks.saveDoc.mock.calls[0][0];
+    expect(payload.params.some((param: { name: string }) => param.name === 'data')).toBe(false);
+    expect(payload.params.some((param: { name: string }) => param.name === 'name')).toBe(false);
+  });
+
+  it('提升根响应字段的直接子字段后保留后代并清除父引用', async () => {
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+    await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    await wrapper.get('[role="dialog"]').findAll('button')
+      .find((button) => button.text() === '提升直接子字段')?.trigger('click');
     await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
 
@@ -170,6 +201,76 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(payload.params.some((param: { name: string }) => param.name === 'data')).toBe(false);
     expect(child.parentParamKey).toBeUndefined();
     expect(child).not.toHaveProperty('parentParamKey');
+  });
+
+  it('叶子响应字段直接删除且不打开确认对话框', async () => {
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+
+    await responseSection.findAll('.fei-action-btn--danger')[1].trigger('click');
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(1);
+    expect(responseSection.text()).not.toContain('name');
+  });
+
+  it('提升直接子字段导致同级重名时保持原树并展示错误', async () => {
+    const detail = buildDetail();
+    detail.responseParams = [
+      { id: 2, name: 'data', paramScene: 'RESPONSE', type: 'object', required: true, nullable: false, sortOrder: 1 },
+      { id: 3, parentId: 2, name: 'user', paramScene: 'RESPONSE', type: 'object', required: true, nullable: false, sortOrder: 2 },
+      { id: 4, parentId: 3, name: 'name', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 3 },
+      { id: 5, parentId: 2, name: 'name', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 4 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+
+    await responseSection.findAll('.fei-action-btn--danger')[1].trigger('click');
+    await wrapper.get('[role="dialog"]').findAll('button')
+      .find((button) => button.text() === '提升直接子字段')?.trigger('click');
+
+    expect(wrapper.get('[role="dialog"]').text()).toContain('同级响应字段名称不能重复');
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(4);
+  });
+
+  it('有子字段的响应容器不能改为标量类型', async () => {
+    const wrapper = await mountView();
+    const typeSelect = sectionByTitle(wrapper, '响应字段').findAll('select')[0];
+
+    await typeSelect.setValue('string');
+
+    expect((typeSelect.element as HTMLSelectElement).value).toBe('object');
+    expect(wrapper.text()).toContain('响应字段 data 的类型 string 不能拥有子字段');
+  });
+
+  it('保存前拒绝后端加载的标量父字段异常结构', async () => {
+    const detail = buildDetail();
+    if (detail.responseParams?.[0]) detail.responseParams[0].type = 'string';
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect(wrapper.text()).toContain('响应字段 data 的类型 string 不能拥有子字段');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
+  it('保存前拒绝后端加载的缺失父字段结构而不静默提升为根', async () => {
+    const detail = buildDetail();
+    detail.responseParams = [
+      { id: 3, parentId: 999, name: 'name', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 1 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect(wrapper.text()).toContain('响应字段父级不存在：response-missing-parent-');
+    expect(wrapper.text()).toContain('[name]');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
   });
 
   it('格式化合法JSON并保留非法JSON原值', async () => {
