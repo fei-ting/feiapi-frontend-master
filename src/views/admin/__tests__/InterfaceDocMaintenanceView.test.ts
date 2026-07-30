@@ -128,6 +128,49 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.text()).toContain('用户接口');
   });
 
+  it.each([
+    ['requestParams', undefined],
+    ['requestParams', null],
+    ['requestParams', {}],
+    ['responseParams', undefined],
+    ['responseParams', null],
+    ['responseParams', {}],
+    ['errorCodes', undefined],
+    ['errorCodes', null],
+    ['errorCodes', {}],
+  ])('聚合集合 %s 为无效值时禁止保存', async (field, invalidValue) => {
+    const invalidDetail = {
+      ...buildDetail(),
+      [field]: invalidValue,
+    } as unknown as InterfaceDocDetailVO;
+    mocks.getDocDetail.mockResolvedValue(invalidDetail);
+
+    const wrapper = await mountView();
+
+    expect(wrapper.text()).toContain('接口文档聚合数据不完整，请重新加载');
+    const saveButtons = wrapper.findAll('button')
+      .filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
+    expect(saveButtons).toHaveLength(2);
+    expect(saveButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    await saveButtons[0]?.trigger('click');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
+  it('合法空集合可以加载且不会被判定为不完整响应', async () => {
+    const emptyDetail = buildDetail();
+    emptyDetail.requestParams = [];
+    emptyDetail.responseParams = [];
+    emptyDetail.errorCodes = [];
+    mocks.getDocDetail.mockResolvedValue(emptyDetail);
+
+    const wrapper = await mountView();
+
+    expect(wrapper.text()).not.toContain('接口文档聚合数据不完整');
+    expect(wrapper.text()).toContain('当前接口没有运行时请求参数');
+    expect(wrapper.text()).toContain('暂未维护响应字段');
+    expect(wrapper.text()).toContain('当前接口没有专属错误码');
+  });
+
   it('接口不可编辑时由父级fieldset禁用全部控件', async () => {
     mocks.getDocDetail.mockResolvedValue(buildDetail(1));
     const wrapper = await mountView();
@@ -317,8 +360,66 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(mocks.saveDoc).toHaveBeenCalledOnce();
     expect(mocks.saveDoc.mock.calls[0][0].docVersion).toBe('v2');
     expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('DRAFT');
+    expect(mocks.saveDoc.mock.calls[0][0].params)
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'userId', paramScene: 'BODY' }),
+        expect.objectContaining({ name: 'data', paramScene: 'RESPONSE' }),
+        expect.objectContaining({ name: 'name', paramScene: 'RESPONSE' }),
+      ]));
+    expect(mocks.saveDoc.mock.calls[0][0].errorCodes)
+      .toEqual([expect.objectContaining({ errorCode: 'A001' })]);
     expect(mocks.getDocDetail).toHaveBeenCalledTimes(2);
     expect(wrapper.emitted('show-toast')).toContainEqual(['草稿已保存', 'success']);
+  });
+
+  it('保存后使用回读的新记录ID和文档状态重建编辑模型', async () => {
+    const initialDetail = buildDetail();
+    initialDetail.responseParams.forEach((param) => { param.description = `${param.name}说明`; });
+    const refreshedDetail = buildDetail();
+    refreshedDetail.docStatus = 'READY';
+    refreshedDetail.requestParams[0]!.id = 101;
+    refreshedDetail.responseParams[0]!.id = 102;
+    refreshedDetail.responseParams[1]!.id = 103;
+    refreshedDetail.responseParams[1]!.parentId = 102;
+    refreshedDetail.responseParams.forEach((param) => { param.description = `${param.name}说明`; });
+    refreshedDetail.errorCodes[0]!.id = 201;
+    mocks.getDocDetail.mockReset()
+      .mockResolvedValueOnce(initialDetail)
+      .mockResolvedValueOnce(refreshedDetail)
+      .mockResolvedValue(refreshedDetail);
+    const wrapper = await mountView();
+
+    await wrapper.findAll('button').find((button) => button.text() === '完成维护')?.trigger('click');
+    await flushPromises();
+
+    const completeButtons = wrapper.findAll('button').filter((button) => button.text() === '完成维护');
+    expect(completeButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    const secondPayload = mocks.saveDoc.mock.calls[1][0];
+    expect(secondPayload.params).toEqual(expect.arrayContaining([
+      expect.objectContaining({ paramKey: 'request-101', name: 'userId' }),
+      expect.objectContaining({ paramKey: 'response-102', name: 'data' }),
+      expect.objectContaining({ paramKey: 'response-103', parentParamKey: 'response-102', name: 'name' }),
+    ]));
+    expect(mocks.getDocDetail).toHaveBeenCalledTimes(3);
+  });
+
+  it('保存成功但回读失败时不发送成功通知', async () => {
+    mocks.getDocDetail.mockReset()
+      .mockResolvedValueOnce(buildDetail())
+      .mockRejectedValueOnce(new Error('回读服务失败'));
+    const wrapper = await mountView();
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(wrapper.text()).toContain('文档已保存，但重新加载后端数据失败，请重新加载');
+    expect(wrapper.emitted('show-toast')).toBeUndefined();
   });
 
   it('保存期间禁用操作按钮并阻止重复提交', async () => {

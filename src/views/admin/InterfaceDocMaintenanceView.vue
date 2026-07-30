@@ -179,6 +179,14 @@ const canSaveDraft = computed(() => canOperate.value && dirty.value);
 const canComplete = computed(() => canOperate.value && (dirty.value || detail.value?.docStatus === 'DRAFT'));
 /** 生成前端稳定键。 */
 const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++keySequence.value}`;
+/** 校验聚合详情是否包含全部可替换集合。 */
+const validateCompleteCollectionSnapshot = (data: InterfaceDocDetailVO): void => {
+  if (!Array.isArray(data.requestParams)
+    || !Array.isArray(data.responseParams)
+    || !Array.isArray(data.errorCodes)) {
+    throw new Error('接口文档聚合数据不完整，请重新加载');
+  }
+};
 /** 将接口参数转换为保存请求，并保留父子关系。 */
 const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response'): InterfaceDocParamSaveRequest[] => {
   const keyMap = new Map(params.filter((param) => param.id).map((param) => [param.id as number, `${scene}-${param.id}`]));
@@ -211,31 +219,29 @@ const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response')
 };
 
 /** 加载接口文档并初始化编辑快照。 */
-const loadDocument = async (): Promise<void> => {
+const loadDocument = async (): Promise<boolean> => {
   if (!Number.isInteger(interfaceInfoId.value) || interfaceInfoId.value <= 0) {
     loadError.value = '接口 ID 无效';
     loading.value = false;
-    return;
+    return false;
   }
   loading.value = true;
   loadError.value = '';
   saveError.value = '';
   try {
     const data = await interfaceService.getDocDetail(interfaceInfoId.value);
-    detail.value = data;
-    Object.assign(form, {
+    validateCompleteCollectionSnapshot(data);
+    const loadedForm: DocMainForm = {
       docVersion: data.doc?.docVersion ?? 'v1',
       requestContentType: data.doc?.requestContentType ?? 'application/json',
       responseContentType: data.doc?.responseContentType ?? 'application/json',
       successExample: data.doc?.successExample ?? '',
       failExample: data.doc?.failExample ?? '',
       remark: data.doc?.remark ?? '',
-    });
-    requestParams.value = mapParams(data.requestParams ?? [], 'request');
-    responseParams.value = mapParams(data.responseParams ?? [], 'response');
-    responseFieldDeleteState.value = null;
-    responseFieldDeleteError.value = '';
-    errorCodes.value = (data.errorCodes ?? []).map((item, index) => ({
+    };
+    const loadedRequestParams = mapParams(data.requestParams, 'request');
+    const loadedResponseParams = mapParams(data.responseParams, 'response');
+    const loadedErrorCodes = data.errorCodes.map((item, index) => ({
       clientKey: item.id ? `error-${item.id}` : nextClientKey('error'),
       errorCode: item.errorCode ?? '',
       errorMessage: item.errorMessage ?? '',
@@ -243,30 +249,62 @@ const loadDocument = async (): Promise<void> => {
       solution: item.solution ?? '',
       sortOrder: item.sortOrder ?? index + 1,
     }));
-    baseline.value = JSON.stringify(buildSaveRequest(data.docStatus));
+    const loadedBaseline = JSON.stringify(buildSaveRequestFromModel(
+      data.docStatus,
+      loadedForm,
+      loadedRequestParams,
+      loadedResponseParams,
+      loadedErrorCodes,
+    ));
+
+    detail.value = data;
+    Object.assign(form, loadedForm);
+    requestParams.value = loadedRequestParams;
+    responseParams.value = loadedResponseParams;
+    responseFieldDeleteState.value = null;
+    responseFieldDeleteError.value = '';
+    errorCodes.value = loadedErrorCodes;
+    baseline.value = loadedBaseline;
+    return true;
   } catch (error) {
     detail.value = null;
     loadError.value = error instanceof Error ? error.message : '接口文档加载失败';
+    return false;
   } finally {
     loading.value = false;
   }
 };
 
-/** 构建文档聚合保存请求。 */
-const buildSaveRequest = (docStatus: InterfaceDocStatus): InterfaceDocSaveRequest => ({
+/** 根据指定编辑模型构建文档聚合保存请求。 */
+const buildSaveRequestFromModel = (
+  docStatus: InterfaceDocStatus,
+  mainForm: DocMainForm,
+  requestParamSnapshot: InterfaceDocParamSaveRequest[],
+  responseParamSnapshot: InterfaceDocParamSaveRequest[],
+  errorCodeSnapshot: EditableErrorCode[],
+): InterfaceDocSaveRequest => ({
   interfaceInfoId: interfaceInfoId.value,
   docStatus,
-  docVersion: form.docVersion,
-  requestContentType: form.requestContentType,
-  responseContentType: form.responseContentType,
-  successExample: form.successExample,
-  failExample: form.failExample,
-  remark: form.remark,
-  params: [...requestParams.value, ...responseParams.value].map(({ parentParamKey, ...param }) => (
+  docVersion: mainForm.docVersion,
+  requestContentType: mainForm.requestContentType,
+  responseContentType: mainForm.responseContentType,
+  successExample: mainForm.successExample,
+  failExample: mainForm.failExample,
+  remark: mainForm.remark,
+  params: [...requestParamSnapshot, ...responseParamSnapshot].map(({ parentParamKey, ...param }) => (
     parentParamKey ? { ...param, parentParamKey } : param
   )),
-  errorCodes: errorCodes.value.map(({ clientKey: _clientKey, ...errorCode }) => errorCode),
+  errorCodes: errorCodeSnapshot.map(({ clientKey: _clientKey, ...errorCode }) => errorCode),
 });
+
+/** 构建当前页面的文档聚合保存请求。 */
+const buildSaveRequest = (docStatus: InterfaceDocStatus): InterfaceDocSaveRequest => buildSaveRequestFromModel(
+  docStatus,
+  form,
+  requestParams.value,
+  responseParams.value,
+  errorCodes.value,
+);
 
 /** 校验表单中的必填字段。 */
 const validateForm = (targetStatus: InterfaceDocStatus): string => {
@@ -313,7 +351,11 @@ const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => 
   saveError.value = '';
   try {
     await interfaceService.saveDoc(buildSaveRequest(targetStatus));
-    await loadDocument();
+    const reloaded = await loadDocument();
+    if (!reloaded) {
+      loadError.value = '文档已保存，但重新加载后端数据失败，请重新加载';
+      return;
+    }
     emit('show-toast', targetStatus === 'READY' ? '文档维护已完成' : '草稿已保存', 'success');
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : '接口文档保存失败';
