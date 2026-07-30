@@ -160,23 +160,26 @@ export const validateResponseFieldTree = (
   }
 
   const childrenMap = buildChildrenMap(fields);
-  const scalarParent = fields.find((field) => (
+  const scalarParentDetails = fields.filter((field) => (
     (childrenMap.get(field.paramKey)?.length ?? 0) > 0 && !isResponseFieldContainer(field.type)
-  ));
-  if (scalarParent) {
+  )).map((field) => `${fieldLabel(field)}(${field.type})`);
+  if (scalarParentDetails.length) {
     return {
       valid: false,
-      message: `响应字段 ${fieldLabel(scalarParent)} 的类型 ${scalarParent.type} 不能拥有子字段`,
+      message: `以下响应字段不是容器类型，不能拥有子字段：${scalarParentDetails.join('、')}`,
     };
   }
 
-  const siblingNames = new Set<string>();
+  const siblingNamesByParent = new Map<string | undefined, Set<string>>();
   for (const field of fields) {
     const normalizedName = field.name.trim();
     if (!normalizedName) continue;
-    const siblingKey = `${field.parentParamKey ?? ''}:${normalizedName}`;
-    if (siblingNames.has(siblingKey)) return { valid: false, message: '同级响应字段名称不能重复' };
-    siblingNames.add(siblingKey);
+    // 父级键单独作为映射键，字段名中的任意字符都不会改变同级作用域。
+    const parentKey = field.parentParamKey || undefined;
+    const siblingNames = siblingNamesByParent.get(parentKey) ?? new Set<string>();
+    if (siblingNames.has(normalizedName)) return { valid: false, message: '同级响应字段名称不能重复' };
+    siblingNames.add(normalizedName);
+    siblingNamesByParent.set(parentKey, siblingNames);
   }
 
   for (const field of fields) {
