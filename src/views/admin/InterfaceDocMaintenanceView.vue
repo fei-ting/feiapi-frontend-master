@@ -30,6 +30,7 @@
         <ResponseParamEditor
           :params="responseParams"
           :param-types="paramTypes"
+          :request-param-count="requestParams.length"
           @add="addResponseParam"
           @remove="removeResponseParam"
           @update-param="updateResponseParam"
@@ -58,7 +59,10 @@
       </fieldset>
 
       <div class="fei-doc-editor__bottom-actions">
-        <span v-if="saveError" class="fei-form-error" role="alert">{{ saveError }}</span>
+        <div>
+          <span v-if="saveError" class="fei-form-error" role="alert">{{ saveError }}</span>
+          <BoundaryRemaining :current="aggregatePayloadBytes" :max="INTERFACE_DOC_LIMITS.aggregateSaveBodyBytes" unit="字节" />
+        </div>
         <div class="fei-doc-editor__actions">
           <button class="fei-btn fei-btn--secondary" type="button" :disabled="!canSaveDraft" @click="saveDocument('DRAFT')">
             {{ saving ? '保存中...' : '保存草稿' }}
@@ -76,6 +80,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 import DocumentMainInfoForm from '@/components/admin/doc/DocumentMainInfoForm.vue';
+import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
 import ErrorCodeEditor from '@/components/admin/doc/ErrorCodeEditor.vue';
 import InterfaceDocSummary from '@/components/admin/doc/InterfaceDocSummary.vue';
 import JsonExampleEditor from '@/components/admin/doc/JsonExampleEditor.vue';
@@ -83,6 +88,7 @@ import RequestParamDescriptionList from '@/components/admin/doc/RequestParamDesc
 import ResponseFieldDeleteDialog from '@/components/admin/doc/ResponseFieldDeleteDialog.vue';
 import ResponseParamEditor from '@/components/admin/doc/ResponseParamEditor.vue';
 import SystemRequestHeaderSummary from '@/components/admin/doc/SystemRequestHeaderSummary.vue';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 import { interfaceService } from '@/services/interfaceInfo';
 import type {
   InterfaceDocDetailVO,
@@ -109,6 +115,7 @@ import {
   promoteResponseFieldChildren,
   validateResponseFieldTree,
 } from '@/utils/responseFieldTree';
+import { jsonPayloadByteLength, unicodeCodePointLength, utf8ByteLength } from '@/utils/textSize';
 const route = useRoute();
 const router = useRouter();
 const emit = defineEmits<{
@@ -169,6 +176,8 @@ const interfaceInfoId = computed(() => Number(route.params.id));
 const editable = computed(() => detail.value?.interfaceInfo.status === 0);
 /** 当前编辑状态序列化快照。 */
 const currentSnapshot = computed(() => JSON.stringify(buildSaveRequest(detail.value?.docStatus ?? 'DRAFT')));
+/** 当前聚合保存载荷的 UTF-8 字节数。 */
+const aggregatePayloadBytes = computed(() => utf8ByteLength(currentSnapshot.value));
 /** 当前页面是否存在未保存修改。 */
 const dirty = computed(() => Boolean(detail.value) && currentSnapshot.value !== baseline.value);
 /** 当前页面是否允许保存。 */
@@ -306,8 +315,39 @@ const buildSaveRequest = (docStatus: InterfaceDocStatus): InterfaceDocSaveReques
   errorCodes.value,
 );
 
-/** 校验表单中的必填字段。 */
+/** 校验单个文档参数的普通文本边界。 */
+const validateParamBoundaries = (param: InterfaceDocParamSaveRequest): string => {
+  if (unicodeCodePointLength(param.name) > INTERFACE_DOC_LIMITS.paramNameLength) return '参数名称长度不能超过 128 个字符';
+  if (unicodeCodePointLength(param.defaultValue) > INTERFACE_DOC_LIMITS.defaultValueLength) return '参数默认值长度不能超过 512 个字符';
+  if (unicodeCodePointLength(param.exampleValue) > INTERFACE_DOC_LIMITS.exampleValueLength) return '参数示例值长度不能超过 1024 个字符';
+  if (unicodeCodePointLength(param.description) > INTERFACE_DOC_LIMITS.descriptionLength) return '参数说明长度不能超过 512 个字符';
+  if (unicodeCodePointLength(param.validationRule) > INTERFACE_DOC_LIMITS.descriptionLength) return '校验规则长度不能超过 512 个字符';
+  return '';
+};
+
+/** 校验表单中的数量、文本、字节和必填字段。 */
 const validateForm = (targetStatus: InterfaceDocStatus): string => {
+  if (requestParams.value.length > INTERFACE_DOC_LIMITS.requestParamCount) return '请求参数数量不能超过 100';
+  if (responseParams.value.length > INTERFACE_DOC_LIMITS.responseParamCount) return '响应字段数量不能超过 200';
+  if (requestParams.value.length + responseParams.value.length > INTERFACE_DOC_LIMITS.totalParamCount) {
+    return '请求参数与响应字段合计数量不能超过 200';
+  }
+  if (errorCodes.value.length > INTERFACE_DOC_LIMITS.errorCodeCount) return '错误码数量不能超过 100';
+  if (unicodeCodePointLength(form.remark) > INTERFACE_DOC_LIMITS.descriptionLength) return '文档备注长度不能超过 512 个字符';
+  if (utf8ByteLength(form.successExample) > INTERFACE_DOC_LIMITS.jsonExampleBytes) return '成功响应示例不能超过 65535 个 UTF-8 字节';
+  if (utf8ByteLength(form.failExample) > INTERFACE_DOC_LIMITS.jsonExampleBytes) return '失败响应示例不能超过 65535 个 UTF-8 字节';
+  const invalidParamBoundary = [...requestParams.value, ...responseParams.value]
+    .map(validateParamBoundaries)
+    .find(Boolean);
+  if (invalidParamBoundary) return invalidParamBoundary;
+  const invalidErrorCodeBoundary = errorCodes.value.map((item) => {
+    if (unicodeCodePointLength(item.errorCode) > INTERFACE_DOC_LIMITS.errorCodeLength) return '错误码长度不能超过 64 个字符';
+    if (unicodeCodePointLength(item.errorMessage) > INTERFACE_DOC_LIMITS.errorMessageLength) return '错误信息长度不能超过 256 个字符';
+    if (unicodeCodePointLength(item.description) > INTERFACE_DOC_LIMITS.descriptionLength) return '错误说明长度不能超过 512 个字符';
+    if (unicodeCodePointLength(item.solution) > INTERFACE_DOC_LIMITS.descriptionLength) return '解决建议长度不能超过 512 个字符';
+    return '';
+  }).find(Boolean);
+  if (invalidErrorCodeBoundary) return invalidErrorCodeBoundary;
   if (!form.docVersion || !form.requestContentType || !form.responseContentType) return '文档版本和内容格式不能为空';
   if (responseParams.value.some((param) => !param.name || !param.type)) return '响应字段名称和类型不能为空';
   const responseTreeValidation = validateResponseFieldTree(responseParams.value);
@@ -326,6 +366,9 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
     }
   });
   if (invalidJsonField) return `${invalidJsonField[0]}不是合法 JSON`;
+  if (jsonPayloadByteLength(buildSaveRequest(targetStatus)) > INTERFACE_DOC_LIMITS.aggregateSaveBodyBytes) {
+    return '接口文档保存请求体不能超过 1048576 字节';
+  }
   if (targetStatus === 'DRAFT') return '';
   if (requestParams.value.some((param) => {
     const description = param.description?.trim() ?? '';
@@ -413,6 +456,14 @@ const updateErrorCode = (clientKey: string, field: ErrorCodeEditableField, value
 
 /** 新增响应字段。 */
 const addResponseParam = (): void => {
+  if (responseParams.value.length >= INTERFACE_DOC_LIMITS.responseParamCount) {
+    saveError.value = '响应字段数量不能超过 200';
+    return;
+  }
+  if (requestParams.value.length + responseParams.value.length >= INTERFACE_DOC_LIMITS.totalParamCount) {
+    saveError.value = '请求参数与响应字段合计数量不能超过 200';
+    return;
+  }
   responseParams.value.push({
     paramKey: nextClientKey('response'),
     paramScene: 'RESPONSE',
@@ -484,6 +535,10 @@ const cancelResponseFieldDelete = (): void => {
 
 /** 新增接口错误码。 */
 const addErrorCode = (): void => {
+  if (errorCodes.value.length >= INTERFACE_DOC_LIMITS.errorCodeCount) {
+    saveError.value = '错误码数量不能超过 100';
+    return;
+  }
   errorCodes.value.push({
     clientKey: nextClientKey('error'),
     errorCode: '',

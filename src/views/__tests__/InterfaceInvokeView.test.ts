@@ -153,7 +153,6 @@ describe('InterfaceInvokeView', () => {
     await wrapper.get('#invoke-param-meta').setValue('{错误 JSON');
 
     await clickButton(wrapper, '发送请求');
-    await clickButton(wrapper, '确认调用');
 
     expect(mocks.invoke).not.toHaveBeenCalled();
     expect(wrapper.text()).toContain('请求参数字段类型错误：meta 应为 object');

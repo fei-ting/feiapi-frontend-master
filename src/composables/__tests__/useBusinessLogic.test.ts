@@ -131,4 +131,22 @@ describe('页面业务组合式函数', () => {
     expect(invoke.requestParamError.value).toContain('age');
   });
 
+  it('按最终序列化正文校验在线调用 UTF-8 字节上限', () => {
+    const doc = ref<InterfaceDocDetailVO | null>(buildDoc());
+    const invoke = useInterfaceInvoke(doc);
+    invoke.syncFromDocument();
+    invoke.structuredParams.value = [{ name: 'payload', type: 'string', example: '', required: true }];
+
+    invoke.paramValues.payload = 'a'.repeat(65_521);
+    expect(invoke.syncRequestParamsFromFields()).toBe('');
+    expect(invoke.requestParamBytes.value).toBe(65_535);
+    expect(invoke.validateRequestParams()).toBe(true);
+
+    invoke.paramValues.payload = 'a'.repeat(65_522);
+    expect(invoke.syncRequestParamsFromFields()).toBe('');
+    expect(invoke.requestParamBytes.value).toBe(65_536);
+    expect(invoke.validateRequestParams()).toBe(false);
+    expect(invoke.requestParamError.value).toBe('请求参数不能超过 65535 个 UTF-8 字节');
+  });
+
 });

@@ -1,5 +1,7 @@
-import { reactive, ref, type Ref } from 'vue';
+import { computed, reactive, ref, type Ref } from 'vue';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
+import { utf8ByteLength } from '@/utils/textSize';
 
 /** 在线调用支持的参数值类型 */
 export type RequestParamValue = string | number | boolean | Record<string, unknown> | unknown[];
@@ -25,6 +27,10 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
   const requestParamError = ref('');
   const structuredParams = ref<RequestParamField[]>([]);
   const paramValues = reactive<Record<string, string>>({});
+  /** 当前最终在线调用参数的 UTF-8 字节数。 */
+  const requestParamBytes = computed(() => utf8ByteLength(requestParams.value));
+  /** 当前最终在线调用参数是否超过网关签名正文上限。 */
+  const requestParamOverLimit = computed(() => requestParamBytes.value > INTERFACE_DOC_LIMITS.invokeBodyBytes);
 
   /** 解析接口文档中的结构化参数 */
   const parseStructuredParams = (doc: InterfaceDocDetailVO | null): RequestParamField[] => {
@@ -102,6 +108,10 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
     }
     const content = requestParams.value.trim();
     if (!content) return true;
+    if (requestParamOverLimit.value) {
+      requestParamError.value = '请求参数不能超过 65535 个 UTF-8 字节';
+      return false;
+    }
     try {
       JSON.parse(content);
       return true;
@@ -140,6 +150,8 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
   return {
     requestParams,
     requestParamError,
+    requestParamBytes,
+    requestParamOverLimit,
     structuredParams,
     paramValues,
     parseStructuredParams,

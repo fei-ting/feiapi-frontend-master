@@ -17,6 +17,9 @@ const mountForm = (overrides: Record<string, unknown> = {}) => mount(RequestPara
     invokeLoading: false,
     canFillExample: true,
     emptyParamText: '此接口无需请求参数',
+    requestParamBytes: 25,
+    requestParamOverLimit: false,
+    requestParamError: '',
     ...overrides,
   },
 });
@@ -64,5 +67,17 @@ describe('RequestParameterForm', () => {
     expect(wrapper.findAll('button')).toHaveLength(1);
     expect(wrapper.get('button').attributes()).toHaveProperty('disabled');
     expect(wrapper.get('button').text()).toBe('调用中...');
+  });
+
+  it('展示请求体剩余字节并在超限时禁用发送', () => {
+    const wrapper = mountForm({
+      requestParamBytes: 65_536,
+      requestParamOverLimit: true,
+      requestParamError: '请求参数不能超过 65535 个 UTF-8 字节',
+    });
+
+    expect(wrapper.text()).toContain('超过 1 字节');
+    expect(wrapper.text()).toContain('请求参数不能超过 65535 个 UTF-8 字节');
+    expect(wrapper.findAll('button')[0].attributes()).toHaveProperty('disabled');
   });
 });

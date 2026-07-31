@@ -41,6 +41,9 @@
             :invoke-loading="invokeLoading"
             :can-fill-example="canFillExample"
             :empty-param-text="emptyParamText"
+            :request-param-bytes="requestParamBytes"
+            :request-param-over-limit="requestParamOverLimit"
+            :request-param-error="requestParamError"
             @update-param="updateParamValue"
             @invoke="handleInvokeClick"
             @fill-example="fillExample"
@@ -118,9 +121,12 @@ const docDetail = ref<InterfaceDocDetailVO | null>(null);
 const {
   requestParams,
   requestParamError,
+  requestParamBytes,
+  requestParamOverLimit,
   structuredParams,
   paramValues,
   validateRequestParams,
+  syncRequestParamsFromFields,
   fillStructuredExample,
   syncFromDocument,
 } = useInterfaceInvoke(docDetail);
@@ -237,6 +243,11 @@ const closeDialog = (): void => {
 
 /** 根据登录状态处理发送请求操作。 */
 const handleInvokeClick = (): void => {
+  if (!validateRequestParams()) {
+    const message = requestParamError.value || '请求参数必须是合法 JSON';
+    showToast(message, 'error');
+    return;
+  }
   if (!userStore.loginUser) {
     openLoginDialog();
     return;
@@ -301,6 +312,7 @@ const fillExample = (): void => {
  */
 const updateParamValue = (name: string, value: string): void => {
   paramValues[name] = value;
+  requestParamError.value = syncRequestParamsFromFields();
 };
 
 /** 复制当前调用结果。 */
