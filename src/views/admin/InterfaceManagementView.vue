@@ -317,14 +317,17 @@ const openDeleteModal = async (item: InterfaceInfoVO) => {
     showToast('请先下线接口后再删除', 'info');
     return;
   }
-  if (!window.confirm(`确定删除接口“${item.name}”吗？此操作不可撤销。`)) return;
+  const method = item.method || '-';
+  const path = item.path || '-';
+  if (!window.confirm(`确定删除接口“${item.name}”吗？\n请求方法：${method}\n网关路径：${path}\n删除后不可恢复。`)) return;
   try {
     await interfaceService.delete({ id: item.id });
     showToast('接口已删除', 'success');
-    await loadInterfaces();
   } catch (error) {
     console.error('[InterfaceManagementView] 删除接口失败:', error);
     showToast(error instanceof Error ? error.message : '删除失败', 'error');
+  } finally {
+    await loadInterfaces();
   }
 };
 
