@@ -2,7 +2,7 @@
   <section class="fei-doc-section">
     <div class="fei-doc-section__heading">
       <div><span>03</span><h2>请求参数说明</h2></div>
-      <p>名称、位置、类型和必填性来自运行时模板，仅维护说明性内容</p>
+      <p>当前 {{ params.length }}/{{ INTERFACE_DOC_LIMITS.requestParamCount }}，名称、位置、类型和必填性来自运行时模板</p>
     </div>
     <div v-if="!params.length" class="fei-doc-empty">当前接口没有运行时请求参数</div>
     <div v-else class="fei-doc-param-list">
@@ -11,10 +11,10 @@
           <strong>{{ param.name }}</strong>
           <span>{{ param.paramScene }} · {{ param.type }} · {{ param.required ? '必填' : '选填' }}</span>
         </div>
-        <label class="fei-field"><span class="fei-label">说明</span><input class="fei-input" :value="param.description" maxlength="512" @input="updateText(param.paramKey, 'description', $event, true)" /></label>
-        <label class="fei-field"><span class="fei-label">示例值</span><input class="fei-input" :value="param.exampleValue" maxlength="1024" @input="updateText(param.paramKey, 'exampleValue', $event)" /></label>
-        <label class="fei-field"><span class="fei-label">默认值</span><input class="fei-input" :value="param.defaultValue" maxlength="512" @input="updateText(param.paramKey, 'defaultValue', $event)" /></label>
-        <label class="fei-field"><span class="fei-label">校验规则</span><input class="fei-input" :value="param.validationRule" maxlength="512" @input="updateText(param.paramKey, 'validationRule', $event, true)" /></label>
+        <label class="fei-field"><span class="fei-label">说明</span><input class="fei-input" :value="param.description" @input="updateText(param.paramKey, 'description', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.description)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></label>
+        <label class="fei-field"><span class="fei-label">示例值</span><input class="fei-input" :value="param.exampleValue" @input="updateText(param.paramKey, 'exampleValue', $event)" /><BoundaryRemaining :current="unicodeCodePointLength(param.exampleValue)" :max="INTERFACE_DOC_LIMITS.exampleValueLength" unit="字符" /></label>
+        <label class="fei-field"><span class="fei-label">默认值</span><input class="fei-input" :value="param.defaultValue" @input="updateText(param.paramKey, 'defaultValue', $event)" /><BoundaryRemaining :current="unicodeCodePointLength(param.defaultValue)" :max="INTERFACE_DOC_LIMITS.defaultValueLength" unit="字符" /></label>
+        <label class="fei-field"><span class="fei-label">校验规则</span><input class="fei-input" :value="param.validationRule" @input="updateText(param.paramKey, 'validationRule', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.validationRule)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></label>
         <label class="fei-field fei-field--sort"><span class="fei-label">排序</span><input class="fei-input" type="number" :value="param.sortOrder" @input="updateSort(param.paramKey, $event)" /></label>
       </article>
     </div>
@@ -22,8 +22,11 @@
 </template>
 
 <script setup lang="ts">
+import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 import type { InterfaceDocParamSaveRequest } from '@/types/interfaceDoc';
 import type { RequestParamEditableField } from '@/types/interfaceDocEditor';
+import { unicodeCodePointLength } from '@/utils/textSize';
 
 /** 请求参数说明组件属性。 */
 interface RequestParamDescriptionListProps {

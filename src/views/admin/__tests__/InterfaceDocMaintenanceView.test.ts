@@ -94,6 +94,63 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.get('fieldset').attributes()).not.toHaveProperty('disabled');
   });
 
+  it('达到集合上限时禁用新增且聚合载荷超限时不发送保存请求', async () => {
+    const detail = buildDetail();
+    const maxExample = '😀'.repeat(1024);
+    const maxDescription = '😀'.repeat(512);
+    detail.requestParams = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      name: `request${index}`,
+      paramScene: 'BODY' as const,
+      type: 'string',
+      required: false,
+      defaultValue: maxDescription,
+      exampleValue: maxExample,
+      description: maxDescription,
+      validationRule: maxDescription,
+      sortOrder: index + 1,
+    }));
+    detail.responseParams = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1001,
+      name: `response${index}`,
+      paramScene: 'RESPONSE' as const,
+      type: 'string',
+      required: false,
+      nullable: true,
+      defaultValue: maxDescription,
+      exampleValue: maxExample,
+      description: maxDescription,
+      validationRule: maxDescription,
+      sortOrder: index + 1,
+    }));
+    detail.errorCodes = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      errorCode: `E${index}`,
+      errorMessage: '错误信息',
+      sortOrder: index + 1,
+    }));
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+    const errorSection = sectionByTitle(wrapper, '接口错误码');
+    const responseAddButton = responseSection.findAll('button')[0];
+    const errorAddButton = errorSection.findAll('button')[0];
+
+    expect(responseAddButton.attributes('title')).toBe('请求参数与响应字段合计数量已达到 200');
+    expect(responseAddButton.attributes()).toHaveProperty('disabled');
+    expect(errorAddButton.attributes()).toHaveProperty('disabled');
+
+    const completeButton = wrapper.findAll('button').find((button) => button.text() === '完成维护');
+    await completeButton?.trigger('click');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('接口文档保存请求体不能超过 1048576 字节');
+
+    await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    await errorSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    expect(responseAddButton.attributes()).not.toHaveProperty('disabled');
+    expect(errorAddButton.attributes()).not.toHaveProperty('disabled');
+  });
+
   it('请求格式变化时更新只读Header且保存载荷不提交Header参数', async () => {
     const wrapper = await mountView();
     const mainSection = sectionByTitle(wrapper, '文档主信息');

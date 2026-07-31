@@ -23,14 +23,14 @@ const params = [
 
 describe('ResponseParamEditor', () => {
   it('空列表展示空状态并支持新增', async () => {
-    const wrapper = mount(ResponseParamEditor, { props: { params: [], paramTypes: ['string'] } });
+    const wrapper = mount(ResponseParamEditor, { props: { params: [], paramTypes: ['string'], requestParamCount: 0 } });
     expect(wrapper.text()).toContain('暂未维护响应字段');
     await wrapper.get('button').trigger('click');
     expect(wrapper.emitted('add')).toHaveLength(1);
   });
 
   it('删除事件携带稳定键且父字段排除自身、后代和标量字段', async () => {
-    const wrapper = mount(ResponseParamEditor, { props: { params, paramTypes: ['string', 'object'] } });
+    const wrapper = mount(ResponseParamEditor, { props: { params, paramTypes: ['string', 'object'], requestParamCount: 0 } });
     const parentOptions = wrapper.findAll('select')[1].findAll('option').map((option) => option.text());
     expect(parentOptions).toEqual(['根节点', 'meta']);
 
@@ -39,7 +39,7 @@ describe('ResponseParamEditor', () => {
   });
 
   it('发送文本、选择、数字、布尔和说明字段更新', async () => {
-    const wrapper = mount(ResponseParamEditor, { props: { params: [params[0]], paramTypes: ['string', 'object'] } });
+    const wrapper = mount(ResponseParamEditor, { props: { params: [params[0]], paramTypes: ['string', 'object'], requestParamCount: 0 } });
     const inputs = wrapper.findAll('input');
     const selects = wrapper.findAll('select');
 
@@ -66,5 +66,17 @@ describe('ResponseParamEditor', () => {
       ['response-1', 'defaultValue', 'default'],
       ['response-1', 'validationRule', '非空'],
     ]);
+  });
+
+  it('参数合计达到上限时禁用新增字段', async () => {
+    const wrapper = mount(ResponseParamEditor, {
+      props: { params: [], paramTypes: ['string'], requestParamCount: 200 },
+    });
+
+    const addButton = wrapper.get('button');
+    expect(addButton.attributes()).toHaveProperty('disabled');
+    expect(addButton.attributes('title')).toBe('请求参数与响应字段合计数量已达到 200');
+    await addButton.trigger('click');
+    expect(wrapper.emitted('add')).toBeUndefined();
   });
 });

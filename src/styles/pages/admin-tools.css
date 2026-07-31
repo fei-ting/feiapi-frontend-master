@@ -93,6 +93,8 @@
 .fei-doc-section__heading > div > span { color: var(--fei-primary); font-size: 12px; font-weight: 900; letter-spacing: .1em; }
 .fei-doc-section__heading h2 { margin: 0; font-size: 18px; }
 .fei-doc-section__heading p { margin: 2px 0 0; color: var(--fei-text-muted); font-size: 12px; text-align: right; }
+.fei-doc-boundary-action { display: flex; align-items: center; gap: 12px; }
+.fei-doc-boundary-action p { margin: 0; color: var(--fei-text-muted); font-size: 12px; white-space: nowrap; }
 .fei-doc-param-list,
 .fei-doc-record-list { display: grid; gap: 10px; }
 .fei-doc-param-row { display: grid; grid-template-columns: minmax(160px, 1.1fr) repeat(4, minmax(120px, 1fr)) minmax(72px, .4fr); gap: 10px; align-items: end; padding: 13px; border: 1px solid var(--fei-border); border-radius: 10px; background: #fbfcfe; }
@@ -127,6 +129,7 @@
   .fei-doc-param-row__identity { grid-column: 1 / -1; }
   .fei-doc-section__heading { flex-direction: column; }
   .fei-doc-section__heading p { text-align: left; }
+  .fei-doc-boundary-action { width: 100%; justify-content: space-between; }
   .fei-doc-editor__topbar { align-items: flex-start; }
 }
 

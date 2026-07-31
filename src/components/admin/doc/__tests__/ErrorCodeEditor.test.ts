@@ -40,4 +40,17 @@ describe('ErrorCodeEditor', () => {
       ['error-1', 'solution', '重试'],
     ]);
   });
+
+  it('错误码达到上限时禁用新增', async () => {
+    const fullErrorCodes = Array.from({ length: 100 }, (_, index) => ({
+      ...errorCodes[0],
+      clientKey: `error-${index}`,
+    }));
+    const wrapper = mount(ErrorCodeEditor, { props: { errorCodes: fullErrorCodes } });
+    const addButton = wrapper.findAll('button')[0];
+
+    expect(addButton.attributes()).toHaveProperty('disabled');
+    await addButton.trigger('click');
+    expect(wrapper.emitted('add')).toBeUndefined();
+  });
 });

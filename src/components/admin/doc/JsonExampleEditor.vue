@@ -8,17 +8,22 @@
       <div class="fei-field">
         <span class="fei-label-row"><label class="fei-label" for="success-response-example">成功响应示例</label><button type="button" aria-label="格式化成功响应示例" @click="requestFormat('successExample')">格式化</button></span>
         <textarea id="success-response-example" class="fei-textarea fei-code-input" spellcheck="false" :value="successExample" @input="updateExample('successExample', $event)"></textarea>
+        <BoundaryRemaining :current="utf8ByteLength(successExample)" :max="INTERFACE_DOC_LIMITS.jsonExampleBytes" unit="字节" />
       </div>
       <div class="fei-field">
         <span class="fei-label-row"><label class="fei-label" for="fail-response-example">失败响应示例</label><button type="button" aria-label="格式化失败响应示例" @click="requestFormat('failExample')">格式化</button></span>
         <textarea id="fail-response-example" class="fei-textarea fei-code-input" spellcheck="false" :value="failExample" @input="updateExample('failExample', $event)"></textarea>
+        <BoundaryRemaining :current="utf8ByteLength(failExample)" :max="INTERFACE_DOC_LIMITS.jsonExampleBytes" unit="字节" />
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 import type { JsonExampleField } from '@/types/interfaceDocEditor';
+import { utf8ByteLength } from '@/utils/textSize';
 
 /** JSON 示例编辑器属性。 */
 interface JsonExampleEditorProps {

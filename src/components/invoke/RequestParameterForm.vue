@@ -34,10 +34,12 @@
     </div>
 
     <div v-else class="fei-doc-empty">{{ emptyParamText }}</div>
+    <BoundaryRemaining :current="requestParamBytes" :max="INTERFACE_DOC_LIMITS.invokeBodyBytes" unit="字节" />
+    <p v-if="requestParamError" class="fei-form-error" role="alert">{{ requestParamError }}</p>
   </section>
 
   <div class="fei-toolbar fei-invoke-toolbar">
-    <button class="fei-btn fei-btn--primary" type="button" :disabled="invokeLoading" @click="requestInvoke">
+    <button class="fei-btn fei-btn--primary" type="button" :disabled="invokeLoading || requestParamOverLimit" @click="requestInvoke">
       {{ invokeLoading ? '调用中...' : '发送请求' }}
     </button>
     <button
@@ -52,7 +54,9 @@
 </template>
 
 <script setup lang="ts">
+import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
 import type { RequestParamField } from '@/composables/useInterfaceInvoke';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 
 /** 请求参数表单组件属性。 */
 interface RequestParameterFormProps {
@@ -66,6 +70,12 @@ interface RequestParameterFormProps {
   canFillExample: boolean;
   /** 没有结构化参数时的提示文本。 */
   emptyParamText: string;
+  /** 最终序列化请求参数的 UTF-8 字节数。 */
+  requestParamBytes: number;
+  /** 最终序列化请求参数是否超限。 */
+  requestParamOverLimit: boolean;
+  /** 当前请求参数校验错误。 */
+  requestParamError: string;
 }
 
 /** 请求参数表单组件事件。 */
@@ -78,7 +88,7 @@ interface RequestParameterFormEmits {
   (event: 'fill-example'): void;
 }
 
-defineProps<RequestParameterFormProps>();
+const props = defineProps<RequestParameterFormProps>();
 const emit = defineEmits<RequestParameterFormEmits>();
 
 /**
@@ -93,7 +103,7 @@ const updateParam = (name: string, event: Event): void => {
 
 /** 请求父页面发起调用。 */
 const requestInvoke = (): void => {
-  emit('invoke');
+  if (!props.requestParamOverLimit) emit('invoke');
 };
 
 /** 请求父页面填充示例。 */
