@@ -29,6 +29,7 @@ const buildInterface = (docStatus: 'DRAFT' | 'READY'): InterfaceInfoVO => ({
   id: 1,
   name: '用户接口',
   url: 'http://localhost/api/user',
+  path: '/api/user',
   status: 0,
   method: 'POST',
   quotaType: 'BASIC_QUOTA',
@@ -81,5 +82,45 @@ describe('InterfaceManagementView', () => {
 
     expect(mocks.online).toHaveBeenCalledWith({ id: 1 });
     expect(wrapper.emitted('show-toast')).toContainEqual(['发布探测失败', 'error']);
+  });
+
+  it('删除确认展示接口名称、请求方法、路径和不可恢复提示', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const wrapper = await mountView('READY');
+    const deleteButton = wrapper.findAll('button').find((button) => button.text() === '删除');
+
+    await deleteButton?.trigger('click');
+    await flushPromises();
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      '确定删除接口“用户接口”吗？\n请求方法：POST\n网关路径：/api/user\n删除后不可恢复。',
+    );
+    expect(mocks.deleteInterface).toHaveBeenCalledWith({ id: 1 });
+    confirmSpy.mockRestore();
+  });
+
+  it('取消删除确认时不发送删除请求', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const wrapper = await mountView('READY');
+    const deleteButton = wrapper.findAll('button').find((button) => button.text() === '删除');
+
+    await deleteButton?.trigger('click');
+
+    expect(mocks.deleteInterface).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it('删除失败时展示服务端错误并重新加载权威列表', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mocks.deleteInterface.mockRejectedValue(new Error('接口不存在'));
+    const wrapper = await mountView('READY');
+    const deleteButton = wrapper.findAll('button').find((button) => button.text() === '删除');
+
+    await deleteButton?.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.emitted('show-toast')).toContainEqual(['接口不存在', 'error']);
+    expect(mocks.listPage).toHaveBeenCalledTimes(2);
+    confirmSpy.mockRestore();
   });
 });
