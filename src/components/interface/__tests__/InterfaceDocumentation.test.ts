@@ -136,4 +136,46 @@ describe('InterfaceDocumentation', () => {
     expect(wrapper.text()).toContain('暂无失败 JSON 示例');
     expect(wrapper.get('button[title="复制失败示例"]').attributes()).toHaveProperty('disabled');
   });
+
+  it('恶意标签和事件属性按纯文本渲染', () => {
+    const wrapper = mount(InterfaceDocumentation, {
+      props: {
+        mode: 'detail',
+        docDetail: buildDocDetail({
+          doc: {
+            successExample: '{"html":"<script>alert(1)</script>","image":"<img src=x onerror=alert(1)>"}',
+            failExample: '',
+          },
+          requestParams: [{
+            id: 2,
+            name: '<script>alert(1)</script>',
+            type: 'string',
+            required: true,
+            paramScene: 'BODY',
+            description: '<img src=x onerror=alert(1)>',
+          }],
+          responseParams: [{
+            id: 3,
+            name: '<img src=x onerror=alert(1)>',
+            type: 'string',
+            nullable: true,
+            description: '<script>alert(1)</script>',
+          }],
+          errorCodes: [{
+            id: 1,
+            errorCode: '<script>alert(1)</script>',
+            errorMessage: '<img src=x onerror=alert(1)>',
+            description: '<script>alert(2)</script>',
+            solution: '<img src=x onerror=alert(2)>',
+          }],
+        }),
+      },
+    });
+
+    expect(wrapper.text()).toContain('<script>alert(1)</script>');
+    expect(wrapper.text()).toContain('<img src=x onerror=alert(1)>');
+    expect(wrapper.find('script').exists()).toBe(false);
+    expect(wrapper.find('img').exists()).toBe(false);
+    expect(wrapper.html()).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+  });
 });

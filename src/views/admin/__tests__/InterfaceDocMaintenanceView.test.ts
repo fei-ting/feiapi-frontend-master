@@ -378,14 +378,93 @@ describe('InterfaceDocMaintenanceView', () => {
     const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
     const textareas = jsonSection.findAll('textarea');
 
-    await textareas[0].setValue('{"data":1}');
+    await textareas[0].setValue('{"data":9007199254740993}');
     await jsonSection.findAll('button')[0].trigger('click');
-    expect((textareas[0].element as HTMLTextAreaElement).value).toContain('\n  "data": 1\n');
+    expect((textareas[0].element as HTMLTextAreaElement).value)
+      .toContain('\n  "data": 9007199254740993\n');
 
     await textareas[1].setValue('{bad json');
     await jsonSection.findAll('button')[1].trigger('click');
     expect((textareas[1].element as HTMLTextAreaElement).value).toBe('{bad json');
     expect(wrapper.text()).toContain('失败响应示例不是合法 JSON');
+  });
+
+  it('保存前拒绝大小写不同或首尾空白不同的重复错误码', async () => {
+    const detail = buildDetail();
+    detail.errorCodes = [
+      { id: 1, errorCode: 'A001', errorMessage: '参数错误', sortOrder: 1 },
+      { id: 2, errorCode: 'a001', errorMessage: '参数错误二', sortOrder: 2 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    await wrapper.findAll('button').find((button) => button.text() === '完成维护')?.trigger('click');
+
+    expect(wrapper.text()).toContain('同一接口的错误码不能重复');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+    expect((sectionByTitle(wrapper, '接口错误码').findAll('input')[0].element as HTMLInputElement).value).toBe('A001');
+    expect((sectionByTitle(wrapper, '接口错误码').findAll('input')[5].element as HTMLInputElement).value).toBe('a001');
+  });
+
+  it('保存时自动格式化非空JSON并按最终请求提交', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const textareas = jsonSection.findAll('textarea');
+
+    await textareas[0].setValue('{"data":{"name":"alice"}}');
+    await textareas[1].setValue('{"error":{"code":"A001"}}');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).toBe('{\n  "data": {\n    "name": "alice"\n  }\n}');
+    expect(mocks.saveDoc.mock.calls[0][0].failExample).toBe('{\n  "error": {\n    "code": "A001"\n  }\n}');
+    expect((textareas[0].element as HTMLTextAreaElement).value).toContain('\n    "name": "alice"\n');
+  });
+
+  it('保存时格式化 JSON 不损坏大整数原文', async () => {
+    const wrapper = await mountView();
+    const textareas = sectionByTitle(wrapper, 'JSON 示例').findAll('textarea');
+
+    await textareas[0].setValue('{"id":9007199254740993,"orderNo":9223372036854775807}');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).toContain('9007199254740993');
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).toContain('9223372036854775807');
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).not.toContain('9007199254740992');
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).not.toContain('9223372036854776000');
+  });
+
+  it('保存时非法JSON保留原值且不发送请求', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const successExample = jsonSection.findAll('textarea')[0];
+    const failExample = jsonSection.findAll('textarea')[1];
+
+    await successExample.setValue('{"id":9007199254740993}');
+    await failExample.setValue('{bad json');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect((successExample.element as HTMLTextAreaElement).value).toBe('{"id":9007199254740993}');
+    expect((failExample.element as HTMLTextAreaElement).value).toBe('{bad json');
+    expect(wrapper.text()).toContain('失败响应示例不是合法 JSON');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
+  it('保存前按格式化后的JSON示例字节数拦截超限请求', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const successExample = jsonSection.findAll('textarea')[0];
+    const compactJson = `[${Array.from({ length: 15000 }, () => '0').join(',')}]`;
+
+    await successExample.setValue(compactJson);
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('成功响应示例不能超过 65535 个 UTF-8 字节');
+    expect((successExample.element as HTMLTextAreaElement).value).toContain('\n  0,');
   });
 
   it('依次拦截主信息、响应字段和错误码必填错误', async () => {
