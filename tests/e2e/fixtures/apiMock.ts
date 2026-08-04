@@ -45,6 +45,30 @@ interface ApiMockState {
   quotaConfigs: TestQuotaConfig[];
   /** 下一个接口 ID。 */
   nextInterfaceId: number;
+  /** 指定接口的发布前静态检查问题。 */
+  publishCheckIssues: Map<number, PublishCheckIssue[]>;
+  /** 指定接口的发布探测失败结果。 */
+  publishProbeFailures: Map<number, PublishProbeFailure>;
+}
+
+/** 发布前静态检查问题。 */
+interface PublishCheckIssue {
+  /** 问题分类。 */
+  category: 'INTERFACE_CONFIG' | 'SDK' | 'RUNTIME_TEMPLATE' | 'DOCUMENT' | 'CALL_EXAMPLE';
+  /** 稳定规则编码。 */
+  ruleCode: string;
+  /** 公开字段路径。 */
+  field: string;
+  /** 中文问题说明。 */
+  message: string;
+}
+
+/** 发布探测失败结果。 */
+interface PublishProbeFailure {
+  /** 失败阶段。 */
+  stage: string;
+  /** 安全公开原因。 */
+  reason: string;
 }
 
 /** 统一成功响应。 */
@@ -58,6 +82,8 @@ export class ApiMockController {
     interfaces: createInterfaces(),
     quotaConfigs: createQuotaConfigs(),
     nextInterfaceId: 103,
+    publishCheckIssues: new Map(),
+    publishProbeFailures: new Map(),
   };
 
   /** 已记录的公开请求。 */
@@ -115,6 +141,24 @@ export class ApiMockController {
     return this.recordedRequests.filter((request) => (
       request.method === method.toUpperCase() && request.path === path
     ));
+  }
+
+  /**
+   * 配置指定接口的发布前静态检查问题。
+   * @param interfaceInfoId 接口 ID
+   * @param issues 静态检查问题
+   */
+  setPublishCheckIssues(interfaceInfoId: number, issues: PublishCheckIssue[]): void {
+    this.state.publishCheckIssues.set(interfaceInfoId, issues);
+  }
+
+  /**
+   * 配置指定接口的发布探测失败结果。
+   * @param interfaceInfoId 接口 ID
+   * @param failure 探测失败结果
+   */
+  setPublishProbeFailure(interfaceInfoId: number, failure: PublishProbeFailure): void {
+    this.state.publishProbeFailures.set(interfaceInfoId, failure);
   }
 
   /** 断言不存在未登记 API 请求。 */
@@ -244,6 +288,16 @@ export class ApiMockController {
       return;
     }
 
+    if (key === 'GET /api/interfaceInfo/publish/check') {
+      const interfaceInfoId = Number(request.query.id);
+      const issues = this.state.publishCheckIssues.get(interfaceInfoId) ?? [];
+      await this.fulfillJson(route, success({
+        passed: issues.length === 0,
+        issues,
+      }));
+      return;
+    }
+
     if (key === 'POST /api/interfaceInfo/add') {
       if (!await this.requireCsrf(route, request)) return;
       const body = request.body as Omit<TestInterface, 'id' | 'status' | 'totalNum' | 'initialQuota' | 'docStatus' | 'updateTime'>;
@@ -296,6 +350,24 @@ export class ApiMockController {
       }
       if (key.endsWith('/online') && target.docStatus !== 'READY') {
         await this.fulfillJson(route, { code: 50001, data: null, message: '接口文档待完善，请先完成文档维护' });
+        return;
+      }
+      const publishCheckIssues = this.state.publishCheckIssues.get(target.id) ?? [];
+      if (key.endsWith('/online') && publishCheckIssues.length > 0) {
+        await this.fulfillJson(route, {
+          code: 40901,
+          data: { passed: false, issues: publishCheckIssues },
+          message: '接口发布前检查未通过，请先修复检查问题',
+        });
+        return;
+      }
+      const probeFailure = this.state.publishProbeFailures.get(target.id);
+      if (key.endsWith('/online') && probeFailure) {
+        await this.fulfillJson(route, {
+          code: 40902,
+          data: probeFailure,
+          message: `发布探测失败[${probeFailure.stage}]：${probeFailure.reason}`,
+        });
         return;
       }
       target.status = key.endsWith('/online') ? 1 : 0;

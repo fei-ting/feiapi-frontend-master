@@ -66,6 +66,70 @@
 .fei-icon-btn { border: 0; background: transparent; color: var(--fei-text-muted); cursor: pointer; font-size: 24px; line-height: 1; }
 .fei-modal__footer { justify-content: flex-end; margin-top: 6px; }
 
+.fei-publish-check-dialog {
+  width: min(720px, calc(100vw - 32px));
+}
+
+.fei-publish-check-dialog__body {
+  max-height: min(62vh, 620px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.fei-publish-check-dialog__success {
+  padding: 18px;
+  border: 1px solid rgba(34, 197, 94, .34);
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.fei-publish-check-dialog__groups {
+  display: grid;
+  gap: 12px;
+}
+
+.fei-publish-check-dialog__group {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.fei-publish-check-dialog__group h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.fei-publish-check-dialog__group ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fei-publish-check-dialog__group li {
+  display: grid;
+  grid-template-columns: minmax(120px, .42fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.fei-publish-check-dialog__field {
+  overflow-wrap: anywhere;
+  color: var(--fei-text-muted);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+
 .fei-doc-editor { display: grid; gap: 18px; }
 .fei-doc-editor__topbar { position: sticky; top: 0; z-index: 5; padding: 4px 0 12px; background: var(--fei-bg); }
 .fei-doc-editor__actions { display: flex; align-items: center; gap: 12px; }

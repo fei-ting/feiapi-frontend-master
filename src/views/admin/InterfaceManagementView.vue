@@ -85,20 +85,26 @@
       </template>
       <template #cell-actions="{ row: item }">
         <div class="fei-table-actions">
-          <button class="fei-action-btn" :disabled="item.status !== 0" @click="openEditModal(item)">编辑</button>
+          <button class="fei-action-btn" :disabled="item.status !== 0 || isRowBusy(item.id)" @click="openEditModal(item)">编辑</button>
           <button class="fei-action-btn" @click="openDocumentPage(item.id)">维护文档</button>
           <button
             v-if="item.status === 0"
             class="fei-action-btn"
-            :disabled="item.docStatus !== 'READY'"
+            :disabled="isRowBusy(item.id)"
+            @click="checkPublish(item.id)"
+          >{{ checkingIds.has(item.id) ? '检查中' : '检查' }}</button>
+          <button
+            v-if="item.status === 0"
+            class="fei-action-btn"
+            :disabled="item.docStatus !== 'READY' || isRowBusy(item.id)"
             :title="item.docStatus === 'READY' ? '发布接口' : '请先完成文档维护'"
             @click="onlineInterface(item.id)"
-          >发布</button>
-          <button v-else-if="item.status === 1" class="fei-action-btn" @click="offlineInterface(item.id)">下线</button>
+          >{{ publishingIds.has(item.id) ? '发布中' : '发布' }}</button>
+          <button v-else-if="item.status === 1" class="fei-action-btn" :disabled="isRowBusy(item.id)" @click="offlineInterface(item.id)">下线</button>
           <button v-else class="fei-action-btn" disabled>发布中</button>
           <button
             class="fei-action-btn fei-action-btn--danger"
-            :disabled="item.status !== 0"
+            :disabled="item.status !== 0 || isRowBusy(item.id)"
             @click="openDeleteModal(item)"
           >删除</button>
         </div>
@@ -115,16 +121,28 @@
     @close="closeConfigModal"
     @saved="handleConfigSaved"
   />
+  <InterfacePublishCheckDialog
+    :open="publishCheckDialogOpen"
+    :result="publishCheckResult"
+    @close="publishCheckDialogOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import InterfaceConfigModal from '@/components/admin/InterfaceConfigModal.vue';
+import InterfacePublishCheckDialog from '@/components/admin/InterfacePublishCheckDialog.vue';
 import DataTable from '@/components/common/DataTable.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { QUOTA_TYPE_OPTIONS, useQuota } from '@/composables/useQuota';
 import type { InterfaceInfoVO, InterfaceQuery } from '@/types/interface';
+import {
+  PUBLISH_CHECK_FAILED_CODE,
+  type InterfacePublishCheckVO,
+  type InterfacePublishErrorData,
+} from '@/types/interfacePublish';
+import type { ApiError } from '@/types/common';
 import type { InterfaceQuotaType } from '@/types/quota';
 import type { DataTableColumn } from '@/types/table';
 
@@ -169,6 +187,18 @@ const configModalOpen = ref(false);
 /** 当前编辑的接口；为空时表示新增 */
 const editingInterface = ref<InterfaceInfoVO | null>(null);
 
+/** 正在执行发布前检查的接口 ID 集合。 */
+const checkingIds = ref<Set<number>>(new Set());
+
+/** 正在执行正式发布的接口 ID 集合。 */
+const publishingIds = ref<Set<number>>(new Set());
+
+/** 发布检查结果弹窗是否打开。 */
+const publishCheckDialogOpen = ref(false);
+
+/** 当前发布检查结果。 */
+const publishCheckResult = ref<InterfacePublishCheckVO | null>(null);
+
 /** 接口分页配置 */
 const interfacePagination = ref({
   current: 1,
@@ -185,6 +215,21 @@ const totalNumSortLabel = computed(() => {
   if (totalNumSortOrder.value === 'ascend') return '调用总数当前按升序排序，点击恢复默认排序';
   return '点击按调用总数降序排序';
 });
+
+/** 判断当前接口行是否正在执行发布相关操作。 */
+const isRowBusy = (id: number) => checkingIds.value.has(id) || publishingIds.value.has(id);
+
+/** 向集合中添加接口 ID。 */
+const addBusyId = (target: typeof checkingIds, id: number) => {
+  target.value = new Set([...target.value, id]);
+};
+
+/** 从集合中移除接口 ID。 */
+const removeBusyId = (target: typeof checkingIds, id: number) => {
+  const next = new Set(target.value);
+  next.delete(id);
+  target.value = next;
+};
 
 /**
  * 显示 Toast 通知（通过父组件）
@@ -261,14 +306,70 @@ const loadInterfaces = async () => {
  * 接口上线
  * @param id 接口ID
  */
+/** 判断错误是否为发布前静态检查失败。 */
+const isPublishCheckError = (error: unknown): error is ApiError<InterfacePublishErrorData> =>
+  error instanceof Error && (error as ApiError).code === PUBLISH_CHECK_FAILED_CODE;
+
+/** 判断响应数据是否为发布检查结果。 */
+const isPublishCheckResult = (data: unknown): data is InterfacePublishCheckVO =>
+  typeof data === 'object'
+  && data !== null
+  && typeof (data as InterfacePublishCheckVO).passed === 'boolean'
+  && Array.isArray((data as InterfacePublishCheckVO).issues);
+
+/** 展示未通过的发布检查结果。 */
+const openFailedPublishCheck = (result: InterfacePublishCheckVO): void => {
+  if (result.passed) {
+    return;
+  }
+  publishCheckResult.value = result;
+  publishCheckDialogOpen.value = true;
+};
+
 const onlineInterface = async (id: number) => {
+  addBusyId(publishingIds, id);
   try {
     await interfaceService.online({ id });
     showToast('接口已上线', 'success');
     await loadInterfaces();
   } catch (error) {
     console.error('[InterfaceManagementView] 接口上线失败:', error);
+    if (isPublishCheckError(error)) {
+      try {
+        if (isPublishCheckResult(error.data)) {
+          openFailedPublishCheck(error.data);
+        } else {
+          openFailedPublishCheck(await interfaceService.checkPublish(id));
+        }
+      } catch {
+        // 正式发布失败后的补充检查失败时，保留原始发布错误提示。
+      }
+    }
     showToast(error instanceof Error ? error.message : '上线失败', 'error');
+    await loadInterfaces();
+  } finally {
+    removeBusyId(publishingIds, id);
+  }
+};
+
+/**
+ * 执行发布前检查
+ * @param id 接口 ID
+ */
+const checkPublish = async (id: number) => {
+  addBusyId(checkingIds, id);
+  try {
+    publishCheckResult.value = await interfaceService.checkPublish(id);
+    publishCheckDialogOpen.value = true;
+    if (publishCheckResult.value.passed) {
+      showToast('发布条件已通过', 'success');
+    }
+  } catch (error) {
+    console.error('[InterfaceManagementView] 发布前检查失败:', error);
+    showToast(error instanceof Error ? error.message : '检查失败', 'error');
+  }
+  finally {
+    removeBusyId(checkingIds, id);
   }
 };
 

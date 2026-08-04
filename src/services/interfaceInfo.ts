@@ -7,7 +7,11 @@ import type {
   InterfaceQuery,
 } from '@/types/interface';
 import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/types/interfaceDoc';
+import type { InterfacePublishCheckVO } from '@/types/interfacePublish';
 import type { InvokeRequest } from '@/types/invoke';
+
+/** 发布接口包含最长 15 秒后端探测，预留响应传输和服务端处理时间。 */
+const PUBLISH_REQUEST_TIMEOUT_MS = 20000;
 
 export const interfaceService = {
   listPage(params: InterfaceQuery) {
@@ -32,6 +36,15 @@ export const interfaceService = {
   saveDoc(data: InterfaceDocSaveRequest) {
     return http.post<boolean>('/interfaceDoc/save', data);
   },
+  /**
+   * 执行发布前只读检查
+   * @param id 接口 ID
+   */
+  checkPublish(id: number) {
+    return http.get<InterfacePublishCheckVO>('/interfaceInfo/publish/check', {
+      params: { id },
+    });
+  },
   invoke(data: InvokeRequest) {
     return http.post<unknown>('/interfaceInfo/invoke', data);
   },
@@ -43,7 +56,9 @@ export const interfaceService = {
     return http.post<number>('/interfaceInfo/add', data);
   },
   online(data: IdRequest) {
-    return http.post<boolean>('/interfaceInfo/online', data);
+    return http.post<boolean>('/interfaceInfo/online', data, {
+      timeout: PUBLISH_REQUEST_TIMEOUT_MS,
+    });
   },
   offline(data: IdRequest) {
     return http.post<boolean>('/interfaceInfo/offline', data);

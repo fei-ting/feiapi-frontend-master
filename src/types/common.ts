@@ -17,6 +17,18 @@ export interface ResponseData<T> {
 }
 
 /**
+ * 带业务码和响应数据的请求错误。
+ *
+ * @template T 错误响应数据类型
+ */
+export interface ApiError<T = unknown> extends Error {
+  /** 后端业务错误码 */
+  code?: number;
+  /** 后端错误响应数据 */
+  data?: T;
+}
+
+/**
  * 分页查询结果。
  *
  * @template T 列表项类型
