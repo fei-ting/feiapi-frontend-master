@@ -115,6 +115,7 @@ import {
   promoteResponseFieldChildren,
   validateResponseFieldTree,
 } from '@/utils/responseFieldTree';
+import { formatJsonPreservingNumbers } from '@/utils/jsonFormatter';
 import { jsonPayloadByteLength, unicodeCodePointLength, utf8ByteLength } from '@/utils/textSize';
 const route = useRoute();
 const router = useRouter();
@@ -353,6 +354,14 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
   const responseTreeValidation = validateResponseFieldTree(responseParams.value);
   if (!responseTreeValidation.valid) return responseTreeValidation.message;
   if (errorCodes.value.some((item) => !item.errorCode || !item.errorMessage)) return '错误码和错误信息不能为空';
+  const errorCodeCompareKeys = new Set<string>();
+  if (errorCodes.value.some((item) => {
+    const compareKey = item.errorCode.trim().toLowerCase();
+    if (!compareKey) return false;
+    if (errorCodeCompareKeys.has(compareKey)) return true;
+    errorCodeCompareKeys.add(compareKey);
+    return false;
+  })) return '同一接口的错误码不能重复';
   const invalidJsonField = ([
     ['成功响应示例', form.successExample],
     ['失败响应示例', form.failExample],
@@ -382,9 +391,34 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
   return '';
 };
 
+/** 保存前格式化非空 JSON 示例，并保留非法原值。 */
+const formatJsonExamplesBeforeSave = (): string => {
+  const fields: JsonExampleField[] = ['successExample', 'failExample'];
+  const formattedValues: Partial<Record<JsonExampleField, string>> = {};
+  for (const field of fields) {
+    const value = form[field].trim();
+    if (!value) continue;
+    try {
+      formattedValues[field] = formatJsonPreservingNumbers(value);
+    } catch {
+      return field === 'successExample' ? '成功响应示例不是合法 JSON' : '失败响应示例不是合法 JSON';
+    }
+  }
+  fields.forEach((field) => {
+    const formattedValue = formattedValues[field];
+    if (formattedValue !== undefined) form[field] = formattedValue;
+  });
+  return '';
+};
+
 /** 保存结构化接口文档。 */
 const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => {
   if (saving.value) return;
+  const jsonFormatMessage = formatJsonExamplesBeforeSave();
+  if (jsonFormatMessage) {
+    saveError.value = jsonFormatMessage;
+    return;
+  }
   const validationMessage = validateForm(targetStatus);
   if (validationMessage) {
     saveError.value = validationMessage;
@@ -559,7 +593,7 @@ const formatJson = (field: JsonExampleField): void => {
   const value = form[field].trim();
   if (!value) return;
   try {
-    form[field] = JSON.stringify(JSON.parse(value), null, 2);
+    form[field] = formatJsonPreservingNumbers(value);
     saveError.value = '';
   } catch {
     saveError.value = field === 'successExample' ? '成功响应示例不是合法 JSON' : '失败响应示例不是合法 JSON';
