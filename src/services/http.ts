@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import type { ResponseData } from '@/types/common';
+import type { ApiError, ResponseData } from '@/types/common';
 
 /**
  * HTTP 客户端模块
@@ -78,9 +78,9 @@ function hasCsrfCookie(): boolean {
  * @returns 带业务码的安全异常
  */
 function createCsrfError(): Error & { code: number } {
-  const error = new Error(CSRF_ERROR_MESSAGE) as Error & { code: number };
+  const error = new Error(CSRF_ERROR_MESSAGE) as ApiError;
   error.code = 40300;
-  return error;
+  return error as Error & { code: number };
 }
 
 /**
@@ -115,8 +115,9 @@ rawHttp.interceptors.response.use(
     // 检查业务错误码，code !== 0 表示业务失败
     const { data } = response;
     if (data.code !== 0) {
-      const err = new Error(data.message || '请求失败') as Error & { code: number };
+      const err = new Error(data.message || '请求失败') as ApiError;
       err.code = data.code;
+      err.data = data.data;
       return Promise.reject(err);
     }
     // 统一解包成功响应，直接返回 data 字段

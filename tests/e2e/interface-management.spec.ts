@@ -100,3 +100,55 @@ test('文档存在未保存修改时离开页面需要二次确认', async ({ pa
   await page.getByRole('button', { name: '返回列表' }).click();
   await expect(page).toHaveURL(/#\/admin\/interfaces$/);
 });
+
+test('发布前检查通过时只展示结果且不改变接口状态', async ({ page, apiMock }) => {
+  await apiMock.authenticateAs(ADMIN_USER);
+  await page.goto('/#/admin/interfaces');
+
+  const inventoryRow = page.getByRole('row').filter({ hasText: '库存查询' });
+  await inventoryRow.getByRole('button', { name: '检查', exact: true }).click();
+
+  const checkDialog = page.getByRole('dialog', { name: '发布条件已通过' });
+  await expect(checkDialog).toBeVisible();
+  await expect(inventoryRow).toContainText('已下线');
+  expect(apiMock.requestsFor('GET', '/api/interfaceInfo/publish/check').map((request) => request.query))
+    .toContainEqual({ id: '101' });
+  expect(apiMock.requestsFor('POST', '/api/interfaceInfo/online')).toHaveLength(0);
+});
+
+test('正式发布静态检查失败时展示分类问题并保持下线', async ({ page, apiMock }) => {
+  apiMock.setPublishCheckIssues(101, [{
+    category: 'DOCUMENT',
+    ruleCode: 'DOCUMENT_READY_REQUIRED',
+    field: 'doc.docStatus',
+    message: '接口文档必须完成维护',
+  }]);
+  await apiMock.authenticateAs(ADMIN_USER);
+  await page.goto('/#/admin/interfaces');
+
+  const inventoryRow = page.getByRole('row').filter({ hasText: '库存查询' });
+  await inventoryRow.getByRole('button', { name: '发布', exact: true }).click();
+
+  const checkDialog = page.getByRole('dialog', { name: '发布检查未通过' });
+  await expect(checkDialog).toBeVisible();
+  await expect(checkDialog).toContainText('结构化文档');
+  await expect(checkDialog).toContainText('接口文档必须完成维护');
+  await expect(inventoryRow).toContainText('已下线');
+});
+
+test('发布探测失败时保持下线且不展示静态检查通过弹窗', async ({ page, apiMock }) => {
+  apiMock.setPublishProbeFailure(101, {
+    stage: 'CONNECTION_TIMEOUT',
+    reason: '连接网关或下游服务超时',
+  });
+  await apiMock.authenticateAs(ADMIN_USER);
+  await page.goto('/#/admin/interfaces');
+
+  const inventoryRow = page.getByRole('row').filter({ hasText: '库存查询' });
+  await inventoryRow.getByRole('button', { name: '发布', exact: true }).click();
+
+  await expect(inventoryRow).toContainText('已下线');
+  await expect(page.getByRole('dialog', { name: '发布条件已通过' })).toHaveCount(0);
+  await expect(page.getByText('发布探测失败[CONNECTION_TIMEOUT]：连接网关或下游服务超时')).toBeVisible();
+  expect(apiMock.requestsFor('GET', '/api/interfaceInfo/publish/check')).toHaveLength(0);
+});
