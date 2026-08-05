@@ -70,6 +70,7 @@
             spellcheck="false"
             placeholder='{"name":"string"}'
           ></textarea>
+          <BoundaryRemaining :current="runtimeTemplateBytes" :max="INTERFACE_DOC_LIMITS.invokeBodyBytes" unit="字节" />
         </label>
 
         <p v-if="errorMessage" class="fei-form-error" role="alert">{{ errorMessage }}</p>
@@ -86,10 +87,18 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
+import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
 import { QUOTA_TYPE_OPTIONS } from '@/composables/useQuota';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 import { interfaceService } from '@/services/interfaceInfo';
 import type { InterfaceInfoAddRequest, InterfaceInfoUpdateRequest, InterfaceInfoVO } from '@/types/interface';
 import type { InterfaceQuotaType } from '@/types/quota';
+import {
+  rawUnicodeCodePointLength,
+  stripUnicodeWhitespace,
+  unicodeCodePointLength,
+  utf8ByteLength,
+} from '@/utils/textSize';
 
 /** 组件属性。 */
 interface Props {
@@ -150,6 +159,11 @@ const submitting = ref(false);
 const errorMessage = ref('');
 const isEdit = computed(() => Boolean(props.interfaceInfo?.id));
 const titleId = computed(() => `interface-config-title-${props.interfaceInfo?.id ?? 'new'}`);
+/** 当前运行时模板的 UTF-8 字节数。 */
+const runtimeTemplateBytes = computed(() => utf8ByteLength(form.requestParams));
+
+/** 运行时模板支持的参数类型标记。 */
+const supportedTypeMarkers = new Set(['string', 'number', 'boolean', 'object', 'array']);
 
 /** 根据当前接口重置表单。 */
 const resetForm = () => {
@@ -173,19 +187,44 @@ const closeModal = () => {
   if (!submitting.value) emit('close');
 };
 
-/** 校验运行时请求参数模板的结构和参数名称。 */
+/** 按后端同步规则解析运行时模板示例值。 */
+const resolveTemplateExampleValue = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return supportedTypeMarkers.has(value.trim().toLowerCase()) ? '' : value;
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+};
+
+/** 校验运行时请求参数模板的字节、结构、数量、名称和示例值边界。 */
 const validateRequestParamsTemplate = (): string => {
   if (!form.requestParams.trim()) return '';
+  if (runtimeTemplateBytes.value > INTERFACE_DOC_LIMITS.invokeBodyBytes) {
+    return '请求参数模板不能超过 65535 个 UTF-8 字节';
+  }
   try {
     const template = JSON.parse(form.requestParams) as unknown;
     if (template === null || Array.isArray(template) || typeof template !== 'object') {
       return '请求参数模板必须是 JSON 对象';
     }
-    const invalidName = Object.keys(template).find((name) => name.length === 0 || /^\s|\s$/u.test(name));
-    if (invalidName === undefined) return '';
-    return invalidName.length === 0
-      ? '请求参数名称不能为空'
-      : `请求参数名称不能包含首尾空白：${JSON.stringify(invalidName)}`;
+    const entries = Object.entries(template as Record<string, unknown>);
+    if (entries.length > INTERFACE_DOC_LIMITS.requestParamCount) return '请求参数数量不能超过 100';
+    const invalidName = entries.find(([name]) => {
+      const strippedName = stripUnicodeWhitespace(name);
+      return !strippedName || strippedName !== name;
+    })?.[0];
+    if (invalidName !== undefined) {
+      return stripUnicodeWhitespace(invalidName).length === 0
+        ? '请求参数名称不能为空'
+        : `请求参数名称不能包含首尾空白：${JSON.stringify(invalidName)}`;
+    }
+    if (entries.some(([name]) => rawUnicodeCodePointLength(name) > INTERFACE_DOC_LIMITS.paramNameLength)) {
+      return '参数名称长度不能超过 128 个字符';
+    }
+    if (entries.some(([, value]) => (
+      unicodeCodePointLength(resolveTemplateExampleValue(value)) > INTERFACE_DOC_LIMITS.exampleValueLength
+    ))) {
+      return '参数示例值长度不能超过 1024 个字符';
+    }
+    return '';
   } catch {
     return '请求参数模板必须是合法 JSON';
   }

@@ -138,11 +138,11 @@ export interface InterfaceDocDetailVO {
   /** 请求 Header 列表 */
   requestHeaders?: InterfaceDocParamVO[];
   /** 请求参数列表 */
-  requestParams?: InterfaceDocParamVO[];
+  requestParams: InterfaceDocParamVO[];
   /** 响应参数列表 */
-  responseParams?: InterfaceDocParamVO[];
+  responseParams: InterfaceDocParamVO[];
   /** 错误码列表 */
-  errorCodes?: InterfaceDocErrorCodeVO[];
+  errorCodes: InterfaceDocErrorCodeVO[];
   /** Java SDK 示例 */
   javaSdkExample?: string;
   /** curl 示例 */

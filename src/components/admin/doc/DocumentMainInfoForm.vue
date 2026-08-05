@@ -8,6 +8,7 @@
       <label class="fei-field">
         <span class="fei-label">文档版本</span>
         <input class="fei-input" :value="modelValue.docVersion" maxlength="64" required @input="updateText('docVersion', $event, true)" />
+        <BoundaryRemaining :current="modelValue.docVersion.length" :max="INTERFACE_DOC_LIMITS.docVersionLength" unit="字符" />
       </label>
       <label class="fei-field">
         <span class="fei-label">请求格式</span>
@@ -24,13 +25,17 @@
     </div>
     <label class="fei-field">
       <span class="fei-label">公开备注</span>
-      <textarea class="fei-textarea fei-textarea--compact" :value="modelValue.remark" maxlength="512" @input="updateText('remark', $event, true)"></textarea>
+      <textarea class="fei-textarea fei-textarea--compact" :value="modelValue.remark" @input="updateText('remark', $event, true)"></textarea>
+      <BoundaryRemaining :current="unicodeCodePointLength(modelValue.remark)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" />
     </label>
   </section>
 </template>
 
 <script setup lang="ts">
+import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
+import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
 import type { DocMainEditableField, DocMainForm } from '@/types/interfaceDocEditor';
+import { unicodeCodePointLength } from '@/utils/textSize';
 
 /** 文档主信息组件属性。 */
 interface DocumentMainInfoFormProps {

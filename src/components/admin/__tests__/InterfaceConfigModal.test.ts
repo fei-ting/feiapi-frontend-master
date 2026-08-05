@@ -105,4 +105,20 @@ describe('InterfaceConfigModal', () => {
     expect(mocks.update).not.toHaveBeenCalled();
     expect(wrapper.text()).toContain('请求参数名称不能包含首尾空白');
   });
+
+  it.each([
+    [JSON.stringify(Object.fromEntries(Array.from({ length: 101 }, (_, index) => [`p${index}`, index]))), '请求参数数量不能超过 100'],
+    [JSON.stringify({ ['😀'.repeat(129)]: 1 }), '参数名称长度不能超过 128 个字符'],
+    [JSON.stringify({ value: 'a'.repeat(1025) }), '参数示例值长度不能超过 1024 个字符'],
+    ['x'.repeat(65_536), '请求参数模板不能超过 65535 个 UTF-8 字节'],
+  ])('运行时模板边界超限时阻止提交并展示原因', async (requestParams, message) => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    await wrapper.get('textarea.fei-code-input').setValue(requestParams);
+
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(mocks.add).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain(message);
+  });
 });

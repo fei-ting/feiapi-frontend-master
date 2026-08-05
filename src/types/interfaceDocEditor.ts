@@ -22,6 +22,16 @@ export interface EditableErrorCode extends InterfaceDocErrorCodeSaveRequest {
   clientKey: string;
 }
 
+/** 非叶子响应字段删除确认状态。 */
+export interface ResponseFieldDeleteState {
+  /** 待删除字段会话键。 */
+  paramKey: string;
+  /** 待删除字段完整路径。 */
+  targetPath: string;
+  /** 全部受影响后代字段路径。 */
+  descendantPaths: string[];
+}
+
 /** 文档主信息允许编辑的字段。 */
 export type DocMainEditableField = 'docVersion' | 'requestContentType' | 'responseContentType' | 'remark';
 

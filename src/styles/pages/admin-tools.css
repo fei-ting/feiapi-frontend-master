@@ -66,6 +66,70 @@
 .fei-icon-btn { border: 0; background: transparent; color: var(--fei-text-muted); cursor: pointer; font-size: 24px; line-height: 1; }
 .fei-modal__footer { justify-content: flex-end; margin-top: 6px; }
 
+.fei-publish-check-dialog {
+  width: min(720px, calc(100vw - 32px));
+}
+
+.fei-publish-check-dialog__body {
+  max-height: min(62vh, 620px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.fei-publish-check-dialog__success {
+  padding: 18px;
+  border: 1px solid rgba(34, 197, 94, .34);
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.fei-publish-check-dialog__groups {
+  display: grid;
+  gap: 12px;
+}
+
+.fei-publish-check-dialog__group {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.fei-publish-check-dialog__group h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.fei-publish-check-dialog__group ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fei-publish-check-dialog__group li {
+  display: grid;
+  grid-template-columns: minmax(120px, .42fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.fei-publish-check-dialog__field {
+  overflow-wrap: anywhere;
+  color: var(--fei-text-muted);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+
 .fei-doc-editor { display: grid; gap: 18px; }
 .fei-doc-editor__topbar { position: sticky; top: 0; z-index: 5; padding: 4px 0 12px; background: var(--fei-bg); }
 .fei-doc-editor__actions { display: flex; align-items: center; gap: 12px; }
@@ -93,6 +157,8 @@
 .fei-doc-section__heading > div > span { color: var(--fei-primary); font-size: 12px; font-weight: 900; letter-spacing: .1em; }
 .fei-doc-section__heading h2 { margin: 0; font-size: 18px; }
 .fei-doc-section__heading p { margin: 2px 0 0; color: var(--fei-text-muted); font-size: 12px; text-align: right; }
+.fei-doc-boundary-action { display: flex; align-items: center; gap: 12px; }
+.fei-doc-boundary-action p { margin: 0; color: var(--fei-text-muted); font-size: 12px; white-space: nowrap; }
 .fei-doc-param-list,
 .fei-doc-record-list { display: grid; gap: 10px; }
 .fei-doc-param-row { display: grid; grid-template-columns: minmax(160px, 1.1fr) repeat(4, minmax(120px, 1fr)) minmax(72px, .4fr); gap: 10px; align-items: end; padding: 13px; border: 1px solid var(--fei-border); border-radius: 10px; background: #fbfcfe; }
@@ -127,6 +193,7 @@
   .fei-doc-param-row__identity { grid-column: 1 / -1; }
   .fei-doc-section__heading { flex-direction: column; }
   .fei-doc-section__heading p { text-align: left; }
+  .fei-doc-boundary-action { width: 100%; justify-content: space-between; }
   .fei-doc-editor__topbar { align-items: flex-start; }
 }
 

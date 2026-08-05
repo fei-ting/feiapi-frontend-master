@@ -94,6 +94,63 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.get('fieldset').attributes()).not.toHaveProperty('disabled');
   });
 
+  it('达到集合上限时禁用新增且聚合载荷超限时不发送保存请求', async () => {
+    const detail = buildDetail();
+    const maxExample = '😀'.repeat(1024);
+    const maxDescription = '😀'.repeat(512);
+    detail.requestParams = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      name: `request${index}`,
+      paramScene: 'BODY' as const,
+      type: 'string',
+      required: false,
+      defaultValue: maxDescription,
+      exampleValue: maxExample,
+      description: maxDescription,
+      validationRule: maxDescription,
+      sortOrder: index + 1,
+    }));
+    detail.responseParams = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1001,
+      name: `response${index}`,
+      paramScene: 'RESPONSE' as const,
+      type: 'string',
+      required: false,
+      nullable: true,
+      defaultValue: maxDescription,
+      exampleValue: maxExample,
+      description: maxDescription,
+      validationRule: maxDescription,
+      sortOrder: index + 1,
+    }));
+    detail.errorCodes = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      errorCode: `E${index}`,
+      errorMessage: '错误信息',
+      sortOrder: index + 1,
+    }));
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+    const errorSection = sectionByTitle(wrapper, '接口错误码');
+    const responseAddButton = responseSection.findAll('button')[0];
+    const errorAddButton = errorSection.findAll('button')[0];
+
+    expect(responseAddButton.attributes('title')).toBe('请求参数与响应字段合计数量已达到 200');
+    expect(responseAddButton.attributes()).toHaveProperty('disabled');
+    expect(errorAddButton.attributes()).toHaveProperty('disabled');
+
+    const completeButton = wrapper.findAll('button').find((button) => button.text() === '完成维护');
+    await completeButton?.trigger('click');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('接口文档保存请求体不能超过 1048576 字节');
+
+    await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    await errorSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    expect(responseAddButton.attributes()).not.toHaveProperty('disabled');
+    expect(errorAddButton.attributes()).not.toHaveProperty('disabled');
+  });
+
   it('请求格式变化时更新只读Header且保存载荷不提交Header参数', async () => {
     const wrapper = await mountView();
     const mainSection = sectionByTitle(wrapper, '文档主信息');
@@ -128,6 +185,49 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.text()).toContain('用户接口');
   });
 
+  it.each([
+    ['requestParams', undefined],
+    ['requestParams', null],
+    ['requestParams', {}],
+    ['responseParams', undefined],
+    ['responseParams', null],
+    ['responseParams', {}],
+    ['errorCodes', undefined],
+    ['errorCodes', null],
+    ['errorCodes', {}],
+  ])('聚合集合 %s 为无效值时禁止保存', async (field, invalidValue) => {
+    const invalidDetail = {
+      ...buildDetail(),
+      [field]: invalidValue,
+    } as unknown as InterfaceDocDetailVO;
+    mocks.getDocDetail.mockResolvedValue(invalidDetail);
+
+    const wrapper = await mountView();
+
+    expect(wrapper.text()).toContain('接口文档聚合数据不完整，请重新加载');
+    const saveButtons = wrapper.findAll('button')
+      .filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
+    expect(saveButtons).toHaveLength(2);
+    expect(saveButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    await saveButtons[0]?.trigger('click');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
+  it('合法空集合可以加载且不会被判定为不完整响应', async () => {
+    const emptyDetail = buildDetail();
+    emptyDetail.requestParams = [];
+    emptyDetail.responseParams = [];
+    emptyDetail.errorCodes = [];
+    mocks.getDocDetail.mockResolvedValue(emptyDetail);
+
+    const wrapper = await mountView();
+
+    expect(wrapper.text()).not.toContain('接口文档聚合数据不完整');
+    expect(wrapper.text()).toContain('当前接口没有运行时请求参数');
+    expect(wrapper.text()).toContain('暂未维护响应字段');
+    expect(wrapper.text()).toContain('当前接口没有专属错误码');
+  });
+
   it('接口不可编辑时由父级fieldset禁用全部控件', async () => {
     mocks.getDocDetail.mockResolvedValue(buildDetail(1));
     const wrapper = await mountView();
@@ -158,10 +258,41 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(requestParam.nullable).toBe(false);
   });
 
-  it('删除响应父字段时清除子字段引用并保持保存载荷', async () => {
+  it('删除非叶子响应字段时展示全部路径并支持取消', async () => {
     const wrapper = await mountView();
     const responseSection = sectionByTitle(wrapper, '响应字段');
     await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+
+    const dialog = wrapper.get('[role="dialog"]');
+    expect(dialog.text()).toContain('data');
+    expect(dialog.text()).toContain('data.name');
+    expect(dialog.text()).toContain('受影响子字段（1）');
+    await dialog.findAll('button').find((button) => button.text() === '取消')?.trigger('click');
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(2);
+  });
+
+  it('删除整个响应字段子树后保存全量快照', async () => {
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+    await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    await wrapper.get('[role="dialog"]').findAll('button')
+      .find((button) => button.text() === '删除整个子树')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    const payload = mocks.saveDoc.mock.calls[0][0];
+    expect(payload.params.some((param: { name: string }) => param.name === 'data')).toBe(false);
+    expect(payload.params.some((param: { name: string }) => param.name === 'name')).toBe(false);
+  });
+
+  it('提升根响应字段的直接子字段后保留后代并清除父引用', async () => {
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+    await responseSection.findAll('.fei-action-btn--danger')[0].trigger('click');
+    await wrapper.get('[role="dialog"]').findAll('button')
+      .find((button) => button.text() === '提升直接子字段')?.trigger('click');
     await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
 
@@ -172,19 +303,168 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(child).not.toHaveProperty('parentParamKey');
   });
 
+  it('叶子响应字段直接删除且不打开确认对话框', async () => {
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+
+    await responseSection.findAll('.fei-action-btn--danger')[1].trigger('click');
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(1);
+    expect(responseSection.text()).not.toContain('name');
+  });
+
+  it('提升直接子字段导致同级重名时保持原树并展示错误', async () => {
+    const detail = buildDetail();
+    detail.responseParams = [
+      { id: 2, name: 'data', paramScene: 'RESPONSE', type: 'object', required: true, nullable: false, sortOrder: 1 },
+      { id: 3, parentId: 2, name: 'user', paramScene: 'RESPONSE', type: 'object', required: true, nullable: false, sortOrder: 2 },
+      { id: 4, parentId: 3, name: 'name', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 3 },
+      { id: 5, parentId: 2, name: 'name', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 4 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+
+    await responseSection.findAll('.fei-action-btn--danger')[1].trigger('click');
+    await wrapper.get('[role="dialog"]').findAll('button')
+      .find((button) => button.text() === '提升直接子字段')?.trigger('click');
+
+    expect(wrapper.get('[role="dialog"]').text()).toContain('同级响应字段名称不能重复');
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(4);
+  });
+
+  it('有子字段的响应容器不能改为标量类型', async () => {
+    const wrapper = await mountView();
+    const typeSelect = sectionByTitle(wrapper, '响应字段').findAll('select')[0];
+
+    await typeSelect.setValue('string');
+
+    expect((typeSelect.element as HTMLSelectElement).value).toBe('object');
+    expect(wrapper.text()).toContain('以下响应字段不是容器类型，不能拥有子字段：data(string)');
+  });
+
+  it('保存前拒绝后端加载的标量父字段异常结构', async () => {
+    const detail = buildDetail();
+    if (detail.responseParams?.[0]) detail.responseParams[0].type = 'string';
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect(wrapper.text()).toContain('以下响应字段不是容器类型，不能拥有子字段：data(string)');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
+  it('保存前拒绝后端加载的缺失父字段结构而不静默提升为根', async () => {
+    const detail = buildDetail();
+    detail.responseParams = [
+      { id: 3, parentId: 999, name: 'name', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 1 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect(wrapper.text()).toContain('响应字段父级不存在：response-missing-parent-');
+    expect(wrapper.text()).toContain('[name]');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
   it('格式化合法JSON并保留非法JSON原值', async () => {
     const wrapper = await mountView();
     const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
     const textareas = jsonSection.findAll('textarea');
 
-    await textareas[0].setValue('{"data":1}');
+    await textareas[0].setValue('{"data":9007199254740993}');
     await jsonSection.findAll('button')[0].trigger('click');
-    expect((textareas[0].element as HTMLTextAreaElement).value).toContain('\n  "data": 1\n');
+    expect((textareas[0].element as HTMLTextAreaElement).value)
+      .toContain('\n  "data": 9007199254740993\n');
 
     await textareas[1].setValue('{bad json');
     await jsonSection.findAll('button')[1].trigger('click');
     expect((textareas[1].element as HTMLTextAreaElement).value).toBe('{bad json');
     expect(wrapper.text()).toContain('失败响应示例不是合法 JSON');
+  });
+
+  it('保存前拒绝大小写不同或首尾空白不同的重复错误码', async () => {
+    const detail = buildDetail();
+    detail.errorCodes = [
+      { id: 1, errorCode: 'A001', errorMessage: '参数错误', sortOrder: 1 },
+      { id: 2, errorCode: 'a001', errorMessage: '参数错误二', sortOrder: 2 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    await wrapper.findAll('button').find((button) => button.text() === '完成维护')?.trigger('click');
+
+    expect(wrapper.text()).toContain('同一接口的错误码不能重复');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+    expect((sectionByTitle(wrapper, '接口错误码').findAll('input')[0].element as HTMLInputElement).value).toBe('A001');
+    expect((sectionByTitle(wrapper, '接口错误码').findAll('input')[5].element as HTMLInputElement).value).toBe('a001');
+  });
+
+  it('保存时自动格式化非空JSON并按最终请求提交', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const textareas = jsonSection.findAll('textarea');
+
+    await textareas[0].setValue('{"data":{"name":"alice"}}');
+    await textareas[1].setValue('{"error":{"code":"A001"}}');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).toBe('{\n  "data": {\n    "name": "alice"\n  }\n}');
+    expect(mocks.saveDoc.mock.calls[0][0].failExample).toBe('{\n  "error": {\n    "code": "A001"\n  }\n}');
+    expect((textareas[0].element as HTMLTextAreaElement).value).toContain('\n    "name": "alice"\n');
+  });
+
+  it('保存时格式化 JSON 不损坏大整数原文', async () => {
+    const wrapper = await mountView();
+    const textareas = sectionByTitle(wrapper, 'JSON 示例').findAll('textarea');
+
+    await textareas[0].setValue('{"id":9007199254740993,"orderNo":9223372036854775807}');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).toContain('9007199254740993');
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).toContain('9223372036854775807');
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).not.toContain('9007199254740992');
+    expect(mocks.saveDoc.mock.calls[0][0].successExample).not.toContain('9223372036854776000');
+  });
+
+  it('保存时非法JSON保留原值且不发送请求', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const successExample = jsonSection.findAll('textarea')[0];
+    const failExample = jsonSection.findAll('textarea')[1];
+
+    await successExample.setValue('{"id":9007199254740993}');
+    await failExample.setValue('{bad json');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect((successExample.element as HTMLTextAreaElement).value).toBe('{"id":9007199254740993}');
+    expect((failExample.element as HTMLTextAreaElement).value).toBe('{bad json');
+    expect(wrapper.text()).toContain('失败响应示例不是合法 JSON');
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+  });
+
+  it('保存前按格式化后的JSON示例字节数拦截超限请求', async () => {
+    const wrapper = await mountView();
+    const jsonSection = sectionByTitle(wrapper, 'JSON 示例');
+    const successExample = jsonSection.findAll('textarea')[0];
+    const compactJson = `[${Array.from({ length: 15000 }, () => '0').join(',')}]`;
+
+    await successExample.setValue(compactJson);
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+
+    expect(mocks.saveDoc).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('成功响应示例不能超过 65535 个 UTF-8 字节');
+    expect((successExample.element as HTMLTextAreaElement).value).toContain('\n  0,');
   });
 
   it('依次拦截主信息、响应字段和错误码必填错误', async () => {
@@ -216,8 +496,66 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(mocks.saveDoc).toHaveBeenCalledOnce();
     expect(mocks.saveDoc.mock.calls[0][0].docVersion).toBe('v2');
     expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('DRAFT');
+    expect(mocks.saveDoc.mock.calls[0][0].params)
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'userId', paramScene: 'BODY' }),
+        expect.objectContaining({ name: 'data', paramScene: 'RESPONSE' }),
+        expect.objectContaining({ name: 'name', paramScene: 'RESPONSE' }),
+      ]));
+    expect(mocks.saveDoc.mock.calls[0][0].errorCodes)
+      .toEqual([expect.objectContaining({ errorCode: 'A001' })]);
     expect(mocks.getDocDetail).toHaveBeenCalledTimes(2);
     expect(wrapper.emitted('show-toast')).toContainEqual(['草稿已保存', 'success']);
+  });
+
+  it('保存后使用回读的新记录ID和文档状态重建编辑模型', async () => {
+    const initialDetail = buildDetail();
+    initialDetail.responseParams.forEach((param) => { param.description = `${param.name}说明`; });
+    const refreshedDetail = buildDetail();
+    refreshedDetail.docStatus = 'READY';
+    refreshedDetail.requestParams[0]!.id = 101;
+    refreshedDetail.responseParams[0]!.id = 102;
+    refreshedDetail.responseParams[1]!.id = 103;
+    refreshedDetail.responseParams[1]!.parentId = 102;
+    refreshedDetail.responseParams.forEach((param) => { param.description = `${param.name}说明`; });
+    refreshedDetail.errorCodes[0]!.id = 201;
+    mocks.getDocDetail.mockReset()
+      .mockResolvedValueOnce(initialDetail)
+      .mockResolvedValueOnce(refreshedDetail)
+      .mockResolvedValue(refreshedDetail);
+    const wrapper = await mountView();
+
+    await wrapper.findAll('button').find((button) => button.text() === '完成维护')?.trigger('click');
+    await flushPromises();
+
+    const completeButtons = wrapper.findAll('button').filter((button) => button.text() === '完成维护');
+    expect(completeButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    const secondPayload = mocks.saveDoc.mock.calls[1][0];
+    expect(secondPayload.params).toEqual(expect.arrayContaining([
+      expect.objectContaining({ paramKey: 'request-101', name: 'userId' }),
+      expect.objectContaining({ paramKey: 'response-102', name: 'data' }),
+      expect.objectContaining({ paramKey: 'response-103', parentParamKey: 'response-102', name: 'name' }),
+    ]));
+    expect(mocks.getDocDetail).toHaveBeenCalledTimes(3);
+  });
+
+  it('保存成功但回读失败时不发送成功通知', async () => {
+    mocks.getDocDetail.mockReset()
+      .mockResolvedValueOnce(buildDetail())
+      .mockRejectedValueOnce(new Error('回读服务失败'));
+    const wrapper = await mountView();
+    await sectionByTitle(wrapper, '文档主信息').get('input').setValue('v2');
+
+    await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(wrapper.text()).toContain('文档已保存，但重新加载后端数据失败，请重新加载');
+    expect(wrapper.emitted('show-toast')).toBeUndefined();
   });
 
   it('保存期间禁用操作按钮并阻止重复提交', async () => {
