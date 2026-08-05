@@ -1,5 +1,8 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import { reactive } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import ErrorCodeEditor from '@/components/admin/doc/ErrorCodeEditor.vue';
+import ResponseParamEditor from '@/components/admin/doc/ResponseParamEditor.vue';
 import InterfaceDocMaintenanceView from '../InterfaceDocMaintenanceView.vue';
 import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
 
@@ -68,7 +71,7 @@ const sectionByTitle = (wrapper: VueWrapper, title: string): VueWrapper => {
 describe('InterfaceDocMaintenanceView', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mocks.routeParams.id = '1';
+    mocks.routeParams = reactive({ id: '1' });
     mocks.leaveGuard = null;
     mocks.updateGuard = null;
     mocks.getDocDetail.mockResolvedValue(buildDetail());
@@ -140,6 +143,10 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(responseAddButton.attributes()).toHaveProperty('disabled');
     expect(errorAddButton.attributes()).toHaveProperty('disabled');
 
+    wrapper.findComponent(ResponseParamEditor).vm.$emit('add');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain('请求参数与响应字段合计数量不能超过 200');
+
     const completeButton = wrapper.findAll('button').find((button) => button.text() === '完成维护');
     await completeButton?.trigger('click');
     expect(mocks.saveDoc).not.toHaveBeenCalled();
@@ -149,6 +156,24 @@ describe('InterfaceDocMaintenanceView', () => {
     await errorSection.findAll('.fei-action-btn--danger')[0].trigger('click');
     expect(responseAddButton.attributes()).not.toHaveProperty('disabled');
     expect(errorAddButton.attributes()).not.toHaveProperty('disabled');
+  });
+
+  it('子组件绕过禁用状态请求新增错误码时仍由维护页拦截', async () => {
+    const detail = buildDetail();
+    detail.errorCodes = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      errorCode: `E${index}`,
+      errorMessage: '错误信息',
+      sortOrder: index + 1,
+    }));
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+
+    wrapper.findComponent(ErrorCodeEditor).vm.$emit('add');
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.text()).toContain('错误码数量不能超过 100');
+    expect(sectionByTitle(wrapper, '接口错误码').findAll('.fei-doc-record')).toHaveLength(100);
   });
 
   it('请求格式变化时更新只读Header且保存载荷不提交Header参数', async () => {
@@ -312,6 +337,23 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
     expect(responseSection.findAll('.fei-doc-record')).toHaveLength(1);
     expect(responseSection.text()).not.toContain('name');
+  });
+
+  it('叶子字段删除后剩余树仍异常时保留原树并展示行内错误', async () => {
+    const detail = buildDetail();
+    detail.responseParams = [
+      { id: 3, parentId: 999, name: 'orphan', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 1 },
+      { id: 4, name: 'removable', paramScene: 'RESPONSE', type: 'string', required: false, nullable: true, sortOrder: 2 },
+    ];
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const responseSection = sectionByTitle(wrapper, '响应字段');
+
+    await responseSection.findAll('.fei-action-btn--danger')[1].trigger('click');
+
+    expect(wrapper.text()).toContain('响应字段父级不存在：response-missing-parent-');
+    expect(wrapper.text()).toContain('[orphan]');
+    expect(responseSection.findAll('.fei-doc-record')).toHaveLength(2);
   });
 
   it('提升直接子字段导致同级重名时保持原树并展示错误', async () => {
@@ -600,6 +642,22 @@ describe('InterfaceDocMaintenanceView', () => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('路由接口ID变化时重新加载对应文档', async () => {
+    const secondDetail = buildDetail();
+    secondDetail.interfaceInfo.id = 2;
+    secondDetail.interfaceInfo.name = '订单接口';
+    mocks.getDocDetail
+      .mockResolvedValueOnce(buildDetail())
+      .mockResolvedValueOnce(secondDetail);
+    const wrapper = await mountView();
+
+    mocks.routeParams.id = '2';
+    await flushPromises();
+
+    expect(mocks.getDocDetail).toHaveBeenNthCalledWith(2, 2);
+    expect(wrapper.text()).toContain('订单接口');
   });
 
   it('缺省文档映射稳定键并支持区块增删和返回列表', async () => {
