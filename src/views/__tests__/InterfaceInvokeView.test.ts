@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InterfaceInvokeView from '../InterfaceInvokeView.vue';
-import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
+import type { InterfaceDocDetailVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 
 const mocks = vi.hoisted(() => ({
   getDocDetail: vi.fn(),

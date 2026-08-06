@@ -144,7 +144,7 @@ describe('样式架构', () => {
     });
 
     it('接口文档响应式规则位于功能共享样式中', () => {
-      const documentationCss = readFile('styles/features/interface-documentation.css');
+      const documentationCss = readFile('features/interface-platform/documentation/styles/interface-documentation.css');
 
       expect(documentationCss).toContain('.fei-doc-grid');
       expect(documentationCss).toContain('.fei-doc-info-grid');
@@ -199,13 +199,13 @@ describe('样式架构', () => {
 
     it('InterfaceDetailView.vue 导入详情和接口文档共享样式', () => {
       const detailView = readFile('views/InterfaceDetailView.vue');
-      expect(detailView).toContain("import '@/styles/features/interface-documentation.css'");
+      expect(detailView).toContain("import '@/features/interface-platform/documentation/styles/interface-documentation.css'");
       expect(detailView).toContain("import '@/styles/pages/detail.css'");
     });
 
     it('InterfaceInvokeView.vue 导入调用和接口文档共享样式', () => {
       const invokeView = readFile('views/InterfaceInvokeView.vue');
-      expect(invokeView).toContain("import '@/styles/features/interface-documentation.css'");
+      expect(invokeView).toContain("import '@/features/interface-platform/documentation/styles/interface-documentation.css'");
       expect(invokeView).toContain("import '@/styles/pages/invoke.css'");
     });
 

@@ -4,7 +4,7 @@
 
 import type { InterfaceQuotaType } from '@/types/quota';
 import type { SortOrder } from '@/types/common';
-import type { InterfaceDocStatus } from '@/types/interfaceDoc';
+import type { InterfaceDocStatus } from '@/features/interface-platform/documentation/types/interfaceDoc';
 
 /** 接口信息视图对象 */
 export interface InterfaceInfoVO {
@@ -46,6 +46,14 @@ export interface InterfaceInfoVO {
   totalNum?: number;
   /** 文档维护状态 */
   docStatus: InterfaceDocStatus;
+}
+
+/** 管理员新增接口时可选择的 SDK 方法。 */
+export interface SdkMethodOption {
+  /** SDK 方法名。 */
+  sdkMethodName: string;
+  /** SDK 方法是否需要请求参数。 */
+  needParams: boolean;
 }
 
 /**
@@ -95,7 +103,7 @@ export interface InterfaceInfoAddRequest {
   /** 接口配额类型 */
   quotaType?: InterfaceQuotaType;
   /** SDK 方法名 */
-  sdkMethodName?: string;
+  sdkMethodName: string;
 }
 
 /**

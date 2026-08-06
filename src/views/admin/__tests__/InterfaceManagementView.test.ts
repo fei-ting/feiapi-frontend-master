@@ -6,7 +6,7 @@ import {
   PUBLISH_CHECK_FAILED_CODE,
   PUBLISH_PROBE_FAILED_CODE,
   type InterfacePublishCheckVO,
-} from '@/types/interfacePublish';
+} from '@/features/interface-platform/publishing/types/interfacePublish';
 
 const mocks = vi.hoisted(() => ({
   listPage: vi.fn(),

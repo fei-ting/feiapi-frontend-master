@@ -20,6 +20,13 @@ beforeEach(() => {
 });
 
 describe('接口信息服务', () => {
+  /** SDK 方法列表使用管理员只读查询接口。 */
+  it('查询已注册 SDK 方法列表', () => {
+    interfaceService.listSdkMethods();
+
+    expect(mocks.get).toHaveBeenCalledWith('/interfaceInfo/sdk-method/list');
+  });
+
   /** 发布请求必须覆盖全局超时，以接收后端结构化探测结果。 */
   it('发布接口使用 20 秒独立超时', () => {
     const request = { id: 1 };

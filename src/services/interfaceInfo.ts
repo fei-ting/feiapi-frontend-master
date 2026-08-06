@@ -5,15 +5,20 @@ import type {
   InterfaceInfoUpdateRequest,
   InterfaceInfoVO,
   InterfaceQuery,
+  SdkMethodOption,
 } from '@/types/interface';
-import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/types/interfaceDoc';
-import type { InterfacePublishCheckVO } from '@/types/interfacePublish';
+import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/features/interface-platform/documentation/types/interfaceDoc';
+import type { InterfacePublishCheckVO } from '@/features/interface-platform/publishing/types/interfacePublish';
 import type { InvokeRequest } from '@/types/invoke';
 
 /** 发布接口包含最长 15 秒后端探测，预留响应传输和服务端处理时间。 */
 const PUBLISH_REQUEST_TIMEOUT_MS = 20000;
 
 export const interfaceService = {
+  /** 查询管理员新增接口时可选择的已注册 SDK 方法。 */
+  listSdkMethods() {
+    return http.get<SdkMethodOption[]>('/interfaceInfo/sdk-method/list');
+  },
   listPage(params: InterfaceQuery) {
     return http.get<PageResult<InterfaceInfoVO>>('/interfaceInfo/list/page', {
       params,

@@ -97,17 +97,17 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CopyOutlined } from '@ant-design/icons-vue';
-import InterfaceDocumentation from '@/components/interface/InterfaceDocumentation.vue';
+import InterfaceDocumentation from '@/features/interface-platform/documentation/components/InterfaceDocumentation.vue';
 import MethodTag from '@/components/MethodTag.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import { useFormat } from '@/composables/useFormat';
-import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
+import { useInterfaceDoc } from '@/features/interface-platform/documentation/composables/useInterfaceDoc';
 import { useQuota } from '@/composables/useQuota';
-import '@/styles/features/interface-documentation.css';
+import '@/features/interface-platform/documentation/styles/interface-documentation.css';
 import '@/styles/pages/detail.css';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/interfaceDoc';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 
 /**
  * 接口详情页面组件。
