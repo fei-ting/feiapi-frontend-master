@@ -23,7 +23,25 @@
           </label>
           <label class="fei-field">
             <span class="fei-label">SDK 方法名</span>
-            <input v-model.trim="form.sdkMethodName" class="fei-input" maxlength="128" required />
+            <select
+              v-if="!isEdit"
+              v-model="form.sdkMethodName"
+              class="fei-select"
+              required
+              :disabled="sdkMethodsLoading || sdkMethodsLoadFailed"
+            >
+              <option value="" disabled>
+                {{ sdkMethodsLoading ? '正在加载 SDK 方法...' : '请选择 SDK 方法' }}
+              </option>
+              <option
+                v-for="option in sdkMethodOptions"
+                :key="option.sdkMethodName"
+                :value="option.sdkMethodName"
+              >
+                {{ option.sdkMethodName }}（{{ option.needParams ? '需要请求参数' : '无请求参数' }}）
+              </option>
+            </select>
+            <input v-else v-model.trim="form.sdkMethodName" class="fei-input" maxlength="128" required />
           </label>
           <label class="fei-field">
             <span class="fei-label">请求方法</span>
@@ -76,7 +94,11 @@
         <p v-if="errorMessage" class="fei-form-error" role="alert">{{ errorMessage }}</p>
         <div class="fei-modal__footer">
           <button class="fei-btn fei-btn--secondary" type="button" :disabled="submitting" @click="closeModal">取消</button>
-          <button class="fei-btn fei-btn--primary" type="submit" :disabled="submitting">
+          <button
+            class="fei-btn fei-btn--primary"
+            type="submit"
+            :disabled="submitting || (!isEdit && (sdkMethodsLoading || sdkMethodsLoadFailed))"
+          >
             {{ submitting ? '保存中...' : isEdit ? '保存配置' : '创建并维护文档' }}
           </button>
         </div>
@@ -91,7 +113,12 @@ import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
 import { QUOTA_TYPE_OPTIONS } from '@/composables/useQuota';
 import { INTERFACE_DOC_LIMITS } from '@/features/interface-platform/documentation/constants/interfaceDocLimits';
 import { interfaceService } from '@/services/interfaceInfo';
-import type { InterfaceInfoAddRequest, InterfaceInfoUpdateRequest, InterfaceInfoVO } from '@/types/interface';
+import type {
+  InterfaceInfoAddRequest,
+  InterfaceInfoUpdateRequest,
+  InterfaceInfoVO,
+  SdkMethodOption,
+} from '@/types/interface';
 import type { InterfaceQuotaType } from '@/types/quota';
 import {
   rawUnicodeCodePointLength,
@@ -157,6 +184,12 @@ const createDefaultForm = (): InterfaceConfigForm => ({
 const form = reactive<InterfaceConfigForm>(createDefaultForm());
 const submitting = ref(false);
 const errorMessage = ref('');
+/** 管理员可选择的已注册 SDK 方法。 */
+const sdkMethodOptions = ref<SdkMethodOption[]>([]);
+/** SDK 方法列表是否正在加载。 */
+const sdkMethodsLoading = ref(false);
+/** SDK 方法列表是否加载失败或为空。 */
+const sdkMethodsLoadFailed = ref(false);
 const isEdit = computed(() => Boolean(props.interfaceInfo?.id));
 const titleId = computed(() => `interface-config-title-${props.interfaceInfo?.id ?? 'new'}`);
 /** 当前运行时模板的 UTF-8 字节数。 */
@@ -185,6 +218,26 @@ const resetForm = () => {
 /** 关闭弹窗。 */
 const closeModal = () => {
   if (!submitting.value) emit('close');
+};
+
+/** 加载管理员新增接口时可选择的 SDK 方法。 */
+const loadSdkMethodOptions = async () => {
+  sdkMethodsLoading.value = true;
+  sdkMethodsLoadFailed.value = false;
+  sdkMethodOptions.value = [];
+  try {
+    const options = await interfaceService.listSdkMethods();
+    sdkMethodOptions.value = options;
+    if (options.length === 0) {
+      sdkMethodsLoadFailed.value = true;
+      errorMessage.value = '当前没有可用的 SDK 方法';
+    }
+  } catch (error) {
+    sdkMethodsLoadFailed.value = true;
+    errorMessage.value = error instanceof Error ? error.message : 'SDK 方法列表加载失败';
+  } finally {
+    sdkMethodsLoading.value = false;
+  }
 };
 
 /** 按后端同步规则解析运行时模板示例值。 */
@@ -237,6 +290,10 @@ const submitForm = async () => {
     errorMessage.value = templateError;
     return;
   }
+  if (!isEdit.value && (!form.sdkMethodName || sdkMethodsLoadFailed.value)) {
+    errorMessage.value = sdkMethodsLoadFailed.value ? errorMessage.value : '请选择 SDK 方法';
+    return;
+  }
   submitting.value = true;
   errorMessage.value = '';
   try {
@@ -265,7 +322,9 @@ const submitForm = async () => {
   }
 };
 
-watch(() => props.open, (open) => {
-  if (open) resetForm();
-});
+watch(() => props.open, async (open) => {
+  if (!open) return;
+  resetForm();
+  if (!isEdit.value) await loadSdkMethodOptions();
+}, { immediate: true });
 </script>

@@ -4,12 +4,14 @@ import InterfaceConfigModal from '../InterfaceConfigModal.vue';
 
 const mocks = vi.hoisted(() => ({
   add: vi.fn(),
+  listSdkMethods: vi.fn(),
   update: vi.fn(),
 }));
 
 vi.mock('@/services/interfaceInfo', () => ({
   interfaceService: {
     add: mocks.add,
+    listSdkMethods: mocks.listSdkMethods,
     update: mocks.update,
   },
 }));
@@ -18,6 +20,10 @@ describe('InterfaceConfigModal', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.add.mockResolvedValue(7);
+    mocks.listSdkMethods.mockResolvedValue([
+      { sdkMethodName: 'getUser', needParams: true },
+      { sdkMethodName: 'getLoveWords', needParams: false },
+    ]);
   });
 
   it('新增接口时省略空展示地址', async () => {
@@ -27,9 +33,10 @@ describe('InterfaceConfigModal', () => {
     const inputs = wrapper.findAll('input');
 
     await inputs[0].setValue('用户接口');
-    await inputs[1].setValue('getUser');
-    await inputs[2].setValue('/api/user');
-    await inputs[3].setValue('http://user-service:8080');
+    await flushPromises();
+    await wrapper.findAll('select')[0].setValue('getUser');
+    await inputs[1].setValue('/api/user');
+    await inputs[2].setValue('http://user-service:8080');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
 
@@ -52,9 +59,10 @@ describe('InterfaceConfigModal', () => {
     const inputs = wrapper.findAll('input');
 
     await inputs[0].setValue('用户接口');
-    await inputs[1].setValue('getUser');
-    await inputs[2].setValue('/api/user');
-    await inputs[3].setValue('http://user-service:8080');
+    await flushPromises();
+    await wrapper.findAll('select')[0].setValue('getUser');
+    await inputs[1].setValue('/api/user');
+    await inputs[2].setValue('http://user-service:8080');
     await wrapper.get('textarea.fei-code-input').setValue('{" userId": 1}');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
@@ -70,9 +78,10 @@ describe('InterfaceConfigModal', () => {
     const inputs = wrapper.findAll('input');
 
     await inputs[0].setValue('用户接口');
-    await inputs[1].setValue('getUser');
-    await inputs[2].setValue('/api/user');
-    await inputs[3].setValue('http://user-service:8080');
+    await flushPromises();
+    await wrapper.findAll('select')[0].setValue('getUser');
+    await inputs[1].setValue('/api/user');
+    await inputs[2].setValue('http://user-service:8080');
     await wrapper.get('textarea.fei-code-input').setValue('{"": 1}');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
@@ -120,5 +129,26 @@ describe('InterfaceConfigModal', () => {
 
     expect(mocks.add).not.toHaveBeenCalled();
     expect(wrapper.text()).toContain(message);
+  });
+
+  it('新增接口时以下拉框展示已注册 SDK 方法', async () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    await flushPromises();
+
+    expect(mocks.listSdkMethods).toHaveBeenCalledOnce();
+    expect(wrapper.findAll('select')[0].text()).toContain('getUser（需要请求参数）');
+    expect(wrapper.findAll('select')[0].text()).toContain('getLoveWords（无请求参数）');
+  });
+
+  it('SDK 方法列表加载失败时禁止新增提交', async () => {
+    mocks.listSdkMethods.mockRejectedValueOnce(new Error('SDK 方法列表加载失败'));
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    await flushPromises();
+
+    await wrapper.get('form').trigger('submit');
+
+    expect(mocks.add).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('SDK 方法列表加载失败');
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined();
   });
 });

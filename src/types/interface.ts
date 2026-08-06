@@ -48,6 +48,14 @@ export interface InterfaceInfoVO {
   docStatus: InterfaceDocStatus;
 }
 
+/** 管理员新增接口时可选择的 SDK 方法。 */
+export interface SdkMethodOption {
+  /** SDK 方法名。 */
+  sdkMethodName: string;
+  /** SDK 方法是否需要请求参数。 */
+  needParams: boolean;
+}
+
 /**
  * 接口分页查询参数
  */
@@ -95,7 +103,7 @@ export interface InterfaceInfoAddRequest {
   /** 接口配额类型 */
   quotaType?: InterfaceQuotaType;
   /** SDK 方法名 */
-  sdkMethodName?: string;
+  sdkMethodName: string;
 }
 
 /**
