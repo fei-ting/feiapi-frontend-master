@@ -6,8 +6,8 @@ import type {
   InterfaceInfoVO,
   InterfaceQuery,
 } from '@/types/interface';
-import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/types/interfaceDoc';
-import type { InterfacePublishCheckVO } from '@/types/interfacePublish';
+import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/features/interface-platform/documentation/types/interfaceDoc';
+import type { InterfacePublishCheckVO } from '@/features/interface-platform/publishing/types/interfacePublish';
 import type { InvokeRequest } from '@/types/invoke';
 
 /** 发布接口包含最长 15 秒后端探测，预留响应传输和服务端处理时间。 */

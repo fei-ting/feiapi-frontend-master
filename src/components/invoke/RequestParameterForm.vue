@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
 import type { RequestParamField } from '@/composables/useInterfaceInvoke';
-import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
+import { INTERFACE_DOC_LIMITS } from '@/features/interface-platform/documentation/constants/interfaceDocLimits';
 
 /** 请求参数表单组件属性。 */
 interface RequestParameterFormProps {

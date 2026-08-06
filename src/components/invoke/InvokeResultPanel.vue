@@ -49,8 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import InterfaceDocumentation from '@/components/interface/InterfaceDocumentation.vue';
-import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
+import InterfaceDocumentation from '@/features/interface-platform/documentation/components/InterfaceDocumentation.vue';
+import type { InterfaceDocDetailVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 import type { InvokeTab } from '@/types/invoke';
 
 /** 调用结果面板组件属性。 */

@@ -1,6 +1,6 @@
 import { computed, reactive, ref, type Ref } from 'vue';
-import { INTERFACE_DOC_LIMITS } from '@/constants/interfaceDocLimits';
-import type { InterfaceDocDetailVO } from '@/types/interfaceDoc';
+import { INTERFACE_DOC_LIMITS } from '@/features/interface-platform/documentation/constants/interfaceDocLimits';
+import type { InterfaceDocDetailVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 import { utf8ByteLength } from '@/utils/textSize';
 
 /** 在线调用支持的参数值类型 */

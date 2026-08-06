@@ -4,7 +4,7 @@
 
 import type { InterfaceQuotaType } from '@/types/quota';
 import type { SortOrder } from '@/types/common';
-import type { InterfaceDocStatus } from '@/types/interfaceDoc';
+import type { InterfaceDocStatus } from '@/features/interface-platform/documentation/types/interfaceDoc';
 
 /** 接口信息视图对象 */
 export interface InterfaceInfoVO {
