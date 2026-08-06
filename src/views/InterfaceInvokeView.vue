@@ -80,13 +80,13 @@ import InvokeResultPanel from '@/components/invoke/InvokeResultPanel.vue';
 import RequestParameterForm from '@/components/invoke/RequestParameterForm.vue';
 import MethodTag from '@/components/MethodTag.vue';
 import StatusTag from '@/components/StatusTag.vue';
-import { useInterfaceDoc } from '@/composables/useInterfaceDoc';
+import { useInterfaceDoc } from '@/features/interface-platform/documentation/composables/useInterfaceDoc';
 import { useInterfaceInvoke } from '@/composables/useInterfaceInvoke';
-import '@/styles/features/interface-documentation.css';
+import '@/features/interface-platform/documentation/styles/interface-documentation.css';
 import '@/styles/pages/invoke.css';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
-import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/types/interfaceDoc';
+import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 import type { InvokeTab } from '@/types/invoke';
 
 /** 在线调用弹窗动作。 */

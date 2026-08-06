@@ -130,19 +130,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import InterfaceConfigModal from '@/components/admin/InterfaceConfigModal.vue';
-import InterfacePublishCheckDialog from '@/components/admin/InterfacePublishCheckDialog.vue';
+import InterfaceConfigModal from '@/features/interface-platform/definition/components/InterfaceConfigModal.vue';
+import InterfacePublishCheckDialog from '@/features/interface-platform/publishing/components/InterfacePublishCheckDialog.vue';
 import DataTable from '@/components/common/DataTable.vue';
 import { interfaceService } from '@/services/interfaceInfo';
 import { QUOTA_TYPE_OPTIONS, useQuota } from '@/composables/useQuota';
+import { useInterfaceDefinition } from '@/features/interface-platform/definition/composables/useInterfaceDefinition';
+import { useInterfaceLifecycle } from '@/features/interface-platform/lifecycle/composables/useInterfaceLifecycle';
+import { useInterfacePublishing } from '@/features/interface-platform/publishing/composables/useInterfacePublishing';
 import type { InterfaceInfoVO, InterfaceQuery } from '@/types/interface';
-import {
-  PUBLISH_CHECK_FAILED_CODE,
-  type InterfacePublishCheckVO,
-  type InterfacePublishErrorData,
-} from '@/types/interfacePublish';
-import type { ApiError } from '@/types/common';
 import type { InterfaceQuotaType } from '@/types/quota';
 import type { DataTableColumn } from '@/types/table';
 
@@ -151,8 +147,12 @@ import type { DataTableColumn } from '@/types/table';
  * 提供接口的增删改查、上下线和分页功能
  */
 
-const router = useRouter();
 const { getQuotaTagClass, getQuotaTypeText, getInitialQuotaText, getInterfaceStatusText } = useQuota();
+
+/** 组件事件 */
+const emit = defineEmits<{
+  (event: 'show-toast', message: string, type: 'success' | 'error' | 'info'): void;
+}>();
 
 /** 接口列表 */
 const interfaces = ref<InterfaceInfoVO[]>([]);
@@ -181,24 +181,6 @@ const interfaceQuotaType = ref<InterfaceQuotaType | ''>('');
 /** 调用总数排序方向 */
 const totalNumSortOrder = ref<'' | 'ascend' | 'descend'>('');
 
-/** 是否显示接口配置弹窗 */
-const configModalOpen = ref(false);
-
-/** 当前编辑的接口；为空时表示新增 */
-const editingInterface = ref<InterfaceInfoVO | null>(null);
-
-/** 正在执行发布前检查的接口 ID 集合。 */
-const checkingIds = ref<Set<number>>(new Set());
-
-/** 正在执行正式发布的接口 ID 集合。 */
-const publishingIds = ref<Set<number>>(new Set());
-
-/** 发布检查结果弹窗是否打开。 */
-const publishCheckDialogOpen = ref(false);
-
-/** 当前发布检查结果。 */
-const publishCheckResult = ref<InterfacePublishCheckVO | null>(null);
-
 /** 接口分页配置 */
 const interfacePagination = ref({
   current: 1,
@@ -216,21 +198,6 @@ const totalNumSortLabel = computed(() => {
   return '点击按调用总数降序排序';
 });
 
-/** 判断当前接口行是否正在执行发布相关操作。 */
-const isRowBusy = (id: number) => checkingIds.value.has(id) || publishingIds.value.has(id);
-
-/** 向集合中添加接口 ID。 */
-const addBusyId = (target: typeof checkingIds, id: number) => {
-  target.value = new Set([...target.value, id]);
-};
-
-/** 从集合中移除接口 ID。 */
-const removeBusyId = (target: typeof checkingIds, id: number) => {
-  const next = new Set(target.value);
-  next.delete(id);
-  target.value = next;
-};
-
 /**
  * 显示 Toast 通知（通过父组件）
  * @param message 通知消息
@@ -239,11 +206,6 @@ const removeBusyId = (target: typeof checkingIds, id: number) => {
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   emit('show-toast', message, type);
 };
-
-/** 组件事件 */
-const emit = defineEmits<{
-  (event: 'show-toast', message: string, type: 'success' | 'error' | 'info'): void;
-}>();
 
 /**
  * 切换调用总数排序方向
@@ -302,165 +264,30 @@ const loadInterfaces = async () => {
   }
 };
 
-/**
- * 接口上线
- * @param id 接口ID
- */
-/** 判断错误是否为发布前静态检查失败。 */
-const isPublishCheckError = (error: unknown): error is ApiError<InterfacePublishErrorData> =>
-  error instanceof Error && (error as ApiError).code === PUBLISH_CHECK_FAILED_CODE;
+const {
+  configModalOpen,
+  editingInterface,
+  openAddModal,
+  openEditModal,
+  closeConfigModal,
+  handleConfigSaved,
+  openDocumentPage,
+} = useInterfaceDefinition({ loadInterfaces, showToast });
 
-/** 判断响应数据是否为发布检查结果。 */
-const isPublishCheckResult = (data: unknown): data is InterfacePublishCheckVO =>
-  typeof data === 'object'
-  && data !== null
-  && typeof (data as InterfacePublishCheckVO).passed === 'boolean'
-  && Array.isArray((data as InterfacePublishCheckVO).issues);
+const {
+  checkingIds,
+  publishingIds,
+  publishCheckDialogOpen,
+  publishCheckResult,
+  isRowBusy,
+  onlineInterface,
+  checkPublish,
+} = useInterfacePublishing({ loadInterfaces, showToast });
 
-/** 展示未通过的发布检查结果。 */
-const openFailedPublishCheck = (result: InterfacePublishCheckVO): void => {
-  if (result.passed) {
-    return;
-  }
-  publishCheckResult.value = result;
-  publishCheckDialogOpen.value = true;
-};
-
-const onlineInterface = async (id: number) => {
-  addBusyId(publishingIds, id);
-  try {
-    await interfaceService.online({ id });
-    showToast('接口已上线', 'success');
-    await loadInterfaces();
-  } catch (error) {
-    console.error('[InterfaceManagementView] 接口上线失败:', error);
-    if (isPublishCheckError(error)) {
-      try {
-        if (isPublishCheckResult(error.data)) {
-          openFailedPublishCheck(error.data);
-        } else {
-          openFailedPublishCheck(await interfaceService.checkPublish(id));
-        }
-      } catch {
-        // 正式发布失败后的补充检查失败时，保留原始发布错误提示。
-      }
-    }
-    showToast(error instanceof Error ? error.message : '上线失败', 'error');
-    await loadInterfaces();
-  } finally {
-    removeBusyId(publishingIds, id);
-  }
-};
-
-/**
- * 执行发布前检查
- * @param id 接口 ID
- */
-const checkPublish = async (id: number) => {
-  addBusyId(checkingIds, id);
-  try {
-    publishCheckResult.value = await interfaceService.checkPublish(id);
-    publishCheckDialogOpen.value = true;
-    if (publishCheckResult.value.passed) {
-      showToast('发布条件已通过', 'success');
-    }
-  } catch (error) {
-    console.error('[InterfaceManagementView] 发布前检查失败:', error);
-    showToast(error instanceof Error ? error.message : '检查失败', 'error');
-  }
-  finally {
-    removeBusyId(checkingIds, id);
-  }
-};
-
-/**
- * 接口下线
- * @param id 接口ID
- */
-const offlineInterface = async (id: number) => {
-  try {
-    await interfaceService.offline({ id });
-    showToast('接口已下线', 'success');
-    await loadInterfaces();
-  } catch (error) {
-    console.error('[InterfaceManagementView] 接口下线失败:', error);
-    showToast('下线失败', 'error');
-  }
-};
-
-/**
- * 打开新增接口弹窗
- */
-const openAddModal = () => {
-  editingInterface.value = null;
-  configModalOpen.value = true;
-};
-
-/**
- * 打开编辑接口弹窗
- * @param item 接口信息
- */
-const openEditModal = (item: InterfaceInfoVO) => {
-  if (item.status !== 0) {
-    showToast('请先下线接口后再修改配置', 'info');
-    return;
-  }
-  editingInterface.value = item;
-  configModalOpen.value = true;
-};
-
-/**
- * 删除下线接口
- * @param item 接口信息
- */
-const openDeleteModal = async (item: InterfaceInfoVO) => {
-  if (item.status !== 0) {
-    showToast('请先下线接口后再删除', 'info');
-    return;
-  }
-  const method = item.method || '-';
-  const path = item.path || '-';
-  if (!window.confirm(`确定删除接口“${item.name}”吗？\n请求方法：${method}\n网关路径：${path}\n删除后不可恢复。`)) return;
-  try {
-    await interfaceService.delete({ id: item.id });
-    showToast('接口已删除', 'success');
-  } catch (error) {
-    console.error('[InterfaceManagementView] 删除接口失败:', error);
-    showToast(error instanceof Error ? error.message : '删除失败', 'error');
-  } finally {
-    await loadInterfaces();
-  }
-};
-
-/** 关闭接口配置弹窗 */
-const closeConfigModal = () => {
-  configModalOpen.value = false;
-  editingInterface.value = null;
-};
-
-/**
- * 处理接口配置保存结果
- * @param id 接口 ID
- * @param created 是否为新增接口
- */
-const handleConfigSaved = async (id: number, created: boolean) => {
-  closeConfigModal();
-  if (created) {
-    showToast('接口已创建，请继续维护文档', 'success');
-    await router.push({ name: 'admin-interface-doc', params: { id } });
-    return;
-  }
-  showToast('接口配置已保存', 'success');
-  await loadInterfaces();
-};
-
-/**
- * 进入独立文档维护页
- * @param id 接口 ID
- */
-const openDocumentPage = (id: number) => {
-  void router.push({ name: 'admin-interface-doc', params: { id } });
-};
+const {
+  offlineInterface,
+  openDeleteModal,
+} = useInterfaceLifecycle({ loadInterfaces, showToast });
 
 onMounted(async () => {
   await loadInterfaces();
