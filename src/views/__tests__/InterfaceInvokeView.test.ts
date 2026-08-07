@@ -110,7 +110,13 @@ describe('InterfaceInvokeView', () => {
     mocks.loginUser = { id: 1, userRole: 'user' };
     mocks.getLoginUser.mockResolvedValue({ id: 1, userRole: 'user' });
     mocks.getDocDetail.mockResolvedValue(buildDocDetail());
-    mocks.invoke.mockResolvedValue({ ok: true });
+    mocks.invoke.mockResolvedValue({
+      successful: true,
+      statusCode: 200,
+      durationMs: 35,
+      contentType: 'application/json',
+      body: '{"ok":true}',
+    });
     mocks.routeParams.id = '1';
   });
 
@@ -119,6 +125,10 @@ describe('InterfaceInvokeView', () => {
    */
   it('按结构化参数类型生成在线调用 JSON', async () => {
     const wrapper = await mountView();
+
+    expect((wrapper.get('#invoke-param-name').element as HTMLInputElement).value).toBe('');
+    expect(wrapper.get('#invoke-param-name').attributes('placeholder')).toBe('请输入name');
+    await clickButton(wrapper, '填充示例');
 
     await clickButton(wrapper, '发送请求');
     await clickButton(wrapper, '确认调用');
@@ -134,6 +144,8 @@ describe('InterfaceInvokeView', () => {
       tags: ['vip'],
     });
     expect(wrapper.text()).toContain('"ok": true');
+    expect(wrapper.text()).toContain('状态 200');
+    expect(wrapper.text()).toContain('耗时 35 ms');
     expect(wrapper.emitted('show-toast')).toContainEqual(['调用成功', 'success']);
   });
 
@@ -141,6 +153,8 @@ describe('InterfaceInvokeView', () => {
   it('未登录时跳转到带 redirect 参数的登录路由', async () => {
     mocks.loginUser = null;
     const wrapper = await mountView();
+
+    await clickButton(wrapper, '填充示例');
 
     await clickButton(wrapper, '发送请求');
     await clickButton(wrapper, '去登录');
@@ -150,6 +164,7 @@ describe('InterfaceInvokeView', () => {
 
   it('参数类型错误时不调用接口并展示校验错误', async () => {
     const wrapper = await mountView();
+    await clickButton(wrapper, '填充示例');
     await wrapper.get('#invoke-param-meta').setValue('{错误 JSON');
 
     await clickButton(wrapper, '发送请求');
@@ -166,6 +181,8 @@ describe('InterfaceInvokeView', () => {
     mocks.invoke.mockRejectedValue(new Error('网关调用失败'));
     const wrapper = await mountView();
 
+    await clickButton(wrapper, '填充示例');
+
     await clickButton(wrapper, '发送请求');
     await clickButton(wrapper, '确认调用');
 
@@ -174,13 +191,22 @@ describe('InterfaceInvokeView', () => {
   });
 
   it('调用返回空值时显示空响应文案', async () => {
-    mocks.invoke.mockResolvedValue(null);
+    mocks.invoke.mockResolvedValue({
+      successful: true,
+      statusCode: 204,
+      durationMs: 12,
+      contentType: 'application/json',
+      body: '',
+    });
     const wrapper = await mountView();
+
+    await clickButton(wrapper, '填充示例');
 
     await clickButton(wrapper, '发送请求');
     await clickButton(wrapper, '确认调用');
 
-    expect(wrapper.text()).toContain('接口返回为空');
+    expect(wrapper.text()).toContain('响应正文为空');
+    expect(wrapper.text()).toContain('状态 204');
     expect(wrapper.emitted('show-toast')).toContainEqual(['调用成功', 'success']);
   });
 
@@ -207,6 +233,8 @@ describe('InterfaceInvokeView', () => {
     });
     const wrapper = await mountView();
 
+    await clickButton(wrapper, '填充示例');
+
     await clickButton(wrapper, '发送请求');
     await clickButton(wrapper, '确认调用');
     await wrapper.get('.fei-debug-copy').trigger('click');
@@ -220,13 +248,20 @@ describe('InterfaceInvokeView', () => {
     const detail = buildDocDetail();
     detail.requestHeaders = [{ name: 'Authorization', defaultValue: 'Bearer demo' }];
     mocks.getDocDetail.mockResolvedValue(detail);
-    mocks.invoke.mockResolvedValue('plain response');
+    mocks.invoke.mockResolvedValue({
+      successful: true,
+      statusCode: 200,
+      durationMs: 8,
+      contentType: 'text/plain',
+      body: 'plain response',
+    });
     const wrapper = await mountView();
 
     await wrapper.get('#invoke-param-name').setValue('');
     await clickButton(wrapper, '填充示例');
     expect((wrapper.get('#invoke-param-name').element as HTMLInputElement).value).toBe('alice');
     expect(wrapper.text()).toContain('Authorization: Bearer demo');
+    expect(wrapper.get('.fei-invoke-body-preview__content').text()).toContain('"name": "alice"');
 
     await clickButton(wrapper, '发送请求');
     await clickButton(wrapper, '确认调用');
@@ -234,6 +269,27 @@ describe('InterfaceInvokeView', () => {
 
     await clickButton(wrapper, '接口文档');
     expect(wrapper.find('[role="tab"][aria-selected="true"]').text()).toBe('接口文档');
+    expect(wrapper.text()).toContain('Java SDK');
+    expect(wrapper.text()).toContain('curl');
+  });
+
+  it('示例值为空时保持空输入且不显示无效填充按钮', async () => {
+    const detail = buildDocDetail();
+    detail.requestParams = [{
+      id: 1,
+      name: 'username',
+      paramScene: 'BODY',
+      type: 'string',
+      required: true,
+      exampleValue: '',
+    }];
+    mocks.getDocDetail.mockResolvedValue(detail);
+
+    const wrapper = await mountView();
+
+    expect((wrapper.get('#invoke-param-username').element as HTMLInputElement).value).toBe('');
+    expect(wrapper.get('#invoke-param-username').attributes('placeholder')).toBe('请输入username');
+    expect(wrapper.findAll('button').some((button) => button.text() === '填充示例')).toBe(false);
   });
 
   it('非法接口ID不发起文档请求', async () => {

@@ -249,6 +249,20 @@
   margin-top: 22px;
 }
 
+.fei-invoke-body-preview {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.fei-invoke-body-preview__content {
+  max-height: 220px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .fei-invoke-textarea {
   min-height: 220px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -284,6 +298,44 @@
   min-height: 0;
   max-height: 100%;
   margin-top: 0;
+}
+
+.fei-invoke-result-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.fei-invoke-response-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--fei-border);
+  background: #f8fbff;
+}
+
+.fei-invoke-response-meta__item {
+  padding: 5px 9px;
+  color: var(--fei-text-secondary);
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fei-invoke-response-meta__item.is-success {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.fei-invoke-response-meta__item.is-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 .fei-invoke-doc {

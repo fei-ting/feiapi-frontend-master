@@ -47,11 +47,28 @@ describe('InterfaceDocumentation', () => {
     expect(wrapper.text()).toContain('用户名称。例如：alice。不能为空');
     expect(wrapper.text()).toContain('dataobject是响应数据');
     expect(wrapper.get('pre.fei-code').text()).toContain('"ok": true');
-    expect(wrapper.text()).toContain('curl -X POST /api/doc');
+    expect(wrapper.text()).toContain('FeiApiClient client');
     expect(wrapper.classes()).toContain('fei-invoke-doc');
     expect(wrapper.text()).not.toContain('错误码');
-    expect(wrapper.find('.fei-example-switch').exists()).toBe(false);
-    expect(wrapper.find('button[title="复制 curl 示例"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="调用示例类型"]').exists()).toBe(true);
+    expect(wrapper.find('button[title="复制 Java SDK 示例"]').exists()).toBe(true);
+  });
+
+  it('紧凑模式支持切换并复制 Java SDK 与 curl 示例', async () => {
+    const wrapper = mount(InterfaceDocumentation, {
+      props: { docDetail: buildDocDetail() },
+    });
+
+    await wrapper.get('button[title="复制 Java SDK 示例"]').trigger('click');
+    const invocationSwitch = wrapper.get('[aria-label="调用示例类型"]');
+    await invocationSwitch.findAll('.fei-example-switch__button')[1].trigger('click');
+    expect(wrapper.text()).toContain('curl -X POST /api/doc');
+    await wrapper.get('button[title="复制 curl 示例"]').trigger('click');
+
+    expect(wrapper.emitted('copy-text')).toEqual([
+      ['FeiApiClient client = new FeiApiClient();\nclient.getUser();'],
+      ['curl -X POST /api/doc'],
+    ]);
   });
 
   it('详情模式展示完整列、错误码和响应父级字段', () => {

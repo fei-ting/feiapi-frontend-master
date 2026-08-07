@@ -20,6 +20,7 @@ const mountForm = (overrides: Record<string, unknown> = {}) => mount(RequestPara
     requestParamBytes: 25,
     requestParamOverLimit: false,
     requestParamError: '',
+    requestBodyPreview: '{\n  "name": "alice"\n}',
     ...overrides,
   },
 });
@@ -79,5 +80,12 @@ describe('RequestParameterForm', () => {
     expect(wrapper.text()).toContain('超过 1 字节');
     expect(wrapper.text()).toContain('请求参数不能超过 65535 个 UTF-8 字节');
     expect(wrapper.findAll('button')[0].attributes()).toHaveProperty('disabled');
+  });
+
+  it('展示字段生成的只读请求 Body', () => {
+    const wrapper = mountForm();
+
+    expect(wrapper.get('.fei-invoke-body-preview').text()).toContain('请求 Body');
+    expect(wrapper.get('.fei-invoke-body-preview__content').text()).toContain('"name": "alice"');
   });
 });

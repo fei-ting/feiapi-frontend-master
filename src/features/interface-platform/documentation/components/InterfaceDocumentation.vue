@@ -153,7 +153,7 @@
     </div>
 
     <div class="fei-doc-section">
-      <div v-if="isDetailMode" class="fei-doc-section__head">
+      <div class="fei-doc-section__head">
         <h3 class="fei-doc-heading">调用示例</h3>
         <button
           class="fei-icon-btn"
@@ -162,11 +162,10 @@
           :disabled="!hasText(activeInvocationText)"
           @click="requestCopy(activeInvocationText)"
         >
-          <slot name="copy-icon" />
+          <slot name="copy-icon">复制</slot>
         </button>
       </div>
-      <h3 v-else class="fei-doc-heading">curl 调用示例</h3>
-      <div v-if="isDetailMode" class="fei-example-switch" role="tablist" aria-label="调用示例类型">
+      <div class="fei-example-switch" role="tablist" aria-label="调用示例类型">
         <button
           class="fei-example-switch__button"
           :class="{ 'is-active': invocationTab === 'java' }"
@@ -251,7 +250,7 @@ const activeExampleCopyTitle = computed(() => (
 
 /** 当前展示的调用示例。 */
 const activeInvocationText = computed(() => {
-  if (!isDetailMode.value || invocationTab.value === 'curl') {
+  if (invocationTab.value === 'curl') {
     return props.docDetail.curlExample || '';
   }
   return props.docDetail.javaSdkExample || '';
