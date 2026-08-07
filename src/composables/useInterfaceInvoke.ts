@@ -10,7 +10,7 @@ export type RequestParamValue = string | number | boolean | Record<string, unkno
 export interface RequestParamField {
   name: string;
   type: string;
-  example: unknown;
+  example?: unknown;
   required: boolean;
   defaultValue?: string;
   description?: string;
@@ -32,6 +32,13 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
   /** 当前最终在线调用参数是否超过网关签名正文上限。 */
   const requestParamOverLimit = computed(() => requestParamBytes.value > INTERFACE_DOC_LIMITS.invokeBodyBytes);
 
+  /** 判断字段示例是否只是类型占位标记。 */
+  const isTypePlaceholder = (param: RequestParamField, value: unknown): boolean => (
+    typeof value === 'string'
+    && ['string', 'number', 'boolean', 'object', 'array'].includes(value.trim().toLowerCase())
+    && value.trim().toLowerCase() === param.type.toLowerCase()
+  );
+
   /** 解析接口文档中的结构化参数 */
   const parseStructuredParams = (doc: InterfaceDocDetailVO | null): RequestParamField[] => {
     if (!doc || doc.structuredDocMissing) return [];
@@ -41,9 +48,9 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
         const field: RequestParamField = {
           name: param.name as string,
           type: param.type || 'string',
-          example: param.exampleValue || param.defaultValue || '',
           required: param.required !== false,
         };
+        if (param.exampleValue !== undefined) field.example = param.exampleValue;
         if (param.defaultValue !== undefined) field.defaultValue = param.defaultValue;
         if (param.description !== undefined) field.description = param.description;
         if (param.validationRule !== undefined) field.validationRule = param.validationRule;
@@ -85,17 +92,35 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
     return { valid: true, value: rawValue };
   };
 
+  /** 将示例值转换为字段输入框使用的文本。 */
+  const exampleToInputValue = (param: RequestParamField): string | null => {
+    const value = param.example ?? param.defaultValue;
+    if (value === null || value === undefined || isTypePlaceholder(param, value)) return null;
+    const rawValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    if (!rawValue.trim()) return null;
+    return parseParamValue(param, rawValue).valid ? rawValue : null;
+  };
+
+  /** 当前文档是否至少存在一个可转换的示例值。 */
+  const canFillExample = computed(() => (
+    structuredParams.value.some((param) => exampleToInputValue(param) !== null)
+  ));
+
   /** 将字段值同步为请求 JSON */
   const syncRequestParamsFromFields = () => {
     if (!structuredParams.value.length) return '';
     const params: Record<string, RequestParamValue> = {};
+    let firstError = '';
     for (const param of structuredParams.value) {
       const parsedValue = parseParamValue(param, paramValues[param.name] || '');
-      if (!parsedValue.valid) return parsedValue.message || '请求参数格式错误';
+      if (!parsedValue.valid) {
+        if (!firstError) firstError = parsedValue.message || '请求参数格式错误';
+        continue;
+      }
       if (parsedValue.value !== undefined) params[param.name] = parsedValue.value as RequestParamValue;
     }
     requestParams.value = JSON.stringify(params);
-    return '';
+    return firstError;
   };
 
   /** 校验当前请求参数 */
@@ -124,27 +149,18 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
   /** 从文档示例填充字段值 */
   const fillStructuredExample = () => {
     structuredParams.value.forEach((param) => {
-      if (param.example === null || param.example === undefined) {
-        paramValues[param.name] = '';
-      } else if (typeof param.example === 'string' && ['string', 'number', 'boolean', 'object', 'array'].includes(param.example.toLowerCase())) {
-        paramValues[param.name] = '';
-      } else if (typeof param.example === 'object') {
-        paramValues[param.name] = JSON.stringify(param.example);
-      } else {
-        paramValues[param.name] = String(param.example);
-      }
+      const inputValue = exampleToInputValue(param);
+      if (inputValue !== null) paramValues[param.name] = inputValue;
     });
-    syncRequestParamsFromFields();
+    requestParamError.value = syncRequestParamsFromFields();
   };
 
   /** 根据最新文档初始化参数状态 */
   const syncFromDocument = () => {
+    Object.keys(paramValues).forEach((name) => delete paramValues[name]);
     structuredParams.value = parseStructuredParams(docDetail.value);
-    if (structuredParams.value.length) {
-      fillStructuredExample();
-    } else {
-      requestParams.value = '';
-    }
+    requestParams.value = '';
+    requestParamError.value = '';
   };
 
   return {
@@ -154,6 +170,7 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
     requestParamOverLimit,
     structuredParams,
     paramValues,
+    canFillExample,
     parseStructuredParams,
     syncRequestParamsFromFields,
     validateRequestParams,

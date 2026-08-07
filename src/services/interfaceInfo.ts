@@ -9,7 +9,7 @@ import type {
 } from '@/types/interface';
 import type { InterfaceDocDetailVO, InterfaceDocSaveRequest } from '@/features/interface-platform/documentation/types/interfaceDoc';
 import type { InterfacePublishCheckVO } from '@/features/interface-platform/publishing/types/interfacePublish';
-import type { InvokeRequest } from '@/types/invoke';
+import type { InvokeRequest, InvokeResponse } from '@/types/invoke';
 
 /** 发布接口包含最长 15 秒后端探测，预留响应传输和服务端处理时间。 */
 const PUBLISH_REQUEST_TIMEOUT_MS = 20000;
@@ -51,7 +51,7 @@ export const interfaceService = {
     });
   },
   invoke(data: InvokeRequest) {
-    return http.post<unknown>('/interfaceInfo/invoke', data);
+    return http.post<InvokeResponse>('/interfaceInfo/invoke', data);
   },
   /**
    * 新增接口信息
