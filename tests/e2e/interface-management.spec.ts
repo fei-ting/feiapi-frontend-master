@@ -9,7 +9,10 @@ test('管理员新增接口并完成发布、下线和删除', async ({ page, ap
   await page.getByRole('button', { name: '新增接口' }).click();
   const configDialog = page.getByRole('dialog', { name: '新增接口' });
   await configDialog.getByLabel('接口名称').fill(NEW_INTERFACE.name);
-  await configDialog.getByLabel('SDK 方法名').fill(NEW_INTERFACE.sdkMethodName);
+  const sdkMethodSelect = configDialog.getByLabel('SDK 方法名');
+  await expect(sdkMethodSelect).toBeEnabled();
+  await sdkMethodSelect.selectOption(NEW_INTERFACE.sdkMethodName);
+  expect(apiMock.requestsFor('GET', '/api/interfaceInfo/sdk-method/list')).toHaveLength(1);
   await configDialog.getByLabel('请求方法').selectOption(NEW_INTERFACE.method);
   await configDialog.getByLabel('配额类型').selectOption(NEW_INTERFACE.quotaType);
   await configDialog.getByLabel('接口描述').fill(NEW_INTERFACE.description);
