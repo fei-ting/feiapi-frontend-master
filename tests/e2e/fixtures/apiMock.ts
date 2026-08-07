@@ -5,6 +5,7 @@ import {
   ADMIN_USER,
   createInterfaces,
   createQuotaConfigs,
+  NEW_INTERFACE,
 } from './testData';
 import type { TestInterface, TestQuotaConfig, TestUser } from './testData';
 
@@ -285,6 +286,21 @@ export class ApiMockController {
         current: Number(request.query.current ?? 1),
         pageSize: Number(request.query.pageSize ?? 10),
       }));
+      return;
+    }
+
+    if (key === 'GET /api/interfaceInfo/sdk-method/list') {
+      const registeredMethods = [
+        ...this.state.interfaces.map((item) => ({
+          sdkMethodName: item.sdkMethodName,
+          needParams: Boolean(item.requestParams.trim()),
+        })),
+        {
+          sdkMethodName: NEW_INTERFACE.sdkMethodName,
+          needParams: true,
+        },
+      ].sort((left, right) => left.sdkMethodName.localeCompare(right.sdkMethodName));
+      await this.fulfillJson(route, success(registeredMethods));
       return;
     }
 
