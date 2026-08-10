@@ -1,6 +1,7 @@
 <template>
   <button
     class="fei-copy-button"
+    :class="{ 'fei-copy-button--top-right': placement === 'top-right' }"
     type="button"
     :aria-label="label"
     :title="label"
@@ -16,12 +17,17 @@
 </template>
 
 <script setup lang="ts">
+/** 公共复制按钮定位模式。 */
+type CopyIconButtonPlacement = 'inline' | 'top-right';
+
 /** 公共复制图标按钮属性。 */
 interface CopyIconButtonProps {
   /** 无障碍名称和原生提示文本。 */
   label?: string;
   /** 悬停时展示的简短提示文本。 */
   tooltip?: string;
+  /** 按钮在业务容器中的定位模式。 */
+  placement?: CopyIconButtonPlacement;
   /** 是否禁用复制按钮。 */
   disabled?: boolean;
 }
@@ -35,6 +41,7 @@ interface CopyIconButtonEmits {
 withDefaults(defineProps<CopyIconButtonProps>(), {
   label: '复制',
   tooltip: '复制',
+  placement: 'inline',
   disabled: false,
 });
 const emit = defineEmits<CopyIconButtonEmits>();
@@ -66,6 +73,13 @@ const handleClick = (mouseEvent: MouseEvent): void => {
   box-shadow: var(--fei-shadow-soft);
   cursor: pointer;
   transition: color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+}
+
+.fei-copy-button--top-right {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
 }
 
 .fei-copy-button:not(:disabled):hover {

@@ -5,13 +5,14 @@ import CopyIconButton from '../CopyIconButton.vue';
 describe('CopyIconButton', () => {
   it('渲染统一复制图标和提示信息', () => {
     const wrapper = mount(CopyIconButton, {
-      props: { label: '复制 Java SDK 示例' },
+      props: { label: '复制 Java SDK 示例', placement: 'top-right' },
     });
 
     const button = wrapper.get('button');
     expect(button.attributes('aria-label')).toBe('复制 Java SDK 示例');
     expect(button.attributes('title')).toBe('复制 Java SDK 示例');
     expect(button.attributes('data-tooltip')).toBe('复制');
+    expect(button.classes()).toContain('fei-copy-button--top-right');
     expect(button.find('svg').exists()).toBe(true);
   });
 
