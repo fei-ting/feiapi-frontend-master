@@ -75,21 +75,8 @@
   top: 10px;
   right: 10px;
   z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  color: var(--fei-text-secondary);
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--fei-border);
-  border-radius: 8px;
-  box-shadow: var(--fei-shadow-soft);
-  cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .fei-debug-output:hover .fei-debug-copy,
@@ -98,50 +85,11 @@
   pointer-events: auto;
 }
 
-.fei-debug-copy:hover {
-  color: var(--fei-primary);
-  border-color: var(--fei-primary-light);
-  transform: translateY(-1px);
-}
-
-.fei-debug-copy:disabled {
-  color: var(--fei-text-muted);
-  cursor: not-allowed;
-}
-
-.fei-debug-copy svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.fei-debug-copy::after {
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 8px);
-  padding: 5px 8px;
-  color: #fff;
-  background: #111827;
-  border-radius: 6px;
-  content: attr(data-tooltip);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(4px) translateY(-50%);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.fei-debug-copy:hover::after,
-.fei-debug-copy:focus-visible::after {
-  opacity: 1;
-  transform: translateX(0) translateY(-50%);
+@media (hover: none) {
+  .fei-debug-copy {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .fei-detail-quota-text {

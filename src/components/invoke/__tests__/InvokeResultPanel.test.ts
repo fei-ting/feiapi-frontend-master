@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
+import CopyIconButton from '@/components/common/CopyIconButton.vue';
 import InterfaceDocumentation from '@/features/interface-platform/documentation/components/InterfaceDocumentation.vue';
 import InvokeResultPanel from '../InvokeResultPanel.vue';
 import type { InterfaceDocDetailVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
@@ -31,6 +32,7 @@ describe('InvokeResultPanel', () => {
 
     expect(wrapper.text()).toContain('暂无数据');
     expect(wrapper.get('.fei-debug-copy').attributes()).toHaveProperty('disabled');
+    expect(wrapper.getComponent(CopyIconButton).props('label')).toBe('复制');
     expect(wrapper.get('.fei-doc-tab.is-active').text()).toBe('请求结果');
   });
 

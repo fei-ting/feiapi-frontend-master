@@ -43,19 +43,11 @@
         class="fei-debug-output fei-invoke-output"
         :class="{ 'fei-debug-output--empty': !invokeResultText }"
       >
-        <button
+        <CopyIconButton
           class="fei-debug-copy"
-          type="button"
-          aria-label="复制"
-          data-tooltip="复制"
           :disabled="!invokeResultText"
           @click="requestCopy"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M8 8.5C8 7.67 8.67 7 9.5 7h8C18.33 7 19 7.67 19 8.5v8c0 .83-.67 1.5-1.5 1.5h-8C8.67 18 8 17.33 8 16.5v-8Z" />
-            <path d="M5 14.5v-8C5 5.67 5.67 5 6.5 5h8" />
-          </svg>
-        </button>
+        />
         <pre class="fei-debug-output__content">{{ invokeResultText || '暂无数据' }}</pre>
       </div>
     </div>
@@ -70,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import CopyIconButton from '@/components/common/CopyIconButton.vue';
 import InterfaceDocumentation from '@/features/interface-platform/documentation/components/InterfaceDocumentation.vue';
 import type { InterfaceDocDetailVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 import type { InvokeResponse, InvokeTab } from '@/types/invoke';

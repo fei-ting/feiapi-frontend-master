@@ -88,19 +88,7 @@
     </div>
 
     <div class="fei-doc-section">
-      <div v-if="isDetailMode" class="fei-doc-section__head">
-        <h3 class="fei-doc-heading">JSON 返回示例</h3>
-        <button
-          class="fei-icon-btn"
-          type="button"
-          :title="activeExampleCopyTitle"
-          :disabled="!hasText(activeExampleText)"
-          @click="requestCopy(activeExampleText)"
-        >
-          <slot name="copy-icon" />
-        </button>
-      </div>
-      <h3 v-else class="fei-doc-heading">JSON 返回示例</h3>
+      <h3 class="fei-doc-heading">JSON 返回示例</h3>
       <div v-if="isDetailMode" class="fei-example-switch" role="tablist" aria-label="返回示例类型">
         <button
           class="fei-example-switch__button"
@@ -123,8 +111,16 @@
           失败示例
         </button>
       </div>
-      <pre v-if="hasText(activeExampleText)" class="fei-code">{{ prettyJson(activeExampleText, '{}') }}</pre>
-      <div v-else class="fei-doc-empty">{{ activeExampleEmptyText }}</div>
+      <div class="fei-code-wrap">
+        <CopyIconButton
+          class="fei-code-copy"
+          :label="activeExampleCopyTitle"
+          :disabled="!hasText(activeExampleText)"
+          @click="requestCopy(activeExampleText)"
+        />
+        <pre v-if="hasText(activeExampleText)" class="fei-code">{{ prettyJson(activeExampleText, '{}') }}</pre>
+        <div v-else class="fei-doc-empty">{{ activeExampleEmptyText }}</div>
+      </div>
     </div>
 
     <div v-if="isDetailMode" class="fei-doc-section">
@@ -153,18 +149,7 @@
     </div>
 
     <div class="fei-doc-section">
-      <div class="fei-doc-section__head">
-        <h3 class="fei-doc-heading">调用示例</h3>
-        <button
-          class="fei-icon-btn"
-          type="button"
-          :title="activeInvocationCopyTitle"
-          :disabled="!hasText(activeInvocationText)"
-          @click="requestCopy(activeInvocationText)"
-        >
-          <slot name="copy-icon">复制</slot>
-        </button>
-      </div>
+      <h3 class="fei-doc-heading">调用示例</h3>
       <div class="fei-example-switch" role="tablist" aria-label="调用示例类型">
         <button
           class="fei-example-switch__button"
@@ -187,14 +172,23 @@
           curl
         </button>
       </div>
-      <pre v-if="hasText(activeInvocationText)" class="fei-code">{{ activeInvocationText }}</pre>
-      <div v-else class="fei-doc-empty">暂无调用示例</div>
+      <div class="fei-code-wrap">
+        <CopyIconButton
+          class="fei-code-copy"
+          :label="activeInvocationCopyTitle"
+          :disabled="!hasText(activeInvocationText)"
+          @click="requestCopy(activeInvocationText)"
+        />
+        <pre v-if="hasText(activeInvocationText)" class="fei-code">{{ activeInvocationText }}</pre>
+        <div v-else class="fei-doc-empty">暂无调用示例</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import CopyIconButton from '@/components/common/CopyIconButton.vue';
 import { useInterfaceDoc } from '@/features/interface-platform/documentation/composables/useInterfaceDoc';
 import type { InterfaceDocDetailVO, InterfaceDocParamVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 
