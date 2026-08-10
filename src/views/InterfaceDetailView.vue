@@ -83,11 +83,7 @@
         :doc-detail="docDetail"
         mode="detail"
         @copy-text="copyText"
-      >
-        <template #copy-icon>
-          <CopyOutlined />
-        </template>
-      </InterfaceDocumentation>
+      />
     </section>
   </template>
   <div v-else class="fei-empty fei-card">接口不存在</div>
@@ -96,7 +92,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { CopyOutlined } from '@ant-design/icons-vue';
 import InterfaceDocumentation from '@/features/interface-platform/documentation/components/InterfaceDocumentation.vue';
 import MethodTag from '@/components/MethodTag.vue';
 import StatusTag from '@/components/StatusTag.vue';
