@@ -115,6 +115,7 @@
         <CopyIconButton
           class="fei-code-copy"
           :label="activeExampleCopyTitle"
+          placement="top-right"
           :disabled="!hasText(activeExampleText)"
           @click="requestCopy(activeExampleText)"
         />
@@ -176,6 +177,7 @@
         <CopyIconButton
           class="fei-code-copy"
           :label="activeInvocationCopyTitle"
+          placement="top-right"
           :disabled="!hasText(activeInvocationText)"
           @click="requestCopy(activeInvocationText)"
         />

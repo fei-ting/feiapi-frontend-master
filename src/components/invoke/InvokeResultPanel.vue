@@ -45,6 +45,7 @@
       >
         <CopyIconButton
           class="fei-debug-copy"
+          placement="top-right"
           :disabled="!invokeResultText"
           @click="requestCopy"
         />

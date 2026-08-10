@@ -33,6 +33,7 @@ describe('InvokeResultPanel', () => {
     expect(wrapper.text()).toContain('暂无数据');
     expect(wrapper.get('.fei-debug-copy').attributes()).toHaveProperty('disabled');
     expect(wrapper.getComponent(CopyIconButton).props('label')).toBe('复制');
+    expect(wrapper.getComponent(CopyIconButton).props('placement')).toBe('top-right');
     expect(wrapper.get('.fei-doc-tab.is-active').text()).toBe('请求结果');
   });
 

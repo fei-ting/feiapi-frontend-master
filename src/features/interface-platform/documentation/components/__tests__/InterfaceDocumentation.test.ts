@@ -54,6 +54,10 @@ describe('InterfaceDocumentation', () => {
     expect(wrapper.find('[aria-label="调用示例类型"]').exists()).toBe(true);
     expect(wrapper.find('button[title="复制 Java SDK 示例"]').exists()).toBe(true);
     expect(wrapper.findAllComponents(CopyIconButton)).toHaveLength(2);
+    expect(
+      wrapper.findAllComponents(CopyIconButton)
+        .every((button) => button.props('placement') === 'top-right'),
+    ).toBe(true);
   });
 
   it('紧凑模式支持切换并复制 Java SDK 与 curl 示例', async () => {
