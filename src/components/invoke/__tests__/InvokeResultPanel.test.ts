@@ -57,6 +57,16 @@ describe('InvokeResultPanel', () => {
     expect(wrapper.emitted('update:activeTab')).toEqual([['doc']]);
   });
 
+  it('点击请求结果标签时发送标签切换事件', async () => {
+    const wrapper = mount(InvokeResultPanel, {
+      props: { activeTab: 'doc', invokeResult: null, invokeResultText: '', docDetail },
+    });
+
+    await wrapper.findAll('.fei-doc-tab')[0].trigger('click');
+
+    expect(wrapper.emitted('update:activeTab')).toEqual([['result']]);
+  });
+
   it('文档标签组合接口文档组件', () => {
     const wrapper = mount(InvokeResultPanel, {
       props: { activeTab: 'doc', invokeResult: null, invokeResultText: '', docDetail },
@@ -67,6 +77,17 @@ describe('InvokeResultPanel', () => {
     expect(wrapper.text()).toContain('请求 Header');
     expect(wrapper.text()).toContain('暂无调用示例');
     expect(wrapper.text()).not.toContain('错误码');
+  });
+
+  it('转发接口文档的复制文本事件', async () => {
+    const wrapper = mount(InvokeResultPanel, {
+      props: { activeTab: 'doc', invokeResult: null, invokeResultText: '', docDetail },
+    });
+
+    wrapper.getComponent(InterfaceDocumentation).vm.$emit('copy-text', 'curl https://example.com');
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.emitted('copy-doc-text')).toEqual([['curl https://example.com']]);
   });
 
   it('展示响应状态、耗时和媒体类型', () => {
