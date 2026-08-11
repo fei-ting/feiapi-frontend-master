@@ -20,8 +20,8 @@ export interface DashboardOverview {
 
 /** 趋势数据点 */
 export interface TrendPoint {
-  /** 时间标签（如 "00:00", "06:00"） */
-  label: string;
+  /** 数据点对应的标准时间 */
+  time: string;
   /** 数值 */
   value: number;
 }

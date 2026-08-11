@@ -1,7 +1,7 @@
 <template>
   <div class="fei-card fei-dashboard__section">
     <div class="fei-card-header">
-      <h3 class="fei-section-title">📊 运行状态（最近 24 小时）</h3>
+      <h3 class="fei-section-title">📊 运行状态（最近 8 小时）</h3>
       <div class="fei-trend-tabs">
         <button
           v-for="tab in trendTabs"
@@ -21,7 +21,7 @@
           {{ latestTrend }}{{ currentTrendTab?.unit }}
         </span>
       </div>
-      <div class="fei-chart-wrapper">
+      <div v-if="currentTrendData.length" class="fei-chart-wrapper">
         <div class="fei-chart-y-axis">
           <span>{{ yAxisMax }}</span>
           <span>{{ Math.round(yAxisMax / 2) }}</span>
@@ -37,17 +37,24 @@
               <div
                 class="fei-chart-bar"
                 :style="{ height: `${barHeight(point.value)}%`, background: currentTrendTab?.color }"
-                :title="`${point.label}: ${point.value}${currentTrendTab?.unit}`"
+                :title="`${formatFullTrendTime(point.time)}: ${point.value}${currentTrendTab?.unit}`"
               >
                 <span class="fei-chart-bar__value">{{ point.value }}{{ currentTrendTab?.unit }}</span>
               </div>
             </div>
           </div>
           <div class="fei-chart-x-axis">
-            <span v-for="(point, index) in currentTrendData" :key="index">{{ point.label }}</span>
+            <span
+              v-for="(point, index) in currentTrendData"
+              :key="index"
+              :title="formatFullTrendTime(point.time)"
+            >
+              {{ formatTrendTime(point.time) }}
+            </span>
           </div>
         </div>
       </div>
+      <div v-else class="fei-empty fei-trend-empty">最近8小时暂无调用数据</div>
       <div class="fei-chart-x-label">时间</div>
     </div>
   </div>
@@ -133,6 +140,42 @@ const latestTrend = computed<string | number>(() => {
 const barHeight = (value: number): number => (
   yAxisMax.value > 0 ? (value / yAxisMax.value) * 100 : 0
 );
+
+/**
+ * 将标准时间格式化为趋势横轴时间。
+ *
+ * @param time 标准时间
+ * @returns 月日和时分组成的横轴时间
+ */
+const formatTrendTime = (time: string): string => formatTime(time, false);
+
+/**
+ * 将标准时间格式化为完整悬停时间。
+ *
+ * @param time 标准时间
+ * @returns 包含年月日和时分秒的完整时间
+ */
+const formatFullTrendTime = (time: string): string => formatTime(time, true);
+
+/**
+ * 按浏览器所在时区格式化标准时间，解析失败时保留后端原始值。
+ *
+ * @param time 标准时间
+ * @param includeYear 是否包含年份和秒
+ * @returns 格式化后的时间
+ */
+const formatTime = (time: string, includeYear: boolean): string => {
+  const date = new Date(time);
+  if (Number.isNaN(date.getTime())) {
+    return time;
+  }
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  const datePart = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const timePart = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return includeYear
+    ? `${date.getFullYear()}-${datePart} ${timePart}:${pad(date.getSeconds())}`
+    : `${datePart} ${timePart}`;
+};
 
 /**
  * 通知父页面切换趋势类型。
@@ -294,6 +337,7 @@ const changeActiveTrend = (key: keyof DashboardTrends): void => {
   text-align: center;
   font-size: 12px;
   color: var(--fei-text-muted);
+  white-space: nowrap;
 }
 
 .fei-chart-x-label {
@@ -301,6 +345,12 @@ const changeActiveTrend = (key: keyof DashboardTrends): void => {
   font-size: 12px;
   color: var(--fei-text-muted);
   margin-top: 8px;
+}
+
+.fei-trend-empty {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
 }
 
 @media (max-width: 1100px) {
@@ -318,6 +368,11 @@ const changeActiveTrend = (key: keyof DashboardTrends): void => {
 
   .fei-chart-wrapper {
     min-height: 200px;
+    overflow-x: auto;
+  }
+
+  .fei-chart-area {
+    min-width: 560px;
   }
 
   .fei-chart-x-axis span {
