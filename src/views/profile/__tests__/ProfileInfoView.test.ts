@@ -58,6 +58,14 @@ describe('ProfileInfoView', () => {
     expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('1');
   });
 
+  it('按独立分区展示基础资料和密码表单', () => {
+    const wrapper = mountView();
+
+    expect(wrapper.findAll('.fei-profile-form-section')).toHaveLength(2);
+    expect(wrapper.get('.fei-profile-form--basic').findAll('.fei-field')).toHaveLength(2);
+    expect(wrapper.get('.fei-profile-form--password').findAll('.fei-field')).toHaveLength(3);
+  });
+
   it('昵称校验失败时阻止资料请求', async () => {
     const wrapper = mountView();
     await wrapper.get('input[autocomplete="nickname"]').setValue('a');

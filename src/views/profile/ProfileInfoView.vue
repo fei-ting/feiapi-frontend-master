@@ -1,11 +1,11 @@
 <template>
-  <div class="fei-card">
+  <div class="fei-card fei-profile-settings-card">
     <div class="fei-card-header">
       <div>
         <h2 class="fei-section-title">修改个人信息</h2>
       </div>
     </div>
-    <div class="fei-card-body">
+    <div class="fei-card-body fei-profile-settings-body">
       <div class="fei-profile-form-grid">
         <ProfileForm
           :model-value="profileForm"
