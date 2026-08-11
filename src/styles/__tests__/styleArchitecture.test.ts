@@ -77,6 +77,19 @@ describe('样式架构', () => {
       expect(actionsRule).toContain('justify-content: center');
     });
 
+    it('接口调用总数排序表头使用无边框居中样式', () => {
+      const adminToolsCss = readFile('styles/pages/admin-tools.css');
+      const sortHeaderRule = adminToolsCss.match(/\.fei-sort-header\s*\{([^}]*)\}/)?.[1] ?? '';
+
+      expect(sortHeaderRule).toContain('display: inline-flex');
+      expect(sortHeaderRule).toContain('justify-content: center');
+      expect(sortHeaderRule).toContain('border: 0');
+      expect(sortHeaderRule).toContain('background: transparent');
+      expect(adminToolsCss).toContain('.fei-sort-caret--up');
+      expect(adminToolsCss).toContain('.fei-sort-caret--down');
+      expect(adminToolsCss).toContain('.fei-sort-caret.is-active');
+    });
+
     it('跨页面区块、面板和标题样式位于全局布局层', () => {
       const layoutCss = readFile('styles/layout.css');
       const detailCss = readFile('styles/pages/detail.css');
