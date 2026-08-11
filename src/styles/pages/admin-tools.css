@@ -47,6 +47,148 @@
 .fei-field--sort { max-width: 96px; }
 .fei-form-error { margin: 0; color: var(--fei-error); font-size: 13px; }
 
+/* ========== 配额策略卡片 ========== */
+
+.fei-quota-config {
+  display: grid;
+  gap: 24px;
+}
+
+.fei-quota-config__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-quota-config__toolbar .fei-section-title {
+  margin: 0;
+}
+
+.fei-quota-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+.fei-quota-config-card {
+  --fei-quota-card-accent: var(--fei-primary);
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 366px;
+  overflow: hidden;
+  flex-direction: column;
+  padding: 24px;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-quota-config-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: var(--fei-quota-card-accent);
+  content: '';
+}
+
+.fei-quota-config-card--free {
+  --fei-quota-card-accent: #16a6c9;
+}
+
+.fei-quota-config-card--trial {
+  --fei-quota-card-accent: #f79009;
+}
+
+.fei-quota-config-card__head {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fei-quota-config-card__time {
+  overflow: hidden;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fei-quota-config-card__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 24px;
+  border-top: 1px solid #edf1f6;
+  margin-top: 20px;
+}
+
+.fei-quota-edit-label {
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+}
+
+.fei-quota-config-card__value-row {
+  display: flex;
+  min-height: 50px;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fei-quota-edit-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--fei-text);
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.fei-quota-config-card__unit {
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+}
+
+.fei-quota-config-card__editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  color: var(--fei-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fei-quota-config-card__editor .fei-input {
+  height: 44px;
+}
+
+.fei-quota-config-card__actions {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.fei-quota-config-card__save {
+  width: 100%;
+  height: 48px;
+  border-radius: 7px;
+}
+
+.fei-quota-config__empty {
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
 .fei-modal__header,
 .fei-modal__footer,
 .fei-doc-editor__topbar,
@@ -181,7 +323,25 @@
 
 /* ========== 后台工具响应式规则 ========== */
 
+@media (max-width: 1280px) {
+  .fei-quota-config-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .fei-quota-config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-quota-config__toolbar {
+    align-items: flex-start;
+  }
+
+  .fei-quota-config-card {
+    min-height: 340px;
+  }
+
   .fei-form-grid--two,
   .fei-form-grid--three,
   .fei-form-grid--four,

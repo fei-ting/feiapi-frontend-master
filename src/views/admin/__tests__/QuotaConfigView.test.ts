@@ -57,6 +57,8 @@ describe('配额策略配置页面', () => {
 
     const cards = wrapper.findAll('.fei-quota-config-card');
     expect(cards).toHaveLength(3);
+    expect(wrapper.find('.fei-card').exists()).toBe(false);
+    expect(wrapper.get('.fei-quota-config-grid').exists()).toBe(true);
     expect(cards.map((card) => card.get('.fei-tag').text())).toEqual([
       '基础额度',
       '免费无限',
@@ -68,7 +70,14 @@ describe('配额策略配置页面', () => {
       ['fei-tag', 'fei-tag--quota-trial'],
     ]);
     expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
+    expect(wrapper.findAll('.fei-quota-config-card__save')).toHaveLength(2);
+    expect(cards.map((card) => card.get('.fei-quota-edit-value').text())).toEqual([
+      '100',
+      '无限次',
+      '20',
+    ]);
     expect(cards[1].get('.fei-quota-edit-value').text()).toBe('无限次');
+    expect(cards[1].find('button').exists()).toBe(false);
 
     expect(cards[0].get('input').attributes('aria-label')).toBe('基础额度初始额度');
     wrapper.unmount();
@@ -193,7 +202,7 @@ describe('配额策略配置页面', () => {
     const wrapper = mount(QuotaConfigView, { global });
     await flushPromises();
 
-    await wrapper.get('.fei-card-header button').trigger('click');
+    await wrapper.get('.fei-quota-config__toolbar button').trigger('click');
     await flushPromises();
 
     expect(mocks.list).toHaveBeenCalledTimes(2);
