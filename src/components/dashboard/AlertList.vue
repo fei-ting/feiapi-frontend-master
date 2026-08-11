@@ -18,7 +18,7 @@
             <div class="fei-alert-item__name">{{ item.name }}</div>
             <div class="fei-alert-item__desc">{{ item.description }}</div>
           </div>
-          <div class="fei-alert-item__time">{{ item.time }}</div>
+          <div class="fei-alert-item__time">{{ formatRelativeTime(item.time) }}</div>
         </div>
       </div>
       <div v-else class="fei-empty" style="padding: 32px">暂无告警</div>
@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import type { AlertInterface } from '@/types/dashboard';
+import { formatRelativeTime } from '@/utils/relativeTime';
 
 /** 告警列表组件属性。 */
 interface AlertListProps {

@@ -119,6 +119,10 @@ describe('页面业务组合式函数', () => {
     expect(invoke.structuredParams.value[0]).not.toHaveProperty('defaultValue');
     expect(invoke.structuredParams.value[0]).not.toHaveProperty('description');
     expect(invoke.structuredParams.value[0]).not.toHaveProperty('validationRule');
+    expect(invoke.requestParams.value).toBe('');
+    expect(invoke.canFillExample.value).toBe(true);
+
+    invoke.fillStructuredExample();
     expect(JSON.parse(invoke.requestParams.value)).toEqual({
       age: 18,
       enabled: true,

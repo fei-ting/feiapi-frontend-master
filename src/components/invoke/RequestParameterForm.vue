@@ -36,6 +36,11 @@
     <div v-else class="fei-doc-empty">{{ emptyParamText }}</div>
     <BoundaryRemaining :current="requestParamBytes" :max="INTERFACE_DOC_LIMITS.invokeBodyBytes" unit="字节" />
     <p v-if="requestParamError" class="fei-form-error" role="alert">{{ requestParamError }}</p>
+
+    <div class="fei-invoke-body-preview">
+      <span class="fei-info-label">请求 Body</span>
+      <pre class="fei-code fei-invoke-body-preview__content">{{ requestBodyPreview }}</pre>
+    </div>
   </section>
 
   <div class="fei-toolbar fei-invoke-toolbar">
@@ -76,6 +81,8 @@ interface RequestParameterFormProps {
   requestParamOverLimit: boolean;
   /** 当前请求参数校验错误。 */
   requestParamError: string;
+  /** 当前字段生成的只读请求 Body。 */
+  requestBodyPreview: string;
 }
 
 /** 请求参数表单组件事件。 */

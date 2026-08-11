@@ -44,6 +44,7 @@
             :request-param-bytes="requestParamBytes"
             :request-param-over-limit="requestParamOverLimit"
             :request-param-error="requestParamError"
+            :request-body-preview="requestBodyPreview"
             @update-param="updateParamValue"
             @invoke="handleInvokeClick"
             @fill-example="fillExample"
@@ -54,8 +55,10 @@
       <InvokeResultPanel
         v-model:active-tab="activeTab"
         :invoke-result="invokeResult"
+        :invoke-result-text="invokeResultText"
         :doc-detail="docDetail"
         @copy-result="copyInvokeResult"
+        @copy-doc-text="copyText"
       />
     </div>
   </template>
@@ -87,7 +90,7 @@ import '@/styles/pages/invoke.css';
 import { interfaceService } from '@/services/interfaceInfo';
 import { useUserStore } from '@/stores/user';
 import type { InterfaceDocDetailVO, InterfaceDocInterfaceInfoVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
-import type { InvokeTab } from '@/types/invoke';
+import type { InvokeResponse, InvokeTab } from '@/types/invoke';
 
 /** 在线调用弹窗动作。 */
 type DialogAction = 'login' | 'invoke';
@@ -125,14 +128,15 @@ const {
   requestParamOverLimit,
   structuredParams,
   paramValues,
+  canFillExample,
   validateRequestParams,
   syncRequestParamsFromFields,
   fillStructuredExample,
   syncFromDocument,
 } = useInterfaceInvoke(docDetail);
 
-/** 格式化后的调用结果。 */
-const invokeResult = ref('');
+/** 结构化在线调用结果。 */
+const invokeResult = ref<InvokeResponse | null>(null);
 
 /** 结果区域的当前标签。 */
 const activeTab = ref<InvokeTab>('result');
@@ -152,9 +156,6 @@ const loginHref = computed(() => `/login?redirect=${encodeURIComponent(route.ful
 /** 当前接口基础信息。 */
 const detail = computed<InterfaceDocInterfaceInfoVO | null>(() => docDetail.value?.interfaceInfo || null);
 
-/** 是否存在可以填充的示例参数。 */
-const canFillExample = computed(() => structuredParams.value.length > 0 || Boolean(requestParams.value.trim()));
-
 /** 没有结构化参数时的提示文本。 */
 const emptyParamText = computed(() => (
   docDetail.value?.structuredDocMissing ? '暂无结构化请求参数' : '此接口无需请求参数'
@@ -167,6 +168,17 @@ const invokeHeaderText = computed(() => {
     return '无请求 Header';
   }
   return headers.map((param) => `${param.name || '-'}: ${paramValue(param)}`).join('\n');
+});
+
+/** 当前字段序列化生成的只读请求 Body。 */
+const requestBodyPreview = computed(() => {
+  const content = requestParams.value.trim();
+  if (!content) return structuredParams.value.length ? '{}' : '无请求 Body';
+  try {
+    return JSON.stringify(JSON.parse(content), null, 2);
+  } catch {
+    return content;
+  }
 });
 
 /**
@@ -182,21 +194,20 @@ const getErrorMessage = (error: unknown): string => {
   return '调用失败，请稍后重试';
 };
 
-/**
- * 格式化接口调用响应。
- *
- * @param data 响应数据
- * @returns 格式化后的结果文本
- */
-const formatInvokeResponse = (data: unknown): string => {
-  if (data === null || data === undefined) {
-    return '接口返回为空';
+/** 格式化在线调用响应正文或安全错误信息。 */
+const invokeResultText = computed(() => {
+  const result = invokeResult.value;
+  if (!result) return '';
+  const body = result.body || '';
+  if (body.trim()) {
+    try {
+      return JSON.stringify(JSON.parse(body), null, 2);
+    } catch {
+      return body;
+    }
   }
-  if (typeof data === 'string') {
-    return data;
-  }
-  return JSON.stringify(data, null, 2);
-};
+  return result.errorMessage || '响应正文为空';
+});
 
 /** 加载接口文档详情。 */
 const loadDetail = async (): Promise<void> => {
@@ -272,7 +283,11 @@ const invokeApi = async (): Promise<void> => {
   }
   if (!validateRequestParams()) {
     const message = requestParamError.value || '请求参数必须是合法 JSON';
-    invokeResult.value = message;
+    invokeResult.value = {
+      successful: false,
+      durationMs: 0,
+      errorMessage: message,
+    };
     activeTab.value = 'result';
     showToast(message, 'error');
     return;
@@ -284,11 +299,19 @@ const invokeApi = async (): Promise<void> => {
       id: detail.value.id,
       userRequestParams: requestParams.value,
     });
-    invokeResult.value = formatInvokeResponse(data);
-    showToast('调用成功', 'success');
+    invokeResult.value = data;
+    if (data.successful) {
+      showToast('调用成功', 'success');
+    } else {
+      showToast(data.errorMessage || `接口返回状态 ${data.statusCode ?? '未知'}`, 'error');
+    }
   } catch (error) {
     const message = getErrorMessage(error);
-    invokeResult.value = message;
+    invokeResult.value = {
+      successful: false,
+      durationMs: 0,
+      errorMessage: message,
+    };
     showToast(message, 'error');
   } finally {
     invokeLoading.value = false;
@@ -297,8 +320,9 @@ const invokeApi = async (): Promise<void> => {
 
 /** 填充结构化参数示例。 */
 const fillExample = (): void => {
-  if (structuredParams.value.length) {
+  if (canFillExample.value) {
     fillStructuredExample();
+    showToast('已填充示例参数', 'success');
     return;
   }
   showToast('暂无可填充的示例参数', 'info');
@@ -317,10 +341,10 @@ const updateParamValue = (name: string, value: string): void => {
 
 /** 复制当前调用结果。 */
 const copyInvokeResult = async (): Promise<void> => {
-  if (!invokeResult.value) {
+  if (!invokeResultText.value) {
     return;
   }
-  await copyText(invokeResult.value);
+  await copyText(invokeResultText.value);
 };
 
 onMounted(() => {

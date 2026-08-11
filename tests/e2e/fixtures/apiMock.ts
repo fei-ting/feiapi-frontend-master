@@ -436,30 +436,9 @@ export class ApiMockController {
       return;
     }
 
-    if (key === 'GET /api/analysis/dashboard/overview') {
-      await this.fulfillJson(route, success({
-        totalUsers: 2,
-        totalInterfaces: this.state.interfaces.length,
-        onlineInterfaces: this.state.interfaces.filter((item) => item.status === 1).length,
-        offlineInterfaces: this.state.interfaces.filter((item) => item.status === 0).length,
-        todayInvocations: 12,
-        todaySuccessRate: 100,
-      }));
-      return;
-    }
-
-    if (key === 'GET /api/analysis/dashboard/trends') {
-      await this.fulfillJson(route, success({
-        successRate: [],
-        invocationCount: [],
-        errorRate: [],
-        responseTime: [],
-      }));
-      return;
-    }
-
-    if (key === 'GET /api/analysis/dashboard/alerts' || key === 'GET /api/analysis/dashboard/changes') {
-      await this.fulfillJson(route, success([]));
+    if (key.startsWith('GET /api/analysis/dashboard/')) {
+      // 工作台禁止使用业务 Mock，交由真实后端处理；未启动后端时由页面展示错误状态。
+      await route.continue();
       return;
     }
 

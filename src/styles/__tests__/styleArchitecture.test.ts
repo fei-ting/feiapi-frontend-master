@@ -150,6 +150,8 @@ describe('样式架构', () => {
       expect(documentationCss).toContain('.fei-doc-info-grid');
       expect(documentationCss).toContain('.fei-doc-two-col');
       expect(documentationCss).toContain('.fei-doc-section__head');
+      expect(documentationCss).toContain('.fei-code-copy');
+      expect(documentationCss).not.toContain('.fei-icon-btn');
     });
 
     it('在线调用响应式规则在 invoke.css 中', () => {

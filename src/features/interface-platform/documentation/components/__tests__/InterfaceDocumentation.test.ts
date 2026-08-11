@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
+import CopyIconButton from '@/components/common/CopyIconButton.vue';
 import InterfaceDocumentation from '../InterfaceDocumentation.vue';
 import type { InterfaceDocDetailVO } from '@/features/interface-platform/documentation/types/interfaceDoc';
 
@@ -47,23 +48,44 @@ describe('InterfaceDocumentation', () => {
     expect(wrapper.text()).toContain('用户名称。例如：alice。不能为空');
     expect(wrapper.text()).toContain('dataobject是响应数据');
     expect(wrapper.get('pre.fei-code').text()).toContain('"ok": true');
-    expect(wrapper.text()).toContain('curl -X POST /api/doc');
+    expect(wrapper.text()).toContain('FeiApiClient client');
     expect(wrapper.classes()).toContain('fei-invoke-doc');
     expect(wrapper.text()).not.toContain('错误码');
-    expect(wrapper.find('.fei-example-switch').exists()).toBe(false);
-    expect(wrapper.find('button[title="复制 curl 示例"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="调用示例类型"]').exists()).toBe(true);
+    expect(wrapper.find('button[title="复制 Java SDK 示例"]').exists()).toBe(true);
+    expect(wrapper.findAllComponents(CopyIconButton)).toHaveLength(2);
+    expect(
+      wrapper.findAllComponents(CopyIconButton)
+        .every((button) => button.props('placement') === 'top-right'),
+    ).toBe(true);
+  });
+
+  it('紧凑模式支持切换并复制 Java SDK 与 curl 示例', async () => {
+    const wrapper = mount(InterfaceDocumentation, {
+      props: { docDetail: buildDocDetail() },
+    });
+
+    await wrapper.get('button[title="复制 Java SDK 示例"]').trigger('click');
+    const invocationSwitch = wrapper.get('[aria-label="调用示例类型"]');
+    await invocationSwitch.findAll('.fei-example-switch__button')[1].trigger('click');
+    expect(wrapper.text()).toContain('curl -X POST /api/doc');
+    await wrapper.get('button[title="复制 curl 示例"]').trigger('click');
+
+    expect(wrapper.emitted('copy-text')).toEqual([
+      ['FeiApiClient client = new FeiApiClient();\nclient.getUser();'],
+      ['curl -X POST /api/doc'],
+    ]);
   });
 
   it('详情模式展示完整列、错误码和响应父级字段', () => {
     const wrapper = mount(InterfaceDocumentation, {
       props: { docDetail: buildDocDetail(), mode: 'detail' },
-      slots: { 'copy-icon': '<span class="test-copy-icon" />' },
     });
 
     expect(wrapper.findAll('.fei-doc-section')).toHaveLength(6);
     expect(wrapper.classes()).not.toContain('fei-invoke-doc');
     expect(wrapper.classes()).toContain('fei-interface-documentation--detail');
-    expect(wrapper.findAll('.test-copy-icon')).toHaveLength(2);
+    expect(wrapper.findAllComponents(CopyIconButton)).toHaveLength(2);
     expect(wrapper.text()).toContain('位置');
     expect(wrapper.text()).toContain('父级字段');
     expect(wrapper.text()).toContain('请求体');
