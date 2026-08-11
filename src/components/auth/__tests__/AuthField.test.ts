@@ -26,6 +26,15 @@ describe('AuthField', () => {
     expect(input.attributes('aria-invalid')).toBe('false');
   });
 
+  it('按配置展示输入框前置图标', () => {
+    const userField = mountField({ icon: 'user' });
+    const lockField = mountField({ icon: 'lock' });
+
+    expect(userField.get('.fei-auth-field__icon').exists()).toBe(true);
+    expect(lockField.get('.fei-auth-field__icon').exists()).toBe(true);
+    expect(userField.get('.fei-auth-field__control').classes()).toContain('fei-auth-field__control--icon');
+  });
+
   it('转发字段更新、输入和失焦事件', async () => {
     const wrapper = mountField();
     const input = wrapper.get('input');

@@ -1,18 +1,22 @@
 <template>
   <div class="fei-field">
     <label class="fei-label" :for="id">{{ label }}</label>
-    <input
-      :id="id"
-      class="fei-input"
-      :class="{ 'fei-input--error': Boolean(error) }"
-      :type="type"
-      :value="modelValue"
-      :placeholder="placeholder"
-      :aria-invalid="Boolean(error)"
-      :aria-describedby="error ? errorId : undefined"
-      @input="handleInput"
-      @blur="emit('blur')"
-    />
+    <div class="fei-auth-field__control" :class="{ 'fei-auth-field__control--icon': icon }">
+      <UserOutlined v-if="icon === 'user'" class="fei-auth-field__icon" aria-hidden="true" />
+      <LockOutlined v-if="icon === 'lock'" class="fei-auth-field__icon" aria-hidden="true" />
+      <input
+        :id="id"
+        class="fei-input"
+        :class="{ 'fei-input--error': Boolean(error) }"
+        :type="type"
+        :value="modelValue"
+        :placeholder="placeholder"
+        :aria-invalid="Boolean(error)"
+        :aria-describedby="error ? errorId : undefined"
+        @input="handleInput"
+        @blur="emit('blur')"
+      />
+    </div>
     <span
       v-if="error"
       :id="errorId"
@@ -26,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { LockOutlined, UserOutlined } from '@ant-design/icons-vue';
 import { computed } from 'vue';
 
 /** 认证字段组件属性。 */
@@ -44,6 +49,8 @@ interface AuthFieldProps {
   error?: string;
   /** 是否显示抖动反馈。 */
   shaking?: boolean;
+  /** 输入框前置图标。 */
+  icon?: 'user' | 'lock' | undefined;
 }
 
 /** 认证字段组件事件。 */
@@ -60,6 +67,7 @@ const props = withDefaults(defineProps<AuthFieldProps>(), {
   type: 'text',
   error: '',
   shaking: false,
+  icon: undefined,
 });
 const emit = defineEmits<AuthFieldEmits>();
 
@@ -78,6 +86,26 @@ const handleInput = (event: Event): void => {
 </script>
 
 <style scoped>
+/* 输入框图标容器。 */
+.fei-auth-field__control {
+  position: relative;
+}
+
+.fei-auth-field__control--icon .fei-input {
+  padding-left: 48px;
+}
+
+.fei-auth-field__icon {
+  position: absolute;
+  top: 50%;
+  left: 17px;
+  z-index: 1;
+  color: var(--fei-text-muted);
+  font-size: 18px;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
 /* 输入框错误状态。 */
 .fei-input--error {
   border-color: var(--fei-error);

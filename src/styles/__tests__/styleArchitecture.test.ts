@@ -234,5 +234,13 @@ describe('样式架构', () => {
       expect(profileLayout).toContain("import '@/styles/pages/profile.css'");
       expect(profileLayout).toContain("import SectionNavigation from '@/components/SectionNavigation.vue'");
     });
+
+    it('登录注册页面导入认证页面共享样式', () => {
+      const loginView = readFile('views/LoginView.vue');
+      const registerView = readFile('views/RegisterView.vue');
+
+      expect(loginView).toContain("import '@/styles/pages/auth.css'");
+      expect(registerView).toContain("import '@/styles/pages/auth.css'");
+    });
   });
 });
