@@ -33,6 +33,74 @@
   color: var(--fei-text-muted);
 }
 
+/* ========== 接口列表排序表头 ========== */
+
+.fei-sort-header {
+  display: inline-flex;
+  width: 100%;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  transition: color .16s ease;
+}
+
+.fei-sort-header:hover {
+  color: var(--fei-primary);
+}
+
+.fei-sort-header:focus-visible {
+  outline: 2px solid rgba(47, 107, 255, .3);
+  outline-offset: 2px;
+}
+
+.fei-sort-indicator {
+  display: inline-flex;
+  width: 10px;
+  height: 14px;
+  flex: 0 0 10px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.fei-sort-caret {
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  opacity: .55;
+  transition: border-color .16s ease, opacity .16s ease;
+}
+
+.fei-sort-caret--up {
+  border-bottom: 4px solid var(--fei-text-muted);
+}
+
+.fei-sort-caret--down {
+  border-top: 4px solid var(--fei-text-muted);
+}
+
+.fei-sort-caret.is-active {
+  opacity: 1;
+}
+
+.fei-sort-caret--up.is-active {
+  border-bottom-color: var(--fei-primary);
+}
+
+.fei-sort-caret--down.is-active {
+  border-top-color: var(--fei-primary);
+}
+
 .fei-form-grid {
   display: grid;
   gap: 16px;
