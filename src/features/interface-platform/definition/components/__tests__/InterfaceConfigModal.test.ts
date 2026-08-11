@@ -151,4 +151,72 @@ describe('InterfaceConfigModal', () => {
     expect(wrapper.text()).toContain('SDK 方法列表加载失败');
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined();
   });
+
+  it('点击弹窗外部遮罩时保留弹窗和已填写内容', async () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    const nameInput = wrapper.get('input');
+    await nameInput.setValue('尚未保存的接口');
+
+    await wrapper.get('.fei-modal-mask').trigger('click');
+
+    expect(wrapper.emitted('close')).toBeUndefined();
+    expect(wrapper.get('input').element.value).toBe('尚未保存的接口');
+    expect(wrapper.find('.fei-confirm-dialog').exists()).toBe(false);
+  });
+
+  it('表单未修改时点击取消直接关闭', async () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+
+    await wrapper.get('.fei-interface-config-modal .fei-btn--secondary').trigger('click');
+
+    expect(wrapper.emitted('close')).toEqual([[]]);
+  });
+
+  it('表单修改后点击取消要求确认并允许继续编辑', async () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    await wrapper.get('input').setValue('尚未保存的接口');
+
+    await wrapper.get('.fei-interface-config-modal .fei-btn--secondary').trigger('click');
+
+    expect(wrapper.emitted('close')).toBeUndefined();
+    expect(wrapper.get('.fei-confirm-dialog').text()).toContain('放弃未保存内容');
+
+    await wrapper.get('.fei-confirm-dialog .fei-btn--secondary').trigger('click');
+
+    expect(wrapper.find('.fei-confirm-dialog').exists()).toBe(false);
+    expect(wrapper.get('input').element.value).toBe('尚未保存的接口');
+  });
+
+  it('表单修改后确认放弃才关闭弹窗', async () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    await wrapper.get('input').setValue('尚未保存的接口');
+    await wrapper.get('.fei-modal-mask').trigger('keyup', { key: 'Escape' });
+
+    expect(wrapper.emitted('close')).toBeUndefined();
+    expect(wrapper.find('.fei-confirm-dialog').exists()).toBe(true);
+
+    await wrapper.get('.fei-confirm-dialog .fei-btn--primary').trigger('click');
+
+    expect(wrapper.emitted('close')).toEqual([[]]);
+  });
+
+  it('表单修改后点击关闭按钮要求确认并锁定底层表单', async () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+    await wrapper.get('input').setValue('尚未保存的接口');
+
+    await wrapper.get('.fei-interface-config-modal__close').trigger('click');
+
+    expect(wrapper.emitted('close')).toBeUndefined();
+    expect(wrapper.find('.fei-confirm-dialog').exists()).toBe(true);
+    expect(wrapper.get('.fei-interface-config-modal').attributes('inert')).toBeDefined();
+    expect(wrapper.get('.fei-interface-config-modal').attributes('aria-hidden')).toBe('true');
+  });
+
+  it('准确标记六个必填字段和展示地址可选状态', () => {
+    const wrapper = mount(InterfaceConfigModal, { props: { open: true } });
+
+    expect(wrapper.findAll('.fei-required-mark')).toHaveLength(6);
+    expect(wrapper.get('.fei-interface-config-modal__optional').text()).toBe('可选');
+    expect(wrapper.get('.fei-interface-config-modal__remaining').text()).toContain('剩余');
+  });
 });

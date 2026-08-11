@@ -90,6 +90,17 @@ describe('样式架构', () => {
       expect(adminToolsCss).toContain('.fei-sort-caret.is-active');
     });
 
+    it('接口配置弹窗使用独立滚动内容区和固定操作区', () => {
+      const adminToolsCss = readFile('styles/pages/admin-tools.css');
+      const modalRule = adminToolsCss.match(/\.fei-interface-config-modal\s*\{([^}]*)\}/)?.[1] ?? '';
+      const bodyRule = adminToolsCss.match(/\.fei-interface-config-modal__body\s*\{([^}]*)\}/)?.[1] ?? '';
+      const footerRule = adminToolsCss.match(/\.fei-interface-config-modal__footer\s*\{([^}]*)\}/)?.[1] ?? '';
+
+      expect(modalRule).toContain('overflow: hidden');
+      expect(bodyRule).toContain('overflow-y: auto');
+      expect(footerRule).toContain('flex: 0 0 auto');
+    });
+
     it('跨页面区块、面板和标题样式位于全局布局层', () => {
       const layoutCss = readFile('styles/layout.css');
       const detailCss = readFile('styles/pages/detail.css');
