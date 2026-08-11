@@ -276,6 +276,90 @@
 .fei-icon-btn { border: 0; background: transparent; color: var(--fei-text-muted); cursor: pointer; font-size: 24px; line-height: 1; }
 .fei-modal__footer { justify-content: flex-end; margin-top: 6px; }
 
+/* ========== 接口配置弹窗 ========== */
+
+.fei-interface-config-modal {
+  display: flex;
+  max-height: min(90vh, 860px);
+  overflow: hidden;
+  flex-direction: column;
+  padding: 0;
+}
+
+.fei-interface-config-modal > .fei-modal__header {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-interface-config-modal__close {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 18px;
+  place-items: center;
+  transition: background-color .16s ease, color .16s ease;
+}
+
+.fei-interface-config-modal__close:hover {
+  background: #f2f4f7;
+  color: var(--fei-text);
+}
+
+.fei-interface-config-modal__close:focus-visible {
+  outline: 2px solid rgba(47, 107, 255, .3);
+  outline-offset: 2px;
+}
+
+.fei-interface-config-modal__close:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.fei-interface-config-modal > .fei-form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  gap: 0;
+  flex-direction: column;
+}
+
+.fei-interface-config-modal__body {
+  display: grid;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 16px;
+  padding: 20px 24px;
+  scrollbar-gutter: stable;
+}
+
+.fei-required-mark {
+  color: var(--fei-error);
+}
+
+.fei-interface-config-modal__optional {
+  margin-left: 4px;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fei-interface-config-modal__remaining {
+  text-align: right;
+}
+
+.fei-interface-config-modal__footer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--fei-border);
+  background: #fff;
+}
+
 .fei-publish-check-dialog {
   width: min(720px, calc(100vw - 32px));
 }
@@ -398,6 +482,24 @@
 }
 
 @media (max-width: 768px) {
+  .fei-interface-config-modal {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .fei-interface-config-modal > .fei-modal__header,
+  .fei-interface-config-modal__body {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .fei-interface-config-modal__footer {
+    padding: 14px 16px 16px;
+  }
+
+  .fei-interface-config-modal__footer .fei-btn {
+    flex: 1;
+  }
+
   .fei-quota-config-grid {
     grid-template-columns: 1fr;
   }

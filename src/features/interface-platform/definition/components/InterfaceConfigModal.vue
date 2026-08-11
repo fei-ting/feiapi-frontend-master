@@ -3,97 +3,120 @@
     v-if="open"
     class="fei-modal-mask"
     role="presentation"
-    @click.self="closeModal"
-    @keyup.esc="closeModal"
+    @keyup.esc="requestClose"
   >
-    <section class="fei-modal fei-interface-config-modal" role="dialog" aria-modal="true" :aria-labelledby="titleId">
+    <section
+      class="fei-modal fei-interface-config-modal"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+      :aria-hidden="discardConfirmOpen ? 'true' : undefined"
+      :inert="discardConfirmOpen || undefined"
+    >
       <div class="fei-modal__header">
         <div>
           <p class="fei-modal__eyebrow">运行时配置</p>
           <h2 :id="titleId" class="fei-modal__title">{{ isEdit ? '编辑接口' : '新增接口' }}</h2>
         </div>
-        <button class="fei-icon-btn" type="button" aria-label="关闭" title="关闭" @click="closeModal">×</button>
+        <button
+          class="fei-icon-btn fei-interface-config-modal__close"
+          type="button"
+          aria-label="关闭"
+          title="关闭"
+          :disabled="submitting"
+          @click="requestClose"
+        >
+          <CloseOutlined aria-hidden="true" />
+        </button>
       </div>
 
       <form class="fei-form" @submit.prevent="submitForm">
-        <div class="fei-form-grid fei-form-grid--two">
-          <label class="fei-field">
-            <span class="fei-label">接口名称</span>
-            <input v-model.trim="form.name" class="fei-input" maxlength="50" required />
-          </label>
-          <label class="fei-field">
-            <span class="fei-label">SDK 方法名</span>
-            <select
-              v-if="!isEdit"
-              v-model="form.sdkMethodName"
-              class="fei-select"
-              required
-              :disabled="sdkMethodsLoading || sdkMethodsLoadFailed"
-            >
-              <option value="" disabled>
-                {{ sdkMethodsLoading ? '正在加载 SDK 方法...' : '请选择 SDK 方法' }}
-              </option>
-              <option
-                v-for="option in sdkMethodOptions"
-                :key="option.sdkMethodName"
-                :value="option.sdkMethodName"
+        <div class="fei-interface-config-modal__body">
+          <div class="fei-form-grid fei-form-grid--two">
+            <label class="fei-field">
+              <span class="fei-label">接口名称 <span class="fei-required-mark" aria-hidden="true">*</span></span>
+              <input v-model.trim="form.name" class="fei-input" maxlength="50" required />
+            </label>
+            <label class="fei-field">
+              <span class="fei-label">SDK 方法名 <span class="fei-required-mark" aria-hidden="true">*</span></span>
+              <select
+                v-if="!isEdit"
+                v-model="form.sdkMethodName"
+                class="fei-select"
+                required
+                :disabled="sdkMethodsLoading || sdkMethodsLoadFailed"
               >
-                {{ option.sdkMethodName }}（{{ option.needParams ? '需要请求参数' : '无请求参数' }}）
-              </option>
-            </select>
-            <input v-else v-model.trim="form.sdkMethodName" class="fei-input" maxlength="128" required />
-          </label>
+                <option value="" disabled>
+                  {{ sdkMethodsLoading ? '正在加载 SDK 方法...' : '请选择 SDK 方法' }}
+                </option>
+                <option
+                  v-for="option in sdkMethodOptions"
+                  :key="option.sdkMethodName"
+                  :value="option.sdkMethodName"
+                >
+                  {{ option.sdkMethodName }}（{{ option.needParams ? '需要请求参数' : '无请求参数' }}）
+                </option>
+              </select>
+              <input v-else v-model.trim="form.sdkMethodName" class="fei-input" maxlength="128" required />
+            </label>
+            <label class="fei-field">
+              <span class="fei-label">请求方法 <span class="fei-required-mark" aria-hidden="true">*</span></span>
+              <select v-model="form.method" class="fei-select" required>
+                <option v-for="method in requestMethods" :key="method" :value="method">{{ method }}</option>
+              </select>
+            </label>
+            <label class="fei-field">
+              <span class="fei-label">配额类型 <span class="fei-required-mark" aria-hidden="true">*</span></span>
+              <select v-model="form.quotaType" class="fei-select" required>
+                <option v-for="option in QUOTA_TYPE_OPTIONS" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+          </div>
+
           <label class="fei-field">
-            <span class="fei-label">请求方法</span>
-            <select v-model="form.method" class="fei-select" required>
-              <option v-for="method in requestMethods" :key="method" :value="method">{{ method }}</option>
-            </select>
+            <span class="fei-label">接口描述</span>
+            <textarea v-model.trim="form.description" class="fei-textarea fei-textarea--compact" maxlength="512"></textarea>
           </label>
+
+          <div class="fei-form-grid fei-form-grid--two">
+            <label class="fei-field">
+              <span class="fei-label">网关路径 <span class="fei-required-mark" aria-hidden="true">*</span></span>
+              <input v-model.trim="form.path" class="fei-input" maxlength="512" placeholder="/api/example" required />
+            </label>
+            <label class="fei-field">
+              <span class="fei-label">真实后端地址 <span class="fei-required-mark" aria-hidden="true">*</span></span>
+              <input v-model.trim="form.targetHost" class="fei-input" maxlength="512" placeholder="http://service:8080" required />
+            </label>
+          </div>
+
           <label class="fei-field">
-            <span class="fei-label">配额类型</span>
-            <select v-model="form.quotaType" class="fei-select" required>
-              <option v-for="option in QUOTA_TYPE_OPTIONS" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
+            <span class="fei-label">
+              展示地址
+              <span class="fei-interface-config-modal__optional">可选</span>
+            </span>
+            <input v-model.trim="form.url" class="fei-input" maxlength="512" placeholder="留空时由后端根据地址和路径生成" />
           </label>
+
+          <label class="fei-field">
+            <span class="fei-label">运行时请求参数模板</span>
+            <textarea
+              v-model="form.requestParams"
+              class="fei-textarea fei-code-input"
+              spellcheck="false"
+              placeholder='{"name":"string"}'
+            ></textarea>
+            <span class="fei-interface-config-modal__remaining">
+              <BoundaryRemaining :current="runtimeTemplateBytes" :max="INTERFACE_DOC_LIMITS.invokeBodyBytes" unit="字节" />
+            </span>
+          </label>
+
+          <p v-if="errorMessage" class="fei-form-error" role="alert">{{ errorMessage }}</p>
         </div>
 
-        <label class="fei-field">
-          <span class="fei-label">接口描述</span>
-          <textarea v-model.trim="form.description" class="fei-textarea fei-textarea--compact" maxlength="512"></textarea>
-        </label>
-
-        <div class="fei-form-grid fei-form-grid--two">
-          <label class="fei-field">
-            <span class="fei-label">网关路径</span>
-            <input v-model.trim="form.path" class="fei-input" maxlength="512" placeholder="/api/example" required />
-          </label>
-          <label class="fei-field">
-            <span class="fei-label">真实后端地址</span>
-            <input v-model.trim="form.targetHost" class="fei-input" maxlength="512" placeholder="http://service:8080" required />
-          </label>
-        </div>
-
-        <label class="fei-field">
-          <span class="fei-label">展示地址</span>
-          <input v-model.trim="form.url" class="fei-input" maxlength="512" placeholder="留空时由后端根据地址和路径生成" />
-        </label>
-
-        <label class="fei-field">
-          <span class="fei-label">运行时请求参数模板</span>
-          <textarea
-            v-model="form.requestParams"
-            class="fei-textarea fei-code-input"
-            spellcheck="false"
-            placeholder='{"name":"string"}'
-          ></textarea>
-          <BoundaryRemaining :current="runtimeTemplateBytes" :max="INTERFACE_DOC_LIMITS.invokeBodyBytes" unit="字节" />
-        </label>
-
-        <p v-if="errorMessage" class="fei-form-error" role="alert">{{ errorMessage }}</p>
-        <div class="fei-modal__footer">
-          <button class="fei-btn fei-btn--secondary" type="button" :disabled="submitting" @click="closeModal">取消</button>
+        <div class="fei-modal__footer fei-interface-config-modal__footer">
+          <button class="fei-btn fei-btn--secondary" type="button" :disabled="submitting" @click="requestClose">取消</button>
           <button
             class="fei-btn fei-btn--primary"
             type="submit"
@@ -105,11 +128,24 @@
       </form>
     </section>
   </div>
+
+  <ConfirmDialog
+    :open="discardConfirmOpen"
+    title="放弃未保存内容"
+    message="当前接口配置尚未保存，关闭后已填写的内容将会丢失。"
+    primary-text="放弃修改"
+    cancel-text="继续编辑"
+    title-id="interface-config-discard-title"
+    @confirm="discardChanges"
+    @cancel="continueEditing"
+  />
 </template>
 
 <script setup lang="ts">
+import { CloseOutlined } from '@ant-design/icons-vue';
 import { computed, reactive, ref, watch } from 'vue';
 import BoundaryRemaining from '@/components/common/BoundaryRemaining.vue';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import { QUOTA_TYPE_OPTIONS } from '@/composables/useQuota';
 import { INTERFACE_DOC_LIMITS } from '@/features/interface-platform/documentation/constants/interfaceDocLimits';
 import { interfaceService } from '@/services/interfaceInfo';
@@ -184,6 +220,10 @@ const createDefaultForm = (): InterfaceConfigForm => ({
 const form = reactive<InterfaceConfigForm>(createDefaultForm());
 const submitting = ref(false);
 const errorMessage = ref('');
+/** 是否显示放弃未保存内容确认弹窗。 */
+const discardConfirmOpen = ref(false);
+/** 弹窗打开时的初始表单快照。 */
+const initialFormSnapshot = ref('');
 /** 管理员可选择的已注册 SDK 方法。 */
 const sdkMethodOptions = ref<SdkMethodOption[]>([]);
 /** SDK 方法列表是否正在加载。 */
@@ -194,6 +234,10 @@ const isEdit = computed(() => Boolean(props.interfaceInfo?.id));
 const titleId = computed(() => `interface-config-title-${props.interfaceInfo?.id ?? 'new'}`);
 /** 当前运行时模板的 UTF-8 字节数。 */
 const runtimeTemplateBytes = computed(() => utf8ByteLength(form.requestParams));
+/** 当前表单是否存在未保存修改。 */
+const hasUnsavedChanges = computed(() => (
+  Boolean(initialFormSnapshot.value) && initialFormSnapshot.value !== JSON.stringify({ ...form })
+));
 
 /** 运行时模板支持的参数类型标记。 */
 const supportedTypeMarkers = new Set(['string', 'number', 'boolean', 'object', 'array']);
@@ -213,11 +257,28 @@ const resetForm = () => {
     sdkMethodName: current.sdkMethodName ?? '',
   } : createDefaultForm());
   errorMessage.value = '';
+  initialFormSnapshot.value = JSON.stringify({ ...form });
 };
 
-/** 关闭弹窗。 */
-const closeModal = () => {
-  if (!submitting.value) emit('close');
+/** 请求关闭弹窗；存在未保存修改时先要求确认。 */
+const requestClose = () => {
+  if (submitting.value) return;
+  if (hasUnsavedChanges.value) {
+    discardConfirmOpen.value = true;
+    return;
+  }
+  emit('close');
+};
+
+/** 放弃未保存修改并关闭弹窗。 */
+const discardChanges = () => {
+  discardConfirmOpen.value = false;
+  emit('close');
+};
+
+/** 取消放弃操作并继续编辑。 */
+const continueEditing = () => {
+  discardConfirmOpen.value = false;
 };
 
 /** 加载管理员新增接口时可选择的 SDK 方法。 */
@@ -323,6 +384,7 @@ const submitForm = async () => {
 };
 
 watch(() => props.open, async (open) => {
+  discardConfirmOpen.value = false;
   if (!open) return;
   resetForm();
   if (!isEdit.value) await loadSdkMethodOptions();
