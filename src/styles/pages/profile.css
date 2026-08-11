@@ -58,6 +58,97 @@
   color: var(--fei-primary);
 }
 
+/* ========== 个人资料设置表单 ========== */
+
+.fei-profile-settings-card {
+  overflow: hidden;
+}
+
+.fei-profile-settings-body {
+  padding: 28px 32px 32px;
+}
+
+.fei-profile-form-grid {
+  display: grid;
+  gap: 32px;
+  container-type: inline-size;
+}
+
+.fei-profile-form-section {
+  min-width: 0;
+}
+
+.fei-profile-form-section + .fei-profile-form-section {
+  padding-top: 32px;
+  border-top: 1px solid var(--fei-border);
+}
+
+.fei-profile-form-title {
+  margin: 0 0 20px;
+  color: var(--fei-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.fei-profile-form {
+  display: grid;
+  align-items: start;
+  column-gap: 24px;
+  row-gap: 18px;
+}
+
+.fei-profile-form--basic {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fei-profile-form--password {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fei-profile-form .fei-field {
+  min-width: 0;
+}
+
+.fei-profile-form .fei-input,
+.fei-profile-form .fei-select {
+  min-height: 44px;
+}
+
+.fei-profile-form .fei-toolbar {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.fei-profile-form .fei-btn {
+  min-width: 98px;
+}
+
+@container (max-width: 760px) {
+  .fei-profile-form--basic,
+  .fei-profile-form--password {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .fei-profile-settings-body {
+    padding: 24px 20px;
+  }
+
+  .fei-profile-form-grid {
+    gap: 24px;
+  }
+
+  .fei-profile-form-section + .fei-profile-form-section {
+    padding-top: 24px;
+  }
+
+  .fei-profile-form-title {
+    margin-bottom: 16px;
+  }
+}
+
 /* ========== 密钥卡片 ========== */
 
 .fei-key-card {

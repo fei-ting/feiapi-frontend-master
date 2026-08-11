@@ -1,7 +1,7 @@
 <template>
   <section class="fei-profile-form-section">
     <h3 class="fei-profile-form-title">基础资料</h3>
-    <form class="fei-form" @submit.prevent="submitForm">
+    <form class="fei-form fei-profile-form fei-profile-form--basic" @submit.prevent="submitForm">
       <label class="fei-field">
         <span class="fei-label">昵称</span>
         <input
