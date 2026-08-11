@@ -15,7 +15,7 @@
             {{ changeTypeText(item.changeType) }}
           </span>
           <span class="fei-change-item__name">{{ item.name }}</span>
-          <span class="fei-change-item__time">{{ item.time }}</span>
+          <span class="fei-change-item__time">{{ formatRelativeTime(item.time) }}</span>
         </div>
       </div>
       <div v-else class="fei-empty" style="padding: 32px">暂无变更</div>
@@ -25,6 +25,7 @@
 
 <script setup lang="ts">
 import type { ChangedInterface } from '@/types/dashboard';
+import { formatRelativeTime } from '@/utils/relativeTime';
 
 /** 最近变更列表组件属性。 */
 interface ChangeListProps {
