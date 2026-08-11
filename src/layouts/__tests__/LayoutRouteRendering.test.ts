@@ -102,7 +102,10 @@ const mountLayoutRoute = async (
         },
         AppFooter: { template: '<footer class="test-footer" />' },
         ErrorBoundary: { template: '<div class="test-error-boundary"><slot /></div>' },
-        PageContainer: { template: '<main class="test-page-container"><slot /></main>' },
+        PageContainer: {
+          props: { wide: Boolean },
+          template: '<main class="test-page-container" :data-wide="wide ? \'true\' : \'false\'"><slot /></main>',
+        },
         ToastMessage: {
           props: ['message', 'type', 'visible'],
           template: '<div class="test-toast" :data-type="type" :data-visible="visible">{{ message }}</div>',
@@ -205,6 +208,7 @@ describe('统一应用壳层路由渲染', () => {
 
     expect(wrapper.find('.test-admin-page').exists()).toBe(true);
     expect(wrapper.get('a[href="/admin/interfaces"]').classes()).toContain('is-active');
+    expect(wrapper.get('.test-page-container').attributes('data-wide')).toBe('true');
   });
 
   /** 验证个人中心布局能够渲染嵌套路由页面 */
@@ -213,6 +217,7 @@ describe('统一应用壳层路由渲染', () => {
 
     expect(wrapper.find('.test-profile-page').exists()).toBe(true);
     expect(wrapper.get('a[href="/profile/keys"]').classes()).toContain('is-active');
+    expect(wrapper.get('.test-page-container').attributes('data-wide')).toBe('true');
   });
 
   /** 验证个人资料头部将身份信息和资料概览分区展示 */

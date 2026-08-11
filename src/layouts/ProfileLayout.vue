@@ -7,7 +7,7 @@
       @toggle-menu="toggleMenu"
     />
 
-    <PageContainer>
+    <PageContainer wide>
       <!-- 个人信息头部卡片 -->
       <div v-if="userStore.loginUser" class="fei-profile-header">
         <div class="fei-profile-identity">

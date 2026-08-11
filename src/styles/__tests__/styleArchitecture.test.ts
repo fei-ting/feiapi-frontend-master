@@ -70,10 +70,20 @@ describe('样式架构', () => {
       expect(invokeCss).not.toMatch(/^\.fei-code-inline\s*\{/m);
     });
 
+    it('公共表格操作区保持列内居中', () => {
+      const commonCss = readFile('styles/components/common.css');
+      const actionsRule = commonCss.match(/\.fei-table-actions\s*\{([^}]*)\}/)?.[1] ?? '';
+
+      expect(actionsRule).toContain('justify-content: center');
+    });
+
     it('跨页面区块、面板和标题样式位于全局布局层', () => {
       const layoutCss = readFile('styles/layout.css');
       const detailCss = readFile('styles/pages/detail.css');
+      const wideContainerRule = layoutCss.match(/\.fei-container--wide\s*\{([^}]*)\}/)?.[1] ?? '';
 
+      expect(wideContainerRule).toContain('1590px');
+      expect(wideContainerRule).toContain('clamp(32px, 5vw, 80px)');
       expect(layoutCss).toMatch(/^\.fei-section\s*\{/m);
       expect(layoutCss).toMatch(/^\.fei-panel\s*\{/m);
       expect(layoutCss).toMatch(/^\.fei-detail__title\s*\{/m);
