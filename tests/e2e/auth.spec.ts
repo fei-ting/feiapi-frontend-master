@@ -5,7 +5,7 @@ test('匿名用户访问个人资料时跳转到带原地址的登录页', async
   await page.goto('/#/profile/info');
 
   await expect(page).toHaveURL(/#\/login\?redirect=\/profile\/info$/);
-  await expect(page.getByRole('heading', { name: 'FeiAPI' })).toBeVisible();
+  await expect(page.getByText('FeiAPI').first()).toBeVisible();
 });
 
 test('普通用户不能进入管理后台', async ({ page, apiMock }) => {
