@@ -70,6 +70,12 @@ describe('认证页面', () => {
     const wrapper = mount(LoginView, { global });
 
     expect(wrapper.findAllComponents(AuthField)).toHaveLength(2);
+    expect(wrapper.get('.fei-auth-title').text()).toBe('欢迎回来');
+    expect(wrapper.find('.fei-section-desc').exists()).toBe(false);
+    expect(wrapper.findAllComponents(AuthField).map((field) => field.props('icon'))).toEqual([
+      'user',
+      'lock',
+    ]);
     await wrapper.get('form').trigger('submit');
     await flushPromises();
 
@@ -147,6 +153,13 @@ describe('认证页面', () => {
     const wrapper = mount(RegisterView, { global });
 
     expect(wrapper.findAllComponents(AuthField)).toHaveLength(3);
+    expect(wrapper.get('.fei-auth-title').text()).toBe('创建账户');
+    expect(wrapper.find('.fei-section-desc').exists()).toBe(false);
+    expect(wrapper.findAllComponents(AuthField).map((field) => field.props('icon'))).toEqual([
+      'user',
+      'lock',
+      'lock',
+    ]);
     await wrapper.get('form').trigger('submit');
     await flushPromises();
 

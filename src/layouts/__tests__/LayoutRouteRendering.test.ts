@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AdminLayout from '../AdminLayout.vue';
 import AppLayout from '../AppLayout.vue';
 import ProfileLayout from '../ProfileLayout.vue';
+import { useUserStore } from '@/stores/user';
+import type { UserVO } from '@/types/user';
 import HomeView from '@/views/HomeView.vue';
 
 const serviceMocks = vi.hoisted(() => ({
@@ -61,6 +63,7 @@ const ProfilePage = defineComponent({
  * @param childPath 子路由路径
  * @param targetPath 目标完整路径
  * @param childComponent 子页面组件
+ * @param loginUser 可选的登录用户
  * @returns 页面包装器
  */
 const mountLayoutRoute = async (
@@ -69,7 +72,12 @@ const mountLayoutRoute = async (
   childPath: string,
   targetPath: string,
   childComponent: Component,
+  loginUser?: UserVO,
 ): Promise<VueWrapper> => {
+  const pinia = createPinia();
+  if (loginUser) {
+    useUserStore(pinia).setLoginUser(loginUser);
+  }
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -86,7 +94,7 @@ const mountLayoutRoute = async (
 
   const wrapper = mount(TestRoot, {
     global: {
-      plugins: [createPinia(), router],
+      plugins: [pinia, router],
       stubs: {
         AppHeader: {
           props: ['active'],
@@ -94,7 +102,10 @@ const mountLayoutRoute = async (
         },
         AppFooter: { template: '<footer class="test-footer" />' },
         ErrorBoundary: { template: '<div class="test-error-boundary"><slot /></div>' },
-        PageContainer: { template: '<main class="test-page-container"><slot /></main>' },
+        PageContainer: {
+          props: { wide: Boolean },
+          template: '<main class="test-page-container" :data-wide="wide ? \'true\' : \'false\'"><slot /></main>',
+        },
         ToastMessage: {
           props: ['message', 'type', 'visible'],
           template: '<div class="test-toast" :data-type="type" :data-visible="visible">{{ message }}</div>',
@@ -197,6 +208,7 @@ describe('统一应用壳层路由渲染', () => {
 
     expect(wrapper.find('.test-admin-page').exists()).toBe(true);
     expect(wrapper.get('a[href="/admin/interfaces"]').classes()).toContain('is-active');
+    expect(wrapper.get('.test-page-container').attributes('data-wide')).toBe('true');
   });
 
   /** 验证个人中心布局能够渲染嵌套路由页面 */
@@ -205,5 +217,32 @@ describe('统一应用壳层路由渲染', () => {
 
     expect(wrapper.find('.test-profile-page').exists()).toBe(true);
     expect(wrapper.get('a[href="/profile/keys"]').classes()).toContain('is-active');
+    expect(wrapper.get('.test-page-container').attributes('data-wide')).toBe('true');
+  });
+
+  /** 验证个人资料头部将身份信息和资料概览分区展示 */
+  it('分区展示个人资料头部信息', async () => {
+    const wrapper = await mountLayoutRoute(
+      ProfileLayout,
+      '/profile',
+      'info',
+      '/profile/info',
+      ProfilePage,
+      {
+        id: 1,
+        userAccount: 'admin',
+        userName: '管理员',
+        userRole: 'admin',
+      },
+    );
+
+    expect(wrapper.get('.fei-profile-identity').text()).toContain('管理员');
+    expect(wrapper.get('.fei-profile-identity').text()).toContain('账号：admin');
+    expect(wrapper.findAll('.fei-profile-summary-item').map(item => item.text())).toEqual([
+      '用户角色管理员',
+      '用户 ID1',
+      '性别未设置',
+    ]);
+    wrapper.unmount();
   });
 });

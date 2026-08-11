@@ -1,51 +1,62 @@
 <template>
-  <div class="fei-app-shell">
-    <div class="fei-page" style="display: flex; align-items: center; min-height: calc(100vh - 64px)">
-      <div class="fei-container" style="max-width: 480px">
-        <div class="fei-panel">
-          <div class="fei-empty" style="padding: 0 0 24px">
-            <h1 class="fei-detail__title" style="font-size: 28px; margin-bottom: 8px">FeiAPI</h1>
-            <p class="fei-section-desc">API 开放平台</p>
-          </div>
+  <main class="fei-auth-page">
+    <section class="fei-auth-card" aria-labelledby="login-title">
+      <RouterLink class="fei-auth-brand" to="/home" aria-label="FeiAPI 首页">
+        <span class="fei-auth-brand__icon" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </span>
+        <span>FeiAPI</span>
+      </RouterLink>
 
-          <div class="fei-tabbar">
-            <button class="fei-tab is-active" type="button">账户密码登录</button>
-          </div>
+      <h1 id="login-title" class="fei-auth-title">欢迎回来</h1>
+      <div class="fei-auth-mode">账户密码登录</div>
 
-          <form class="fei-form" @submit.prevent="handleSubmit">
-            <AuthField
-              id="userAccount"
-              v-model="form.userAccount"
-              label="用户名"
-              placeholder="请输入用户名"
-              :error="errors.userAccount"
-              :shaking="shaking.userAccount"
-              @blur="validateAccount"
-              @input="onAccountInput"
-            />
-            <AuthField
-              id="userPassword"
-              v-model="form.userPassword"
-              label="密码"
-              type="password"
-              placeholder="请输入密码"
-              :error="errors.userPassword"
-              :shaking="shaking.userPassword"
-              @blur="validatePassword"
-              @input="onPasswordInput"
-            />
-            <button class="fei-btn fei-btn--primary" type="submit">登录</button>
-          </form>
+      <form class="fei-form fei-auth-form" @submit.prevent="handleSubmit">
+        <AuthField
+          id="userAccount"
+          v-model="form.userAccount"
+          icon="user"
+          label="用户名"
+          placeholder="请输入用户名"
+          :error="errors.userAccount"
+          :shaking="shaking.userAccount"
+          @blur="validateAccount"
+          @input="onAccountInput"
+        />
+        <AuthField
+          id="userPassword"
+          v-model="form.userPassword"
+          icon="lock"
+          label="密码"
+          type="password"
+          placeholder="请输入密码"
+          :error="errors.userPassword"
+          :shaking="shaking.userPassword"
+          @blur="validatePassword"
+          @input="onPasswordInput"
+        />
+        <button class="fei-btn fei-btn--primary fei-auth-submit" type="submit">登录</button>
+      </form>
 
-          <div class="fei-toolbar" style="margin-top: 18px; justify-content: space-between">
-            <RouterLink to="/register">新用户注册</RouterLink>
-            <RouterLink to="/home">返回首页</RouterLink>
-          </div>
-        </div>
+      <div class="fei-auth-links">
+        <span>还没有账户？ <RouterLink to="/register">新用户注册</RouterLink></span>
+        <RouterLink class="fei-auth-links__home" to="/home">返回首页</RouterLink>
       </div>
-    </div>
+      <p class="fei-auth-footer">FeiAPI 在线接口开放平台</p>
+    </section>
     <ToastMessage :message="toast.message" :type="toast.type" :visible="toast.visible" />
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -56,6 +67,7 @@ import { userService } from '@/services/user';
 import { useUserStore } from '@/stores/user';
 import { useAuthForm } from '@/composables/useAuthForm';
 import { useToast } from '@/composables/useToast';
+import '@/styles/pages/auth.css';
 
 const router = useRouter();
 const userStore = useUserStore();

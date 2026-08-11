@@ -1,48 +1,72 @@
 <template>
-  <div class="fei-card">
-    <div class="fei-card-header">
+  <section class="fei-quota-config">
+    <header class="fei-quota-config__toolbar">
       <h2 class="fei-section-title">配额策略配置</h2>
       <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="loadQuotaConfigs">
         <ReloadOutlined class="fei-button-icon" aria-hidden="true" />
         刷新
       </button>
-    </div>
-    <div class="fei-card-body">
-      <div class="fei-quota-config-grid">
-        <article v-for="item in quotaConfigs" :key="item.quotaType" class="fei-quota-config-card">
-          <div class="fei-quota-config-card__head">
-            <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
-              {{ getQuotaTypeText(item.quotaType) }}
-            </span>
-            <span class="fei-quota-config-card__time">{{ formatTime(item.updateTime) }}</span>
+    </header>
+
+    <div v-if="quotaConfigs.length" class="fei-quota-config-grid">
+      <article
+        v-for="item in quotaConfigs"
+        :key="item.quotaType"
+        class="fei-quota-config-card"
+        :class="{
+          'fei-quota-config-card--free': item.quotaType === 'FREE_UNLIMITED',
+          'fei-quota-config-card--basic': item.quotaType === 'BASIC_QUOTA',
+          'fei-quota-config-card--trial': item.quotaType === 'ADVANCED_TRIAL',
+        }"
+      >
+        <div class="fei-quota-config-card__head">
+          <span class="fei-tag" :class="getQuotaTagClass(item.quotaType)">
+            {{ getQuotaTypeText(item.quotaType) }}
+          </span>
+          <span class="fei-quota-config-card__time">{{ formatTime(item.updateTime) }}</span>
+        </div>
+
+        <div class="fei-quota-config-card__body">
+          <span class="fei-quota-edit-label">当前初始额度</span>
+          <div class="fei-quota-config-card__value-row">
+            <strong class="fei-quota-edit-value">
+              {{ item.limited ? item.initialQuota : '无限次' }}
+            </strong>
+            <span v-if="item.limited" class="fei-quota-config-card__unit">次</span>
           </div>
-          <div class="fei-quota-config-card__spacer" aria-hidden="true"></div>
-          <div class="fei-quota-edit-row-inline">
-            <span class="fei-quota-edit-label">当前初始额度：</span>
-            <template v-if="item.limited">
-              <input
-                v-model.number="quotaEditMap[item.quotaType]"
-                class="fei-input fei-input--compact"
-                type="number"
-                min="1"
-                step="1"
-                :aria-label="`${getQuotaTypeText(item.quotaType)}初始额度`"
-              />
-              <button
-                class="fei-btn fei-btn--primary fei-btn--sm"
-                :disabled="quotaSavingType === item.quotaType"
-                @click="openQuotaConfirmModal(item.quotaType)"
-              >
-                {{ quotaSavingType === item.quotaType ? '保存中' : '保存' }}
-              </button>
-            </template>
-            <span v-else class="fei-quota-edit-value">无限次</span>
-          </div>
-        </article>
-      </div>
-      <div v-if="!quotaConfigs.length" class="fei-empty">暂无配额策略数据</div>
+
+          <label
+            v-if="item.limited"
+            class="fei-quota-config-card__editor"
+            :for="`quota-input-${item.quotaType}`"
+          >
+            <span>调整初始额度</span>
+            <input
+              :id="`quota-input-${item.quotaType}`"
+              v-model.number="quotaEditMap[item.quotaType]"
+              class="fei-input fei-input--compact"
+              type="number"
+              min="1"
+              step="1"
+              :aria-label="`${getQuotaTypeText(item.quotaType)}初始额度`"
+            />
+          </label>
+        </div>
+
+        <footer v-if="item.limited" class="fei-quota-config-card__actions">
+          <button
+            class="fei-btn fei-btn--primary fei-quota-config-card__save"
+            :disabled="quotaSavingType === item.quotaType"
+            @click="openQuotaConfirmModal(item.quotaType)"
+          >
+            {{ quotaSavingType === item.quotaType ? '保存中' : '保存' }}
+          </button>
+        </footer>
+      </article>
     </div>
-  </div>
+
+    <div v-else class="fei-empty fei-quota-config__empty">暂无配额策略数据</div>
+  </section>
 
   <ConfirmDialog
     :open="pendingQuota !== null"

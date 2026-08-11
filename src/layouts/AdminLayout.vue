@@ -7,7 +7,7 @@
       @toggle-menu="toggleMenu"
     />
 
-    <PageContainer>
+    <PageContainer wide>
       <div class="fei-admin-layout">
         <SectionNavigation
           label="管理后台导航"

@@ -33,6 +33,74 @@
   color: var(--fei-text-muted);
 }
 
+/* ========== 接口列表排序表头 ========== */
+
+.fei-sort-header {
+  display: inline-flex;
+  width: 100%;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  transition: color .16s ease;
+}
+
+.fei-sort-header:hover {
+  color: var(--fei-primary);
+}
+
+.fei-sort-header:focus-visible {
+  outline: 2px solid rgba(47, 107, 255, .3);
+  outline-offset: 2px;
+}
+
+.fei-sort-indicator {
+  display: inline-flex;
+  width: 10px;
+  height: 14px;
+  flex: 0 0 10px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.fei-sort-caret {
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  opacity: .55;
+  transition: border-color .16s ease, opacity .16s ease;
+}
+
+.fei-sort-caret--up {
+  border-bottom: 4px solid var(--fei-text-muted);
+}
+
+.fei-sort-caret--down {
+  border-top: 4px solid var(--fei-text-muted);
+}
+
+.fei-sort-caret.is-active {
+  opacity: 1;
+}
+
+.fei-sort-caret--up.is-active {
+  border-bottom-color: var(--fei-primary);
+}
+
+.fei-sort-caret--down.is-active {
+  border-top-color: var(--fei-primary);
+}
+
 .fei-form-grid {
   display: grid;
   gap: 16px;
@@ -46,6 +114,148 @@
 .fei-code-input { font-family: 'SFMono-Regular', Consolas, monospace; line-height: 1.55; }
 .fei-field--sort { max-width: 96px; }
 .fei-form-error { margin: 0; color: var(--fei-error); font-size: 13px; }
+
+/* ========== 配额策略卡片 ========== */
+
+.fei-quota-config {
+  display: grid;
+  gap: 24px;
+}
+
+.fei-quota-config__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-quota-config__toolbar .fei-section-title {
+  margin: 0;
+}
+
+.fei-quota-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+.fei-quota-config-card {
+  --fei-quota-card-accent: var(--fei-primary);
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 366px;
+  overflow: hidden;
+  flex-direction: column;
+  padding: 24px;
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--fei-shadow-soft);
+}
+
+.fei-quota-config-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: var(--fei-quota-card-accent);
+  content: '';
+}
+
+.fei-quota-config-card--free {
+  --fei-quota-card-accent: #16a6c9;
+}
+
+.fei-quota-config-card--trial {
+  --fei-quota-card-accent: #f79009;
+}
+
+.fei-quota-config-card__head {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fei-quota-config-card__time {
+  overflow: hidden;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fei-quota-config-card__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 24px;
+  border-top: 1px solid #edf1f6;
+  margin-top: 20px;
+}
+
+.fei-quota-edit-label {
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+}
+
+.fei-quota-config-card__value-row {
+  display: flex;
+  min-height: 50px;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fei-quota-edit-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--fei-text);
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.fei-quota-config-card__unit {
+  color: var(--fei-text-secondary);
+  font-size: 13px;
+}
+
+.fei-quota-config-card__editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  color: var(--fei-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fei-quota-config-card__editor .fei-input {
+  height: 44px;
+}
+
+.fei-quota-config-card__actions {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.fei-quota-config-card__save {
+  width: 100%;
+  height: 48px;
+  border-radius: 7px;
+}
+
+.fei-quota-config__empty {
+  border: 1px solid var(--fei-border);
+  border-radius: 8px;
+  background: #fff;
+}
 
 .fei-modal__header,
 .fei-modal__footer,
@@ -65,6 +275,90 @@
 .fei-modal__title { margin: 0; color: var(--fei-text); font-size: 22px; }
 .fei-icon-btn { border: 0; background: transparent; color: var(--fei-text-muted); cursor: pointer; font-size: 24px; line-height: 1; }
 .fei-modal__footer { justify-content: flex-end; margin-top: 6px; }
+
+/* ========== 接口配置弹窗 ========== */
+
+.fei-interface-config-modal {
+  display: flex;
+  max-height: min(90vh, 860px);
+  overflow: hidden;
+  flex-direction: column;
+  padding: 0;
+}
+
+.fei-interface-config-modal > .fei-modal__header {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--fei-border);
+}
+
+.fei-interface-config-modal__close {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 18px;
+  place-items: center;
+  transition: background-color .16s ease, color .16s ease;
+}
+
+.fei-interface-config-modal__close:hover {
+  background: #f2f4f7;
+  color: var(--fei-text);
+}
+
+.fei-interface-config-modal__close:focus-visible {
+  outline: 2px solid rgba(47, 107, 255, .3);
+  outline-offset: 2px;
+}
+
+.fei-interface-config-modal__close:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.fei-interface-config-modal > .fei-form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  gap: 0;
+  flex-direction: column;
+}
+
+.fei-interface-config-modal__body {
+  display: grid;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 16px;
+  padding: 20px 24px;
+  scrollbar-gutter: stable;
+}
+
+.fei-required-mark {
+  color: var(--fei-error);
+}
+
+.fei-interface-config-modal__optional {
+  margin-left: 4px;
+  color: var(--fei-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fei-interface-config-modal__remaining {
+  text-align: right;
+}
+
+.fei-interface-config-modal__footer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--fei-border);
+  background: #fff;
+}
 
 .fei-publish-check-dialog {
   width: min(720px, calc(100vw - 32px));
@@ -181,7 +475,43 @@
 
 /* ========== 后台工具响应式规则 ========== */
 
+@media (max-width: 1280px) {
+  .fei-quota-config-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .fei-interface-config-modal {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .fei-interface-config-modal > .fei-modal__header,
+  .fei-interface-config-modal__body {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .fei-interface-config-modal__footer {
+    padding: 14px 16px 16px;
+  }
+
+  .fei-interface-config-modal__footer .fei-btn {
+    flex: 1;
+  }
+
+  .fei-quota-config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fei-quota-config__toolbar {
+    align-items: flex-start;
+  }
+
+  .fei-quota-config-card {
+    min-height: 340px;
+  }
+
   .fei-form-grid--two,
   .fei-form-grid--three,
   .fei-form-grid--four,

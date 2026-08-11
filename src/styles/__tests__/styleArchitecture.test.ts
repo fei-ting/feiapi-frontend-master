@@ -70,10 +70,44 @@ describe('样式架构', () => {
       expect(invokeCss).not.toMatch(/^\.fei-code-inline\s*\{/m);
     });
 
+    it('公共表格操作区保持列内居中', () => {
+      const commonCss = readFile('styles/components/common.css');
+      const actionsRule = commonCss.match(/\.fei-table-actions\s*\{([^}]*)\}/)?.[1] ?? '';
+
+      expect(actionsRule).toContain('justify-content: center');
+    });
+
+    it('接口调用总数排序表头使用无边框居中样式', () => {
+      const adminToolsCss = readFile('styles/pages/admin-tools.css');
+      const sortHeaderRule = adminToolsCss.match(/\.fei-sort-header\s*\{([^}]*)\}/)?.[1] ?? '';
+
+      expect(sortHeaderRule).toContain('display: inline-flex');
+      expect(sortHeaderRule).toContain('justify-content: center');
+      expect(sortHeaderRule).toContain('border: 0');
+      expect(sortHeaderRule).toContain('background: transparent');
+      expect(adminToolsCss).toContain('.fei-sort-caret--up');
+      expect(adminToolsCss).toContain('.fei-sort-caret--down');
+      expect(adminToolsCss).toContain('.fei-sort-caret.is-active');
+    });
+
+    it('接口配置弹窗使用独立滚动内容区和固定操作区', () => {
+      const adminToolsCss = readFile('styles/pages/admin-tools.css');
+      const modalRule = adminToolsCss.match(/\.fei-interface-config-modal\s*\{([^}]*)\}/)?.[1] ?? '';
+      const bodyRule = adminToolsCss.match(/\.fei-interface-config-modal__body\s*\{([^}]*)\}/)?.[1] ?? '';
+      const footerRule = adminToolsCss.match(/\.fei-interface-config-modal__footer\s*\{([^}]*)\}/)?.[1] ?? '';
+
+      expect(modalRule).toContain('overflow: hidden');
+      expect(bodyRule).toContain('overflow-y: auto');
+      expect(footerRule).toContain('flex: 0 0 auto');
+    });
+
     it('跨页面区块、面板和标题样式位于全局布局层', () => {
       const layoutCss = readFile('styles/layout.css');
       const detailCss = readFile('styles/pages/detail.css');
+      const wideContainerRule = layoutCss.match(/\.fei-container--wide\s*\{([^}]*)\}/)?.[1] ?? '';
 
+      expect(wideContainerRule).toContain('1590px');
+      expect(wideContainerRule).toContain('clamp(32px, 5vw, 80px)');
       expect(layoutCss).toMatch(/^\.fei-section\s*\{/m);
       expect(layoutCss).toMatch(/^\.fei-panel\s*\{/m);
       expect(layoutCss).toMatch(/^\.fei-detail__title\s*\{/m);
@@ -223,6 +257,14 @@ describe('样式架构', () => {
       expect(profileLayout).toContain("import '@/styles/pages/admin.css'");
       expect(profileLayout).toContain("import '@/styles/pages/profile.css'");
       expect(profileLayout).toContain("import SectionNavigation from '@/components/SectionNavigation.vue'");
+    });
+
+    it('登录注册页面导入认证页面共享样式', () => {
+      const loginView = readFile('views/LoginView.vue');
+      const registerView = readFile('views/RegisterView.vue');
+
+      expect(loginView).toContain("import '@/styles/pages/auth.css'");
+      expect(registerView).toContain("import '@/styles/pages/auth.css'");
     });
   });
 });

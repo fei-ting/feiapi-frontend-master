@@ -7,23 +7,35 @@
       @toggle-menu="toggleMenu"
     />
 
-    <PageContainer>
+    <PageContainer wide>
       <!-- 个人信息头部卡片 -->
       <div v-if="userStore.loginUser" class="fei-profile-header">
-        <UserAvatar
-          class="fei-profile-avatar"
-          :src="userStore.loginUser.userAvatar"
-          :alt="userStore.loginUser.userName || '用户'"
-        />
-        <div class="fei-profile-info">
-          <h1 class="fei-profile-name">{{ userStore.loginUser.userName || '未设置昵称' }}</h1>
-          <p class="fei-profile-account">账号：{{ userStore.loginUser.userAccount }}</p>
-          <div class="fei-profile-meta">
+        <div class="fei-profile-identity">
+          <UserAvatar
+            class="fei-profile-avatar"
+            :src="userStore.loginUser.userAvatar"
+            :alt="userStore.loginUser.userName || '用户'"
+          />
+          <div class="fei-profile-info">
+            <h1 class="fei-profile-name">{{ userStore.loginUser.userName || '未设置昵称' }}</h1>
+            <p class="fei-profile-account">账号：{{ userStore.loginUser.userAccount }}</p>
+          </div>
+        </div>
+
+        <div class="fei-profile-summary" aria-label="个人资料概览">
+          <div class="fei-profile-summary-item">
+            <span class="fei-profile-summary-label">用户角色</span>
             <span class="fei-user-role-badge">
               {{ userStore.loginUser.userRole === 'admin' ? '管理员' : '普通用户' }}
             </span>
-            <span>ID: {{ userStore.loginUser.id }}</span>
-            <span>性别：{{ genderText }}</span>
+          </div>
+          <div class="fei-profile-summary-item">
+            <span class="fei-profile-summary-label">用户 ID</span>
+            <span class="fei-profile-summary-value">{{ userStore.loginUser.id }}</span>
+          </div>
+          <div class="fei-profile-summary-item">
+            <span class="fei-profile-summary-label">性别</span>
+            <span class="fei-profile-summary-value">{{ genderText }}</span>
           </div>
         </div>
       </div>
