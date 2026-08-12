@@ -479,6 +479,28 @@
 .fei-doc-main-info__remark { min-height: 150px; border-radius: 7px; line-height: 1.65; }
 .fei-doc-main-info__hint { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--fei-text-secondary); font-size: 12px; line-height: 1.5; }
 .fei-doc-main-info__hint svg { flex: 0 0 auto; color: var(--fei-primary); font-size: 16px; }
+.fei-doc-request-params { display: grid; gap: 24px; padding: 24px 26px; border-radius: 8px; box-shadow: var(--fei-shadow-soft); }
+.fei-doc-request-params__heading { align-items: center; margin-bottom: 0; padding-bottom: 20px; border-bottom: 1px solid #eaecf0; }
+.fei-doc-request-params__title { align-items: flex-start !important; }
+.fei-doc-request-params__title > span { display: inline-grid; width: 32px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 5px; background: #eef4ff; letter-spacing: 0 !important; }
+.fei-doc-request-params__title > div { display: grid; gap: 4px; }
+.fei-doc-request-params__title p { margin: 0; color: var(--fei-text-secondary); font-size: 13px; line-height: 1.5; text-align: left; }
+.fei-doc-request-params__count { min-width: max-content; padding: 6px 10px; border: 1px solid #c7d7fe; border-radius: 6px; background: #f5f8ff; color: #2449a5; font-size: 12px; font-weight: 700; line-height: 1.25; }
+.fei-doc-request-params__list { gap: 14px; }
+.fei-doc-request-params .fei-doc-request-params__item { grid-template-columns: minmax(180px, .72fr) minmax(0, 4fr); gap: 24px; align-items: start; padding: 20px; border-radius: 8px; }
+.fei-doc-request-params .fei-doc-request-params__identity { gap: 12px; padding: 2px 0 0; }
+.fei-doc-request-params .fei-doc-request-params__identity strong { color: var(--fei-text); font-size: 17px; line-height: 1.4; }
+.fei-doc-request-params__tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.fei-doc-request-params .fei-doc-request-params__tag { display: inline-flex; min-height: 24px; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid; border-radius: 5px; font-size: 11px; font-weight: 700; line-height: 1; }
+.fei-doc-request-params .fei-doc-request-params__tag--scene { border-color: #c7d7fe; background: #eef4ff; color: #2449a5; }
+.fei-doc-request-params .fei-doc-request-params__tag--type { border-color: #d0d5dd; background: #f2f4f7; color: #475467; }
+.fei-doc-request-params .fei-doc-request-params__tag--required { border-color: #f9dbaf; background: #fff6ed; color: #b93815; }
+.fei-doc-request-params .fei-doc-request-params__tag--optional { border-color: #abefc6; background: #ecfdf3; color: #067647; }
+.fei-doc-request-params__tag i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+.fei-doc-request-params__fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; min-width: 0; }
+.fei-doc-request-params__label-row { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
+.fei-doc-request-params__label-row .fei-boundary-remaining { min-width: max-content; margin-top: 0; white-space: nowrap; }
+.fei-doc-request-params .fei-input { min-height: 52px; border-radius: 7px; }
 .fei-doc-boundary-action { display: flex; align-items: center; gap: 12px; }
 .fei-doc-boundary-action p { margin: 0; color: var(--fei-text-muted); font-size: 12px; white-space: nowrap; }
 .fei-doc-param-list,
@@ -563,9 +585,17 @@
   .fei-doc-main-info__remark { min-height: 168px; }
   .fei-doc-main-info__hint { align-items: flex-start; }
 
+  .fei-doc-request-params { gap: 20px; padding: 20px 16px; }
+  .fei-doc-request-params__heading { align-items: flex-start; padding-bottom: 16px; }
+  .fei-doc-request-params__title { gap: 10px !important; }
+  .fei-doc-request-params__count { align-self: flex-start; }
+  .fei-doc-request-params .fei-doc-request-params__item { grid-template-columns: 1fr; gap: 18px; padding: 16px; }
+  .fei-doc-request-params__fields { grid-template-columns: 1fr; gap: 16px; }
+
   .fei-doc-param-row { grid-template-columns: 1fr 1fr; }
   .fei-system-header { grid-template-columns: 1fr 1fr; }
   .fei-doc-param-row__identity { grid-column: 1 / -1; }
+  .fei-doc-request-params .fei-doc-request-params__identity { grid-column: auto; }
   .fei-doc-section__heading { flex-direction: column; }
   .fei-doc-section__heading p { text-align: left; }
   .fei-doc-boundary-action { width: 100%; justify-content: space-between; }

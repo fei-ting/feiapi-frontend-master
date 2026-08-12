@@ -14,24 +14,34 @@ describe('RequestParamDescriptionList', () => {
     expect(wrapper.text()).toContain('当前接口没有运行时请求参数');
   });
 
-  it('展示身份信息并发送五类字段更新', async () => {
+  it('以卡片展示参数身份、数量和字符计数', () => {
+    const wrapper = mount(RequestParamDescriptionList, { props: { params } });
+
+    expect(wrapper.get('.fei-doc-request-params__count').text()).toBe('当前 1 / 100');
+    expect(wrapper.findAll('.fei-doc-request-params__item')).toHaveLength(1);
+    expect(wrapper.text()).toContain('userId');
+    expect(wrapper.findAll('.fei-doc-request-params__tag').map((tag) => tag.text())).toEqual(['BODY', 'number', '必填']);
+    expect(wrapper.findAll('.fei-doc-request-params__label-row')).toHaveLength(4);
+    expect(wrapper.findAll('.fei-boundary-remaining')).toHaveLength(4);
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('排序');
+  });
+
+  it('发送四类说明字段更新并保留原有文本处理规则', async () => {
     const wrapper = mount(RequestParamDescriptionList, { props: { params } });
     const inputs = wrapper.findAll('input');
-    expect(wrapper.text()).toContain('userId');
-    expect(wrapper.text()).toContain('BODY · number · 必填');
+    expect(inputs).toHaveLength(4);
 
     await inputs[0].setValue('  新说明  ');
     await inputs[1].setValue('2');
     await inputs[2].setValue('1');
     await inputs[3].setValue('  大于零  ');
-    await inputs[4].setValue('3');
 
     expect(wrapper.emitted('update-param')).toEqual([
       ['request-1', 'description', '新说明'],
       ['request-1', 'exampleValue', '2'],
       ['request-1', 'defaultValue', '1'],
       ['request-1', 'validationRule', '大于零'],
-      ['request-1', 'sortOrder', 3],
     ]);
   });
 });
