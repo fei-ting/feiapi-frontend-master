@@ -255,7 +255,7 @@ describe('InterfaceDocMaintenanceView', () => {
     mocks.getDocDetail.mockResolvedValue(buildDetail(status));
     const wrapper = await mountView();
 
-    expect(wrapper.text()).toContain('当前接口不可编辑');
+    expect(wrapper.text()).toContain('当前为只读模式');
     expect(wrapper.get('fieldset').attributes()).toHaveProperty('disabled');
     const saveButtons = wrapper.findAll('button').filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
     expect(saveButtons).toHaveLength(0);
