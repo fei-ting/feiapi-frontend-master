@@ -32,12 +32,12 @@ vi.mock('@/services/interfaceInfo', () => ({
 }));
 
 /** 构建接口列表测试数据。 */
-const buildInterface = (docStatus: 'DRAFT' | 'READY'): InterfaceInfoVO => ({
+const buildInterface = (docStatus: 'DRAFT' | 'READY', status = 0): InterfaceInfoVO => ({
   id: 1,
   name: '用户接口',
   url: 'http://localhost/api/user',
   path: '/api/user',
-  status: 0,
+  status,
   method: 'POST',
   quotaType: 'BASIC_QUOTA',
   quotaTypeText: '基础额度接口',
@@ -47,9 +47,9 @@ const buildInterface = (docStatus: 'DRAFT' | 'READY'): InterfaceInfoVO => ({
 });
 
 /** 挂载接口管理页并等待列表加载。 */
-const mountView = async (docStatus: 'DRAFT' | 'READY') => {
+const mountView = async (docStatus: 'DRAFT' | 'READY', status = 0) => {
   mocks.listPage.mockResolvedValue({
-    records: [buildInterface(docStatus)],
+    records: [buildInterface(docStatus, status)],
     current: 1,
     size: 10,
     total: 1,
@@ -66,6 +66,20 @@ const mountView = async (docStatus: 'DRAFT' | 'READY') => {
 describe('InterfaceManagementView', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+  });
+
+  it.each([
+    { status: 0, actionText: '维护文档' },
+    { status: 1, actionText: '查看文档' },
+    { status: 2, actionText: '查看文档' },
+  ])('接口状态为 $status 时显示“$actionText”并进入文档页', async ({ status, actionText }) => {
+    const wrapper = await mountView('READY', status);
+    const documentButton = wrapper.findAll('button').find((button) => button.text() === actionText);
+
+    expect(documentButton).toBeDefined();
+    await documentButton?.trigger('click');
+
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'admin-interface-doc', params: { id: 1 } });
   });
 
   it('草稿接口显示待完善角标并禁用发布', async () => {

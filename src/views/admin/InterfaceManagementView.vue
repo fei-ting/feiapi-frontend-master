@@ -86,7 +86,9 @@
       <template #cell-actions="{ row: item }">
         <div class="fei-table-actions">
           <button class="fei-action-btn" :disabled="item.status !== 0 || isRowBusy(item.id)" @click="openEditModal(item)">编辑</button>
-          <button class="fei-action-btn" @click="openDocumentPage(item.id)">维护文档</button>
+          <button class="fei-action-btn" @click="openDocumentPage(item.id)">
+            {{ item.status === 0 ? '维护文档' : '查看文档' }}
+          </button>
           <button
             v-if="item.status === 0"
             class="fei-action-btn"
