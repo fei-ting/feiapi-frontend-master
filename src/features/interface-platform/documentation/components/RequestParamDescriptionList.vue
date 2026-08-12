@@ -33,10 +33,6 @@
             <input class="fei-input" :value="param.exampleValue" @input="updateText(param.paramKey, 'exampleValue', $event)" />
           </label>
           <label class="fei-field">
-            <span class="fei-doc-request-params__label-row"><span class="fei-label">默认值</span><BoundaryRemaining :current="unicodeCodePointLength(param.defaultValue)" :max="INTERFACE_DOC_LIMITS.defaultValueLength" unit="字符" /></span>
-            <input class="fei-input" :value="param.defaultValue" @input="updateText(param.paramKey, 'defaultValue', $event)" />
-          </label>
-          <label class="fei-field">
             <span class="fei-doc-request-params__label-row"><span class="fei-label">校验规则</span><BoundaryRemaining :current="unicodeCodePointLength(param.validationRule)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></span>
             <input class="fei-input" :value="param.validationRule" @input="updateText(param.paramKey, 'validationRule', $event, true)" />
           </label>

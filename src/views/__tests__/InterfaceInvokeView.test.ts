@@ -246,7 +246,7 @@ describe('InterfaceInvokeView', () => {
 
   it('展示请求头、填充结构化示例并保留字符串响应', async () => {
     const detail = buildDocDetail();
-    detail.requestHeaders = [{ name: 'Authorization', defaultValue: 'Bearer demo' }];
+    detail.requestHeaders = [{ name: 'Authorization', exampleValue: 'Bearer demo' }];
     mocks.getDocDetail.mockResolvedValue(detail);
     mocks.invoke.mockResolvedValue({
       successful: true,

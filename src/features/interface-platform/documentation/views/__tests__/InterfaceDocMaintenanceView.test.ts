@@ -107,7 +107,6 @@ describe('InterfaceDocMaintenanceView', () => {
       paramScene: 'BODY' as const,
       type: 'string',
       required: false,
-      defaultValue: maxDescription,
       exampleValue: maxExample,
       description: maxDescription,
       validationRule: maxDescription,
@@ -120,10 +119,7 @@ describe('InterfaceDocMaintenanceView', () => {
       type: 'string',
       required: false,
       nullable: true,
-      defaultValue: maxDescription,
-      exampleValue: maxExample,
       description: maxDescription,
-      validationRule: maxDescription,
       sortOrder: index + 1,
     }));
     detail.errorCodes = Array.from({ length: 100 }, (_, index) => ({
@@ -752,9 +748,9 @@ describe('InterfaceDocMaintenanceView', () => {
     await completeButton()?.trigger('click');
     expect(wrapper.text()).toContain('响应字段 data 必须填写有效的公开说明');
 
-    const responseInputs = sectionByTitle(wrapper, '响应字段').findAll('input');
-    await responseInputs[4].setValue('响应数据');
-    await responseInputs[12].setValue('用户名称');
+    const responseDescriptionInputs = sectionByTitle(wrapper, '响应字段').findAll('.fei-doc-response-params__description-input');
+    await responseDescriptionInputs[0].setValue('响应数据');
+    await responseDescriptionInputs[1].setValue('用户名称');
     await completeButton()?.trigger('click');
     expect(wrapper.text()).toContain('JSON 响应必须填写成功响应示例');
     expect(mocks.saveDoc).not.toHaveBeenCalled();

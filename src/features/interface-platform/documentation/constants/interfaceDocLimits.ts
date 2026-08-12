@@ -6,7 +6,6 @@ export const INTERFACE_DOC_LIMITS = {
   errorCodeCount: 100,
   docVersionLength: 64,
   paramNameLength: 128,
-  defaultValueLength: 512,
   exampleValueLength: 1024,
   descriptionLength: 512,
   errorCodeLength: 64,

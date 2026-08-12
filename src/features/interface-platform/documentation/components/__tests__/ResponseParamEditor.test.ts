@@ -7,17 +7,17 @@ const params = [
   {
     paramKey: 'response-1', paramScene: 'RESPONSE' as const, name: 'data', type: 'object',
     parentParamKey: '', sortOrder: 1, required: true, nullable: false,
-    description: '响应数据', exampleValue: '{}', defaultValue: '', validationRule: '',
+    description: '响应数据',
   },
   {
     paramKey: 'response-2', paramScene: 'RESPONSE' as const, name: 'name', type: 'string',
     parentParamKey: 'response-1', sortOrder: 2, required: false, nullable: true,
-    description: '名称', exampleValue: 'alice', defaultValue: '', validationRule: '',
+    description: '名称',
   },
   {
     paramKey: 'response-3', paramScene: 'RESPONSE' as const, name: 'meta', type: 'object',
     parentParamKey: '', sortOrder: 3, required: false, nullable: true,
-    description: '元数据', exampleValue: '{}', defaultValue: '', validationRule: '',
+    description: '元数据',
   },
 ];
 
@@ -47,25 +47,22 @@ describe('ResponseParamEditor', () => {
     await selects[0].setValue('string');
     await selects[1].setValue('');
     await inputs[1].setValue('4');
-    await inputs[2].setValue(false);
-    await inputs[3].setValue(true);
-    await inputs[4].setValue('  新说明  ');
-    await inputs[5].setValue('value');
-    await inputs[6].setValue('default');
-    await inputs[7].setValue('  非空  ');
+    await inputs[2].setValue('  新说明  ');
+    await inputs[3].setValue(false);
+    await inputs[4].setValue(true);
 
     expect(wrapper.emitted('update-param')).toEqual([
       ['response-1', 'name', 'result'],
       ['response-1', 'type', 'string'],
       ['response-1', 'parentParamKey', ''],
       ['response-1', 'sortOrder', 4],
+      ['response-1', 'description', '新说明'],
       ['response-1', 'required', false],
       ['response-1', 'nullable', true],
-      ['response-1', 'description', '新说明'],
-      ['response-1', 'exampleValue', 'value'],
-      ['response-1', 'defaultValue', 'default'],
-      ['response-1', 'validationRule', '非空'],
     ]);
+    expect(wrapper.text()).not.toContain('示例值');
+    expect(wrapper.text()).not.toContain('默认值');
+    expect(wrapper.text()).not.toContain('校验规则');
   });
 
   it('参数合计达到上限时禁用新增字段', async () => {

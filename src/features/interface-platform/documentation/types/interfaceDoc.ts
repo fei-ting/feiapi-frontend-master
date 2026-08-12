@@ -89,8 +89,6 @@ export interface InterfaceDocParamVO {
   required?: boolean;
   /** 是否允许为空 */
   nullable?: boolean;
-  /** 默认值 */
-  defaultValue?: string;
   /** 示例值 */
   exampleValue?: string;
   /** 参数说明 */
@@ -165,8 +163,6 @@ export interface InterfaceDocParamSaveRequest {
   required: boolean;
   /** 是否允许为空 */
   nullable?: boolean;
-  /** 默认值 */
-  defaultValue?: string;
   /** 示例值 */
   exampleValue?: string;
   /** 参数说明 */

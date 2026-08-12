@@ -262,6 +262,14 @@
   background: #fff;
   color: var(--fei-text);
   outline: none;
+  line-height: 1.5;
+}
+
+.fei-input,
+.fei-select {
+  min-height: 44px;
+  padding-top: 9px;
+  padding-bottom: 9px;
 }
 
 .fei-textarea {

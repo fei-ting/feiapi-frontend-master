@@ -219,10 +219,9 @@ const mapParams = (params: InterfaceDocParamVO[], scene: 'request' | 'response')
       type: param.type ?? 'string',
       required: param.required ?? false,
       ...(nullable !== undefined ? { nullable } : {}),
-      defaultValue: param.defaultValue ?? '',
-      exampleValue: param.exampleValue ?? '',
+      ...(scene === 'request' ? { exampleValue: param.exampleValue ?? '' } : {}),
       description: param.description ?? '',
-      validationRule: param.validationRule ?? '',
+      ...(scene === 'request' ? { validationRule: param.validationRule ?? '' } : {}),
       sortOrder: param.sortOrder ?? index + 1,
     };
   });
@@ -319,7 +318,6 @@ const buildSaveRequest = (docStatus: InterfaceDocStatus): InterfaceDocSaveReques
 /** 校验单个文档参数的普通文本边界。 */
 const validateParamBoundaries = (param: InterfaceDocParamSaveRequest): string => {
   if (unicodeCodePointLength(param.name) > INTERFACE_DOC_LIMITS.paramNameLength) return '参数名称长度不能超过 128 个字符';
-  if (unicodeCodePointLength(param.defaultValue) > INTERFACE_DOC_LIMITS.defaultValueLength) return '参数默认值长度不能超过 512 个字符';
   if (unicodeCodePointLength(param.exampleValue) > INTERFACE_DOC_LIMITS.exampleValueLength) return '参数示例值长度不能超过 1024 个字符';
   if (unicodeCodePointLength(param.description) > INTERFACE_DOC_LIMITS.descriptionLength) return '参数说明长度不能超过 512 个字符';
   if (unicodeCodePointLength(param.validationRule) > INTERFACE_DOC_LIMITS.descriptionLength) return '校验规则长度不能超过 512 个字符';
@@ -505,10 +503,7 @@ const addResponseParam = (): void => {
     type: 'string',
     required: false,
     nullable: true,
-    defaultValue: '',
-    exampleValue: '',
     description: '',
-    validationRule: '',
     sortOrder: responseParams.value.length + 1,
   });
 };

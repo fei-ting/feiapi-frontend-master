@@ -1,17 +1,31 @@
 <template>
-  <section class="fei-doc-section">
-    <div class="fei-doc-section__heading fei-doc-section__heading--action">
-      <div><span>04</span><h2>响应字段</h2></div>
+  <section class="fei-doc-section fei-doc-response-params">
+    <div class="fei-doc-section__heading fei-doc-response-params__heading">
+      <div class="fei-doc-response-params__title">
+        <span>04</span>
+        <div>
+          <h2>响应字段</h2>
+          <p>维护响应结构、字段约束和面向调用方的字段说明</p>
+        </div>
+      </div>
       <div class="fei-doc-boundary-action">
-        <p>响应 {{ params.length }}/{{ INTERFACE_DOC_LIMITS.responseParamCount }} · 参数合计 {{ totalParamCount }}/{{ INTERFACE_DOC_LIMITS.totalParamCount }}</p>
+        <span class="fei-doc-response-params__count">响应 {{ params.length }} / {{ INTERFACE_DOC_LIMITS.responseParamCount }}</span>
         <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" :disabled="addDisabled" :title="addDisabledReason" @click="requestAdd">新增字段</button>
       </div>
     </div>
     <div v-if="!params.length" class="fei-doc-empty">暂未维护响应字段</div>
     <div v-else class="fei-doc-record-list">
-      <article v-for="param in params" :key="param.paramKey" class="fei-doc-record">
+      <article v-for="param in params" :key="param.paramKey" class="fei-doc-record fei-doc-response-params__item" :class="{ 'fei-doc-response-params__item--child': param.parentParamKey }">
         <div class="fei-doc-record__toolbar">
-          <strong>{{ param.name || '未命名字段' }}</strong>
+          <div class="fei-doc-response-params__identity">
+            <strong>{{ param.name || '未命名字段' }}</strong>
+            <div class="fei-doc-response-params__tags" aria-label="响应字段属性">
+              <span class="fei-doc-response-params__tag fei-doc-response-params__tag--parent">{{ parentLabel(param) }}</span>
+              <span class="fei-doc-response-params__tag fei-doc-response-params__tag--type">{{ param.type }}</span>
+              <span class="fei-doc-response-params__tag" :class="param.required ? 'fei-doc-response-params__tag--required' : 'fei-doc-response-params__tag--optional'">{{ param.required ? '必填' : '选填' }}</span>
+              <span class="fei-doc-response-params__tag" :class="param.nullable ? 'fei-doc-response-params__tag--nullable' : 'fei-doc-response-params__tag--not-null'">{{ param.nullable ? '可为空' : '非空' }}</span>
+            </div>
+          </div>
           <button type="button" class="fei-action-btn fei-action-btn--danger" @click="requestRemove(param.paramKey)">删除</button>
         </div>
         <div class="fei-form-grid fei-form-grid--four">
@@ -20,18 +34,16 @@
           <label class="fei-field"><span class="fei-label">父字段</span><select class="fei-select" :value="param.parentParamKey || ''" @change="updateText(param.paramKey, 'parentParamKey', $event)"><option value="">根节点</option><option v-for="parent in parentOptions(param.paramKey)" :key="parent.paramKey" :value="parent.paramKey">{{ parent.label }}</option></select></label>
           <label class="fei-field"><span class="fei-label">排序</span><input class="fei-input" type="number" :value="param.sortOrder" @input="updateNumber(param.paramKey, 'sortOrder', $event)" /></label>
         </div>
-        <div class="fei-inline-checks">
-          <label><input type="checkbox" :checked="param.required" @change="updateChecked(param.paramKey, 'required', $event)" /> 字段必须出现</label>
-          <label><input type="checkbox" :checked="param.nullable" @change="updateChecked(param.paramKey, 'nullable', $event)" /> 允许空值</label>
-        </div>
-        <div class="fei-form-grid fei-form-grid--two">
-          <label class="fei-field"><span class="fei-label">字段说明</span><input class="fei-input" :value="param.description" @input="updateText(param.paramKey, 'description', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.description)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></label>
-          <label class="fei-field"><span class="fei-label">示例值</span><input class="fei-input" :value="param.exampleValue" @input="updateText(param.paramKey, 'exampleValue', $event)" /><BoundaryRemaining :current="unicodeCodePointLength(param.exampleValue)" :max="INTERFACE_DOC_LIMITS.exampleValueLength" unit="字符" /></label>
-          <label class="fei-field"><span class="fei-label">默认值</span><input class="fei-input" :value="param.defaultValue" @input="updateText(param.paramKey, 'defaultValue', $event)" /><BoundaryRemaining :current="unicodeCodePointLength(param.defaultValue)" :max="INTERFACE_DOC_LIMITS.defaultValueLength" unit="字符" /></label>
-          <label class="fei-field"><span class="fei-label">校验规则</span><input class="fei-input" :value="param.validationRule" @input="updateText(param.paramKey, 'validationRule', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.validationRule)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></label>
+        <div class="fei-doc-response-params__detail-row">
+          <label class="fei-field"><span class="fei-label">字段说明</span><input class="fei-input fei-doc-response-params__description-input" :value="param.description" @input="updateText(param.paramKey, 'description', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.description)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></label>
+          <div class="fei-inline-checks">
+            <label><input type="checkbox" :checked="param.required" @change="updateChecked(param.paramKey, 'required', $event)" /> 字段必须出现</label>
+            <label><input type="checkbox" :checked="param.nullable" @change="updateChecked(param.paramKey, 'nullable', $event)" /> 允许空值</label>
+          </div>
         </div>
       </article>
     </div>
+    <p v-if="params.length" class="fei-doc-response-params__total">参数合计 {{ totalParamCount }} / {{ INTERFACE_DOC_LIMITS.totalParamCount }} · 父字段关系用于组织响应 JSON 层级，同级字段按排序值展示</p>
   </section>
 </template>
 
@@ -85,6 +97,12 @@ const addDisabledReason = computed(() => {
 const parentOptions = (currentKey: string): ResponseFieldParentOption[] => (
   getResponseFieldParentOptions(props.params, currentKey)
 );
+
+/** 获取响应字段当前父级的展示名称。 */
+const parentLabel = (param: InterfaceDocParamSaveRequest): string => {
+  if (!param.parentParamKey) return '根字段';
+  return props.params.find((candidate) => candidate.paramKey === param.parentParamKey)?.name || '父字段缺失';
+};
 
 /** 更新响应字段文本。 */
 const updateText = (paramKey: string, field: ResponseParamEditableField, event: Event, trim = false): void => {
