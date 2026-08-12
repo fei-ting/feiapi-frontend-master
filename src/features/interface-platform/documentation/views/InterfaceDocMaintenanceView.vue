@@ -2,7 +2,7 @@
   <div class="fei-doc-editor">
     <div class="fei-doc-editor__topbar">
       <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" @click="backToList">返回列表</button>
-      <div class="fei-doc-editor__actions">
+      <div v-if="editable" class="fei-doc-editor__actions">
         <span v-if="dirty" class="fei-save-state">存在未保存修改</span>
         <button class="fei-btn fei-btn--secondary fei-btn--sm" type="button" :disabled="!canSaveDraft" @click="saveDocument('DRAFT')">
           {{ saving ? '保存中...' : '保存草稿' }}
@@ -58,7 +58,7 @@
         />
       </fieldset>
 
-      <div class="fei-doc-editor__bottom-actions">
+      <div v-if="editable" class="fei-doc-editor__bottom-actions">
         <div>
           <span v-if="saveError" class="fei-form-error" role="alert">{{ saveError }}</span>
           <BoundaryRemaining :current="aggregatePayloadBytes" :max="INTERFACE_DOC_LIMITS.aggregateSaveBodyBytes" unit="字节" />
