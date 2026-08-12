@@ -22,6 +22,9 @@ describe('DocumentMainInfoForm', () => {
     expect(wrapper.get('input').attributes()).toHaveProperty('required');
     expect(wrapper.findAll('option')).toHaveLength(4);
     expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('公开备注');
+    expect(wrapper.get('.fei-doc-main-info__title').text()).toContain('配置文档版本、内容格式和面向调用方的公开备注');
+    expect(wrapper.findAll('.fei-doc-main-info__label-row')).toHaveLength(2);
+    expect(wrapper.text()).toContain('请避免填写内部地址、密钥或其他敏感信息');
   });
 
   it('四个字段发送更新事件', async () => {
