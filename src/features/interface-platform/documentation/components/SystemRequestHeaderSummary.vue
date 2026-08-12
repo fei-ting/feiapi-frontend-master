@@ -9,9 +9,6 @@
       <div><span>类型</span><strong>string</strong></div>
       <div><span>必填</span><strong>是</strong></div>
       <div><span>值</span><strong class="fei-system-header__value">{{ requestContentType }}</strong></div>
-      <div class="fei-system-header__description">
-        <span>说明</span><strong>由系统根据请求内容类型自动生成</strong>
-      </div>
     </div>
   </section>
 </template>
