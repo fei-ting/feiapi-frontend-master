@@ -24,11 +24,15 @@ describe('InterfaceDocSummary', () => {
     expect(wrapper.text()).toContain('getUser');
     expect(wrapper.text()).toContain('草稿');
     expect(wrapper.text()).not.toContain('当前接口不可编辑');
+    expect(wrapper.get('.fei-doc-summary__status').classes()).toContain('fei-doc-summary__status--offline');
+    expect(wrapper.get('.fei-doc-status').classes()).toContain('fei-doc-status--draft');
   });
 
   it('不可编辑时展示操作提示', () => {
     const wrapper = mount(InterfaceDocSummary, { props: { detail, editable: false } });
-    expect(wrapper.text()).toContain('当前接口不可编辑');
-    expect(wrapper.text()).toContain('请先返回接口列表执行下线操作');
+    expect(wrapper.get('.fei-doc-summary__notice').attributes('role')).toBe('note');
+    expect(wrapper.text()).toContain('当前为只读模式');
+    expect(wrapper.text()).toContain('请先返回接口列表将接口下线');
+    expect(wrapper.get('.fei-doc-summary__notice-icon').text()).toBe('!');
   });
 });

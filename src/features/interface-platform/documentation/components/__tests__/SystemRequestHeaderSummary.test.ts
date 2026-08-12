@@ -11,7 +11,8 @@ describe('SystemRequestHeaderSummary', () => {
     expect(wrapper.text()).toContain('请求 Header');
     expect(wrapper.text()).toContain('Content-Type');
     expect(wrapper.text()).toContain('application/json');
-    expect(wrapper.text()).toContain('由系统根据请求内容类型自动生成');
+    expect(wrapper.text()).not.toContain('说明');
+    expect(wrapper.text()).not.toContain('由系统根据请求内容类型自动生成');
     expect(wrapper.findAll('input')).toHaveLength(0);
     expect(wrapper.findAll('button')).toHaveLength(0);
   });

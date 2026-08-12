@@ -12,7 +12,6 @@ export interface RequestParamField {
   type: string;
   example?: unknown;
   required: boolean;
-  defaultValue?: string;
   description?: string;
   validationRule?: string;
 }
@@ -51,7 +50,6 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
           required: param.required !== false,
         };
         if (param.exampleValue !== undefined) field.example = param.exampleValue;
-        if (param.defaultValue !== undefined) field.defaultValue = param.defaultValue;
         if (param.description !== undefined) field.description = param.description;
         if (param.validationRule !== undefined) field.validationRule = param.validationRule;
         return field;
@@ -94,7 +92,7 @@ export function useInterfaceInvoke(docDetail: Ref<InterfaceDocDetailVO | null>) 
 
   /** 将示例值转换为字段输入框使用的文本。 */
   const exampleToInputValue = (param: RequestParamField): string | null => {
-    const value = param.example ?? param.defaultValue;
+    const value = param.example;
     if (value === null || value === undefined || isTypePlaceholder(param, value)) return null;
     const rawValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
     if (!rawValue.trim()) return null;

@@ -74,12 +74,12 @@ export function useInterfaceDoc(notifyToast?: ToastNotifier) {
     `${param.id || 'legacy'}-${param.paramScene || ''}-${param.name || ''}`;
 
   /**
-   * 获取参数值（优先示例值，其次默认值）。
+   * 获取参数示例值。
    * @param param 参数对象
    * @returns 参数值
    */
   const paramValue = (param: InterfaceDocParamVO) =>
-    param.exampleValue || param.defaultValue || '-';
+    param.exampleValue || '-';
 
   /**
    * 格式化 Header 必填状态。
@@ -111,7 +111,7 @@ export function useInterfaceDoc(notifyToast?: ToastNotifier) {
 
   /**
    * 格式化请求参数描述。
-   * 拼接描述、示例值、默认值、校验规则。
+   * 拼接描述、示例值和校验规则。
    * @param param 请求参数
    * @returns 描述文本
    */
@@ -119,7 +119,6 @@ export function useInterfaceDoc(notifyToast?: ToastNotifier) {
     const parts = [
       param.description && !param.description.includes('旧字段自动转换') ? param.description : '',
       param.exampleValue ? `例如：${param.exampleValue}` : '',
-      param.defaultValue ? `默认值：${param.defaultValue}` : '',
       param.validationRule ? param.validationRule : '',
     ].filter(Boolean);
     return parts.length ? parts.join('。') : '-';

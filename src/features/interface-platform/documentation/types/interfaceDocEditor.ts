@@ -36,7 +36,7 @@ export interface ResponseFieldDeleteState {
 export type DocMainEditableField = 'docVersion' | 'requestContentType' | 'responseContentType' | 'remark';
 
 /** 请求参数说明允许编辑的字段。 */
-export type RequestParamEditableField = 'description' | 'exampleValue' | 'defaultValue' | 'validationRule' | 'sortOrder';
+export type RequestParamEditableField = 'description' | 'exampleValue' | 'validationRule' | 'sortOrder';
 
 /** 响应参数允许编辑的字段。 */
 export type ResponseParamEditableField =
@@ -46,10 +46,7 @@ export type ResponseParamEditableField =
   | 'sortOrder'
   | 'required'
   | 'nullable'
-  | 'description'
-  | 'exampleValue'
-  | 'defaultValue'
-  | 'validationRule';
+  | 'description';
 
 /** 错误码允许编辑的字段。 */
 export type ErrorCodeEditableField = 'errorCode' | 'errorMessage' | 'sortOrder' | 'description' | 'solution';
