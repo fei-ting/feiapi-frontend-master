@@ -465,6 +465,20 @@
 .fei-doc-section__heading > div > span { color: var(--fei-primary); font-size: 12px; font-weight: 900; letter-spacing: .1em; }
 .fei-doc-section__heading h2 { margin: 0; font-size: 18px; }
 .fei-doc-section__heading p { margin: 2px 0 0; color: var(--fei-text-muted); font-size: 12px; text-align: right; }
+.fei-doc-main-info { display: grid; gap: 24px; padding: 24px 26px; border-radius: 8px; box-shadow: var(--fei-shadow-soft); }
+.fei-doc-main-info__heading { padding-bottom: 20px; border-bottom: 1px solid #eaecf0; }
+.fei-doc-main-info__title { align-items: flex-start !important; }
+.fei-doc-main-info__title > span { display: inline-grid; width: 32px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 5px; background: #eef4ff; letter-spacing: 0 !important; }
+.fei-doc-main-info__title > div { display: grid; gap: 4px; }
+.fei-doc-main-info__title p { margin: 0; color: var(--fei-text-secondary); font-size: 13px; line-height: 1.5; text-align: left; }
+.fei-doc-main-info__grid { grid-template-columns: minmax(220px, .55fr) repeat(2, minmax(320px, 1fr)); gap: 24px; }
+.fei-doc-main-info__label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fei-doc-main-info__label-row .fei-boundary-remaining { margin-top: 0; white-space: nowrap; }
+.fei-doc-main-info .fei-input,
+.fei-doc-main-info .fei-select { min-height: 52px; border-radius: 7px; }
+.fei-doc-main-info__remark { min-height: 150px; border-radius: 7px; line-height: 1.65; }
+.fei-doc-main-info__hint { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--fei-text-secondary); font-size: 12px; line-height: 1.5; }
+.fei-doc-main-info__hint svg { flex: 0 0 auto; color: var(--fei-primary); font-size: 16px; }
 .fei-doc-boundary-action { display: flex; align-items: center; gap: 12px; }
 .fei-doc-boundary-action p { margin: 0; color: var(--fei-text-muted); font-size: 12px; white-space: nowrap; }
 .fei-doc-param-list,
@@ -541,6 +555,13 @@
   .fei-doc-summary__meta > div:first-child { padding-top: 0; border-top: 0; }
   .fei-doc-summary__meta > div:last-child { padding-bottom: 0; }
   .fei-doc-summary__notice { align-items: flex-start; }
+
+  .fei-doc-main-info { gap: 20px; padding: 20px 16px; }
+  .fei-doc-main-info__heading { padding-bottom: 16px; }
+  .fei-doc-main-info__title { gap: 10px !important; }
+  .fei-doc-main-info__grid { grid-template-columns: 1fr; gap: 18px; }
+  .fei-doc-main-info__remark { min-height: 168px; }
+  .fei-doc-main-info__hint { align-items: flex-start; }
 
   .fei-doc-param-row { grid-template-columns: 1fr 1fr; }
   .fei-system-header { grid-template-columns: 1fr 1fr; }
