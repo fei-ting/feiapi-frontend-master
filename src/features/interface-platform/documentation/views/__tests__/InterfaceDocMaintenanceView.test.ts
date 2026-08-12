@@ -232,9 +232,7 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.text()).toContain('接口文档聚合数据不完整，请重新加载');
     const saveButtons = wrapper.findAll('button')
       .filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
-    expect(saveButtons).toHaveLength(2);
-    expect(saveButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
-    await saveButtons[0]?.trigger('click');
+    expect(saveButtons).toHaveLength(0);
     expect(mocks.saveDoc).not.toHaveBeenCalled();
   });
 
@@ -253,15 +251,23 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(wrapper.text()).toContain('当前接口没有专属错误码');
   });
 
-  it('接口不可编辑时由父级fieldset禁用全部控件', async () => {
-    mocks.getDocDetail.mockResolvedValue(buildDetail(1));
+  it.each([1, 2])('接口状态为 %s 时隐藏保存操作并由父级fieldset禁用全部控件', async (status) => {
+    mocks.getDocDetail.mockResolvedValue(buildDetail(status));
     const wrapper = await mountView();
 
     expect(wrapper.text()).toContain('当前接口不可编辑');
     expect(wrapper.get('fieldset').attributes()).toHaveProperty('disabled');
     const saveButtons = wrapper.findAll('button').filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
+    expect(saveButtons).toHaveLength(0);
+    expect(wrapper.find('.fei-doc-editor__bottom-actions').exists()).toBe(false);
+  });
+
+  it('已下线接口显示顶部和底部两组保存操作', async () => {
+    const wrapper = await mountView();
+    const saveButtons = wrapper.findAll('button').filter((button) => ['保存草稿', '完成维护'].includes(button.text()));
+
     expect(saveButtons).toHaveLength(4);
-    expect(saveButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    expect(wrapper.find('.fei-doc-editor__bottom-actions').exists()).toBe(true);
   });
 
   it('字段更新后显示脏状态并允许保存', async () => {
