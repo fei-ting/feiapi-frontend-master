@@ -182,11 +182,108 @@
   font-weight: 700;
 }
 
-.fei-invoke-param__label small {
-  margin-left: 6px;
+.fei-invoke-param__name-wrap {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.fei-invoke-param__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fei-invoke-param__required {
+  color: var(--fei-error);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.fei-invoke-param__info {
+  position: relative;
+  display: inline-grid;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #98a2b3;
+  border-radius: 50%;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+}
+
+.fei-invoke-param__info::after {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 10;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 48px));
+  padding: 8px 10px;
+  border: 1px solid rgba(16, 24, 40, .12);
+  border-radius: 7px;
+  background: #101828;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, .18);
+  color: #fff;
+  content: attr(data-tooltip);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  white-space: normal;
+}
+
+.fei-invoke-param__info::before {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  z-index: 11;
+  width: 8px;
+  height: 8px;
+  background: #101828;
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px) rotate(45deg);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.fei-invoke-param__info:hover,
+.fei-invoke-param__info:focus-visible {
+  border-color: var(--fei-primary);
+  color: var(--fei-primary);
+  outline: none;
+}
+
+.fei-invoke-param__info:hover::after,
+.fei-invoke-param__info:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(0);
+}
+
+.fei-invoke-param__info:hover::before,
+.fei-invoke-param__info:focus-visible::before {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(45deg);
+}
+
+.fei-invoke-param__type {
+  margin-left: auto;
   color: var(--fei-text-muted);
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .fei-invoke-toolbar {

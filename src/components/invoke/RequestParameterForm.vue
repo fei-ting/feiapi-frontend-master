@@ -15,11 +15,19 @@
         :for="`invoke-param-${param.name}`"
       >
         <span class="fei-invoke-param__label">
-          <span>
-            {{ param.name }}
-            <small>{{ param.type }}</small>
+          <span class="fei-invoke-param__name-wrap">
             <span v-if="param.required" class="fei-invoke-param__required" aria-label="必填">*</span>
+            <span class="fei-invoke-param__name">{{ param.name }}</span>
+            <span
+              v-if="param.description"
+              class="fei-invoke-param__info"
+              tabindex="0"
+              role="img"
+              :aria-label="`参数说明：${param.description}`"
+              :data-tooltip="param.description"
+            >!</span>
           </span>
+          <small class="fei-invoke-param__type">{{ param.type }}</small>
         </span>
         <input
           :id="`invoke-param-${param.name}`"
