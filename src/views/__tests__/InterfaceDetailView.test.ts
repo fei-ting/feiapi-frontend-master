@@ -58,7 +58,6 @@ const buildDocDetail = (override: Partial<InterfaceDocDetailVO> = {}): Interface
     updateTime: '2026-07-13T12:00:00',
   },
   doc: {
-    docVersion: 'v1',
     requestContentType: 'application/json',
     responseContentType: 'application/json',
     successExample: '{bad json',

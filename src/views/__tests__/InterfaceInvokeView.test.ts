@@ -55,7 +55,6 @@ const buildDocDetail = (): InterfaceDocDetailVO => ({
     quotaTypeText: '基础额度接口',
   },
   doc: {
-    docVersion: 'v1',
     requestContentType: 'application/json',
     responseContentType: 'application/json',
     successExample: '{"ok":true}',

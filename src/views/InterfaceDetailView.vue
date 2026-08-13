@@ -45,7 +45,6 @@
             <h2 id="interface-doc-title" class="fei-section-title">基础信息</h2>
             <p v-if="docDetail.structuredDocMissing" class="fei-section-desc">当前接口尚未维护完整的结构化文档。</p>
           </div>
-          <span class="fei-doc-version">{{ docDetail.doc?.docVersion || 'v1' }}</span>
         </div>
         <div class="fei-doc-info-grid">
           <div class="fei-doc-info-item fei-doc-info-item--wide">

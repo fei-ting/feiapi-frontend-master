@@ -51,8 +51,6 @@ export interface InterfaceDocVO {
   id?: number;
   /** 接口信息 ID */
   interfaceInfoId?: number;
-  /** 文档版本 */
-  docVersion?: string;
   /** 请求内容类型 */
   requestContentType?: string;
   /** 响应内容类型 */
@@ -193,8 +191,6 @@ export interface InterfaceDocSaveRequest {
   interfaceInfoId: number;
   /** 目标文档状态 */
   docStatus: InterfaceDocStatus;
-  /** 文档版本 */
-  docVersion: string;
   /** 请求内容类型 */
   requestContentType: string;
   /** 响应内容类型 */
