@@ -521,11 +521,24 @@
 .fei-doc-response-params__tag--required { border-color: #f9dbaf; background: #fff6ed; color: #b93815; }
 .fei-doc-response-params__tag--optional,
 .fei-doc-response-params__tag--nullable { border-color: #abefc6; background: #ecfdf3; color: #067647; }
+.fei-doc-response-params__delete { min-width: 64px; padding: 7px 14px; border-color: #f04438; border-radius: 7px; background: #fff; color: #b42318; }
+.fei-doc-response-params__delete:hover { border-color: #d92d20; background: #fef3f2; color: #912018; }
+.fei-doc-response-params__delete:focus-visible { outline: 2px solid rgba(240, 68, 56, .3); outline-offset: 2px; }
 .fei-doc-response-params .fei-form-grid--four { gap: 18px; }
 .fei-doc-response-params .fei-input,
 .fei-doc-response-params .fei-select { min-height: 50px; padding-top: 9px; padding-bottom: 9px; border-radius: 7px; line-height: 1.5; }
-.fei-doc-response-params__detail-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 20px; }
-.fei-doc-response-params__detail-row .fei-inline-checks { min-height: 50px; align-items: center; padding-bottom: 1px; white-space: nowrap; }
+.fei-doc-response-params__label-row { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
+.fei-doc-response-params__label-row .fei-boundary-remaining { min-width: max-content; margin-top: 0; white-space: nowrap; }
+.fei-doc-response-params__detail-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 276px); align-items: end; gap: 16px; }
+.fei-doc-response-params__checks { display: grid; min-height: 50px; gap: 8px; justify-content: stretch; padding: 10px 12px; border: 1px solid #eaecf0; border-radius: 7px; background: #f8fafc; color: var(--fei-text-secondary); font-size: 13px; }
+.fei-doc-response-params__checks label { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.fei-doc-response-params__checks input { width: 15px; height: 15px; flex: 0 0 auto; accent-color: var(--fei-primary); }
+.fei-doc-response-params__bottom-add { display: grid; min-height: 96px; place-items: center; gap: 6px; padding: 18px; border: 1px dashed #b2c7ff; border-radius: 8px; background: #fbfdff; color: var(--fei-primary); font-size: 13px; font-weight: 800; cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 160ms ease; }
+.fei-doc-response-params__bottom-add:hover { border-color: var(--fei-primary); background: #f5f8ff; color: #2449a5; transform: translateY(-1px); }
+.fei-doc-response-params__bottom-add:focus-visible { outline: 2px solid rgba(47, 107, 255, .24); outline-offset: 2px; }
+.fei-doc-response-params__bottom-add:disabled { border-color: #d0d5dd; background: #f8fafc; color: var(--fei-text-muted); cursor: not-allowed; transform: none; }
+.fei-doc-response-params__bottom-add-icon { display: inline-grid; width: 34px; height: 34px; place-items: center; border: 1px solid #c7d7fe; border-radius: 50%; background: #eef4ff; color: var(--fei-primary); font-size: 26px; font-weight: 600; line-height: 1; }
+.fei-doc-response-params__bottom-add:disabled .fei-doc-response-params__bottom-add-icon { border-color: #d0d5dd; background: #f2f4f7; color: var(--fei-text-muted); }
 .fei-doc-response-params__total { margin: -4px 0 0; color: var(--fei-text-muted); font-size: 12px; line-height: 1.5; }
 .fei-doc-boundary-action { display: flex; align-items: center; gap: 12px; }
 .fei-doc-boundary-action p { margin: 0; color: var(--fei-text-muted); font-size: 12px; white-space: nowrap; }
@@ -623,7 +636,7 @@
   .fei-doc-response-params__title { gap: 10px !important; }
   .fei-doc-response-params__item { padding: 16px; }
   .fei-doc-response-params__detail-row { grid-template-columns: 1fr; gap: 12px; }
-  .fei-doc-response-params__detail-row .fei-inline-checks { min-height: auto; flex-wrap: wrap; }
+  .fei-doc-response-params__checks { min-height: auto; grid-template-columns: repeat(2, max-content); justify-content: flex-start; }
 
   .fei-doc-param-row { grid-template-columns: 1fr 1fr; }
   .fei-system-header { grid-template-columns: 1fr 1fr; }

@@ -26,22 +26,64 @@
               <span class="fei-doc-response-params__tag" :class="param.nullable ? 'fei-doc-response-params__tag--nullable' : 'fei-doc-response-params__tag--not-null'">{{ param.nullable ? '可为空' : '非空' }}</span>
             </div>
           </div>
-          <button type="button" class="fei-action-btn fei-action-btn--danger" @click="requestRemove(param.paramKey)">删除</button>
+          <button type="button" class="fei-action-btn fei-action-btn--danger fei-doc-response-params__delete" @click="requestRemove(param.paramKey)">删除</button>
         </div>
         <div class="fei-form-grid fei-form-grid--four">
-          <label class="fei-field"><span class="fei-label">字段名</span><input class="fei-input" :value="param.name" required @input="updateText(param.paramKey, 'name', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.name)" :max="INTERFACE_DOC_LIMITS.paramNameLength" unit="字符" /></label>
-          <label class="fei-field"><span class="fei-label">类型</span><select class="fei-select" :value="param.type" @change="updateText(param.paramKey, 'type', $event)"><option v-for="type in paramTypes" :key="type" :value="type">{{ type }}</option></select></label>
-          <label class="fei-field"><span class="fei-label">父字段</span><select class="fei-select" :value="param.parentParamKey || ''" @change="updateText(param.paramKey, 'parentParamKey', $event)"><option value="">根节点</option><option v-for="parent in parentOptions(param.paramKey)" :key="parent.paramKey" :value="parent.paramKey">{{ parent.label }}</option></select></label>
-          <label class="fei-field"><span class="fei-label">排序</span><input class="fei-input" type="number" :value="param.sortOrder" @input="updateNumber(param.paramKey, 'sortOrder', $event)" /></label>
+          <label class="fei-field">
+            <span class="fei-doc-response-params__label-row">
+              <span class="fei-label">字段名</span>
+              <BoundaryRemaining :current="unicodeCodePointLength(param.name)" :max="INTERFACE_DOC_LIMITS.paramNameLength" unit="字符" />
+            </span>
+            <input class="fei-input" :value="param.name" required @input="updateText(param.paramKey, 'name', $event, true)" />
+          </label>
+          <label class="fei-field">
+            <span class="fei-label">类型</span>
+            <select class="fei-select" :value="param.type" @change="updateText(param.paramKey, 'type', $event)">
+              <option v-for="type in paramTypes" :key="type" :value="type">{{ type }}</option>
+            </select>
+          </label>
+          <label class="fei-field">
+            <span class="fei-label">父字段</span>
+            <select class="fei-select" :value="param.parentParamKey || ''" @change="updateText(param.paramKey, 'parentParamKey', $event)">
+              <option value="">根节点</option>
+              <option v-for="parent in parentOptions(param.paramKey)" :key="parent.paramKey" :value="parent.paramKey">{{ parent.label }}</option>
+            </select>
+          </label>
+          <label class="fei-field">
+            <span class="fei-label">排序</span>
+            <input class="fei-input" type="number" :value="param.sortOrder" @input="updateNumber(param.paramKey, 'sortOrder', $event)" />
+          </label>
         </div>
         <div class="fei-doc-response-params__detail-row">
-          <label class="fei-field"><span class="fei-label">字段说明</span><input class="fei-input fei-doc-response-params__description-input" :value="param.description" @input="updateText(param.paramKey, 'description', $event, true)" /><BoundaryRemaining :current="unicodeCodePointLength(param.description)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" /></label>
-          <div class="fei-inline-checks">
-            <label><input type="checkbox" :checked="param.required" @change="updateChecked(param.paramKey, 'required', $event)" /> 字段必须出现</label>
-            <label><input type="checkbox" :checked="param.nullable" @change="updateChecked(param.paramKey, 'nullable', $event)" /> 允许空值</label>
+          <label class="fei-field">
+            <span class="fei-doc-response-params__label-row">
+              <span class="fei-label">字段说明</span>
+              <BoundaryRemaining :current="unicodeCodePointLength(param.description)" :max="INTERFACE_DOC_LIMITS.descriptionLength" unit="字符" />
+            </span>
+            <input class="fei-input fei-doc-response-params__description-input" :value="param.description" @input="updateText(param.paramKey, 'description', $event, true)" />
+          </label>
+          <div class="fei-doc-response-params__checks">
+            <label>
+              <input type="checkbox" :checked="param.required" @change="updateChecked(param.paramKey, 'required', $event)" />
+              <span>字段必须出现</span>
+            </label>
+            <label>
+              <input type="checkbox" :checked="param.nullable" @change="updateChecked(param.paramKey, 'nullable', $event)" />
+              <span>允许空值</span>
+            </label>
           </div>
         </div>
       </article>
+      <button
+        type="button"
+        class="fei-doc-response-params__bottom-add"
+        :disabled="addDisabled"
+        :title="addDisabledReason || '新增响应字段'"
+        @click="requestAdd"
+      >
+        <span class="fei-doc-response-params__bottom-add-icon" aria-hidden="true">+</span>
+        <span>新增响应字段</span>
+      </button>
     </div>
     <p v-if="params.length" class="fei-doc-response-params__total">参数合计 {{ totalParamCount }} / {{ INTERFACE_DOC_LIMITS.totalParamCount }} · 父字段关系用于组织响应 JSON 层级，同级字段按排序值展示</p>
   </section>

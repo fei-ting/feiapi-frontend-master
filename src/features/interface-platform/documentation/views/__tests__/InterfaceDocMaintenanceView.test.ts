@@ -544,6 +544,7 @@ describe('InterfaceDocMaintenanceView', () => {
       .toEqual([expect.objectContaining({ errorCode: 'A001' })]);
     expect(mocks.getDocDetail).toHaveBeenCalledTimes(2);
     expect(wrapper.emitted('show-toast')).toContainEqual(['草稿已保存', 'success']);
+    expect(mocks.routerPush).not.toHaveBeenCalled();
   });
 
   it('保存后使用回读的新记录ID和文档状态重建编辑模型', async () => {
@@ -566,8 +567,11 @@ describe('InterfaceDocMaintenanceView', () => {
     await wrapper.findAll('button').find((button) => button.text() === '完成维护')?.trigger('click');
     await flushPromises();
 
+    const saveDraftButtons = wrapper.findAll('button').filter((button) => button.text() === '保存草稿');
     const completeButtons = wrapper.findAll('button').filter((button) => button.text() === '完成维护');
-    expect(completeButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    expect(saveDraftButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
+    expect(completeButtons.every((button) => button.attributes().disabled === undefined)).toBe(true);
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'interface-detail', params: { id: 1 } });
     await sectionByTitle(wrapper, '文档主信息').get('textarea').setValue('更新备注');
     await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
@@ -594,6 +598,7 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(mocks.saveDoc).toHaveBeenCalledOnce();
     expect(wrapper.text()).toContain('文档已保存，但重新加载后端数据失败，请重新加载');
     expect(wrapper.emitted('show-toast')).toBeUndefined();
+    expect(mocks.routerPush).not.toHaveBeenCalled();
   });
 
   it('保存期间禁用操作按钮并阻止重复提交', async () => {
@@ -725,6 +730,27 @@ describe('InterfaceDocMaintenanceView', () => {
 
     expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('READY');
     expect(wrapper.emitted('show-toast')).toContainEqual(['文档维护已完成', 'success']);
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'interface-detail', params: { id: 1 } });
+  });
+
+  it('已完成文档无正文变化时仍可再次确认完成维护', async () => {
+    const detail = buildDetail();
+    detail.docStatus = 'READY';
+    detail.responseParams?.forEach((param) => { param.description = `${param.name}说明`; });
+    mocks.getDocDetail.mockResolvedValue(detail);
+    const wrapper = await mountView();
+    const saveDraftButton = wrapper.findAll('button').find((button) => button.text() === '保存草稿');
+    const completeButton = wrapper.findAll('button').find((button) => button.text() === '完成维护');
+
+    expect(saveDraftButton?.attributes()).toHaveProperty('disabled');
+    expect(completeButton?.attributes()).not.toHaveProperty('disabled');
+    await completeButton?.trigger('click');
+    await flushPromises();
+
+    expect(mocks.saveDoc).toHaveBeenCalledOnce();
+    expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('READY');
+    expect(wrapper.emitted('show-toast')).toContainEqual(['文档维护已完成', 'success']);
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'interface-detail', params: { id: 1 } });
   });
 
   it('完成维护时拦截请求参数占位说明、响应说明和JSON成功示例', async () => {

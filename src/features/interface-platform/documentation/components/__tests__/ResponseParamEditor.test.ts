@@ -33,9 +33,23 @@ describe('ResponseParamEditor', () => {
     const wrapper = mount(ResponseParamEditor, { props: { params, paramTypes: ['string', 'object'], requestParamCount: 0 } });
     const parentOptions = wrapper.findAll('select')[1].findAll('option').map((option) => option.text());
     expect(parentOptions).toEqual(['根节点', 'meta']);
+    expect(wrapper.findAll('.fei-doc-response-params__label-row')).toHaveLength(6);
+    expect(wrapper.findAll('.fei-doc-response-params__checks')).toHaveLength(3);
+    expect(wrapper.findAll('.fei-doc-response-params__delete')).toHaveLength(3);
+    expect(wrapper.find('.fei-doc-response-params__bottom-add').exists()).toBe(true);
 
     await wrapper.findAll('.fei-action-btn--danger')[0].trigger('click');
     expect(wrapper.emitted('remove')).toEqual([['response-1']]);
+  });
+
+  it('底部快捷新增区域复用新增字段事件', async () => {
+    const wrapper = mount(ResponseParamEditor, {
+      props: { params: [params[0]], paramTypes: ['string', 'object'], requestParamCount: 0 },
+    });
+
+    await wrapper.get('.fei-doc-response-params__bottom-add').trigger('click');
+
+    expect(wrapper.emitted('add')).toHaveLength(1);
   });
 
   it('发送文本、选择、数字、布尔和说明字段更新', async () => {
@@ -74,6 +88,13 @@ describe('ResponseParamEditor', () => {
     expect(addButton.attributes()).toHaveProperty('disabled');
     expect(addButton.attributes('title')).toBe('请求参数与响应字段合计数量已达到 200');
     await addButton.trigger('click');
+    expect(wrapper.emitted('add')).toBeUndefined();
+
+    await wrapper.setProps({ params: [params[0]], requestParamCount: 199 });
+    const bottomAddButton = wrapper.get('.fei-doc-response-params__bottom-add');
+    expect(bottomAddButton.attributes()).toHaveProperty('disabled');
+    expect(bottomAddButton.attributes('title')).toBe('请求参数与响应字段合计数量已达到 200');
+    await bottomAddButton.trigger('click');
     expect(wrapper.emitted('add')).toBeUndefined();
   });
 });

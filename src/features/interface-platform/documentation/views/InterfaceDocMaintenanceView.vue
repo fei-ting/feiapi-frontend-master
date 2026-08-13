@@ -185,7 +185,7 @@ const canOperate = computed(() => editable.value && !loading.value && !loadError
 /** 当前页面是否允许保存草稿。 */
 const canSaveDraft = computed(() => canOperate.value && dirty.value);
 /** 当前页面是否允许完成维护。 */
-const canComplete = computed(() => canOperate.value && (dirty.value || detail.value?.docStatus === 'DRAFT'));
+const canComplete = computed(() => canOperate.value);
 /** 生成前端稳定键。 */
 const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++keySequence.value}`;
 /** 校验聚合详情是否包含全部可替换集合。 */
@@ -429,6 +429,9 @@ const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => 
       return;
     }
     emit('show-toast', targetStatus === 'READY' ? '文档维护已完成' : '草稿已保存', 'success');
+    if (targetStatus === 'READY') {
+      await router.push({ name: 'interface-detail', params: { id: interfaceInfoId.value } });
+    }
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : '接口文档保存失败';
   } finally {
