@@ -5,7 +5,7 @@ import type { RequestParamField } from '@/composables/useInterfaceInvoke';
 
 /** 请求参数字段测试数据。 */
 const structuredParams: RequestParamField[] = [
-  { name: 'name', type: 'string', example: 'alice', required: true },
+  { name: 'name', type: 'string', example: 'alice', required: true, description: '用户名称' },
   { name: 'age', type: 'number', example: 18, required: false },
 ];
 
@@ -34,6 +34,9 @@ describe('RequestParameterForm', () => {
     expect(wrapper.get('#invoke-param-age').attributes('type')).toBe('number');
     expect((wrapper.get('#invoke-param-name').element as HTMLInputElement).value).toBe('alice');
     expect(wrapper.findAll('.fei-invoke-param__required')).toHaveLength(1);
+    expect(wrapper.get('.fei-invoke-param__type').text()).toBe('string');
+    expect(wrapper.get('.fei-invoke-param__info').attributes('data-tooltip')).toBe('用户名称');
+    expect(wrapper.get('.fei-invoke-param__info').attributes('aria-label')).toBe('参数说明：用户名称');
   });
 
   it('输入参数时发送字段名和值', async () => {
