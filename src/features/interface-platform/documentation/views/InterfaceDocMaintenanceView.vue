@@ -430,7 +430,7 @@ const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => 
     }
     emit('show-toast', targetStatus === 'READY' ? '文档维护已完成' : '草稿已保存', 'success');
     if (targetStatus === 'READY') {
-      await router.push({ name: 'interface-detail', params: { id: interfaceInfoId.value } });
+      await router.push({ name: 'admin-interfaces' });
     }
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : '接口文档保存失败';

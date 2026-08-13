@@ -571,7 +571,7 @@ describe('InterfaceDocMaintenanceView', () => {
     const completeButtons = wrapper.findAll('button').filter((button) => button.text() === '完成维护');
     expect(saveDraftButtons.every((button) => button.attributes().disabled !== undefined)).toBe(true);
     expect(completeButtons.every((button) => button.attributes().disabled === undefined)).toBe(true);
-    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'interface-detail', params: { id: 1 } });
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'admin-interfaces' });
     await sectionByTitle(wrapper, '文档主信息').get('textarea').setValue('更新备注');
     await wrapper.findAll('button').find((button) => button.text() === '保存草稿')?.trigger('click');
     await flushPromises();
@@ -730,7 +730,7 @@ describe('InterfaceDocMaintenanceView', () => {
 
     expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('READY');
     expect(wrapper.emitted('show-toast')).toContainEqual(['文档维护已完成', 'success']);
-    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'interface-detail', params: { id: 1 } });
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'admin-interfaces' });
   });
 
   it('已完成文档无正文变化时仍可再次确认完成维护', async () => {
@@ -750,7 +750,7 @@ describe('InterfaceDocMaintenanceView', () => {
     expect(mocks.saveDoc).toHaveBeenCalledOnce();
     expect(mocks.saveDoc.mock.calls[0][0].docStatus).toBe('READY');
     expect(wrapper.emitted('show-toast')).toContainEqual(['文档维护已完成', 'success']);
-    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'interface-detail', params: { id: 1 } });
+    expect(mocks.routerPush).toHaveBeenCalledWith({ name: 'admin-interfaces' });
   });
 
   it('完成维护时拦截请求参数占位说明、响应说明和JSON成功示例', async () => {
