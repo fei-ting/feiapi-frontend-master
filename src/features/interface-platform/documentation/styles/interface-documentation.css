@@ -185,20 +185,6 @@
   min-width: 0;
 }
 
-.fei-doc-version {
-  display: inline-flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 10px;
-  color: #155eef;
-  background: #eff4ff;
-  border: 1px solid #d1e0ff;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .fei-doc-info-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

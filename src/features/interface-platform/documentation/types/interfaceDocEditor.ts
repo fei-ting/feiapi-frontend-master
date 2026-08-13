@@ -2,8 +2,6 @@ import type { InterfaceDocErrorCodeSaveRequest } from '@/features/interface-plat
 
 /** 页面文档主信息表单。 */
 export interface DocMainForm {
-  /** 文档版本。 */
-  docVersion: string;
   /** 请求格式。 */
   requestContentType: string;
   /** 响应格式。 */
@@ -33,7 +31,7 @@ export interface ResponseFieldDeleteState {
 }
 
 /** 文档主信息允许编辑的字段。 */
-export type DocMainEditableField = 'docVersion' | 'requestContentType' | 'responseContentType' | 'remark';
+export type DocMainEditableField = 'requestContentType' | 'responseContentType' | 'remark';
 
 /** 请求参数说明允许编辑的字段。 */
 export type RequestParamEditableField = 'description' | 'exampleValue' | 'validationRule' | 'sortOrder';

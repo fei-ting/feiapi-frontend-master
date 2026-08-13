@@ -85,9 +85,9 @@ test('管理员新增接口并完成发布、下线和删除', async ({ page, ap
 test('文档存在未保存修改时离开页面需要二次确认', async ({ page, apiMock }) => {
   await apiMock.authenticateAs(ADMIN_USER);
   await page.goto('/#/admin/interfaces/101/document');
-  const docVersionInput = page.getByLabel('文档版本');
-  await expect(docVersionInput).toBeVisible();
-  await docVersionInput.fill('v2');
+  const remarkInput = page.getByLabel('公开备注');
+  await expect(remarkInput).toBeVisible();
+  await remarkInput.fill('更新后的公开备注');
 
   page.once('dialog', async (dialog) => {
     expect(dialog.message()).toBe('当前文档存在未保存修改，确定离开吗？');

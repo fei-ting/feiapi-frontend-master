@@ -164,7 +164,6 @@ const baseline = ref('');
 const keySequence = ref(0);
 /** 文档主信息表单。 */
 const form = reactive<DocMainForm>({
-  docVersion: 'v1',
   requestContentType: 'application/json',
   responseContentType: 'application/json',
   successExample: '',
@@ -241,7 +240,6 @@ const loadDocument = async (): Promise<boolean> => {
     const data = await interfaceService.getDocDetail(interfaceInfoId.value);
     validateCompleteCollectionSnapshot(data);
     const loadedForm: DocMainForm = {
-      docVersion: data.doc?.docVersion ?? 'v1',
       requestContentType: data.doc?.requestContentType ?? 'application/json',
       responseContentType: data.doc?.responseContentType ?? 'application/json',
       successExample: data.doc?.successExample ?? '',
@@ -294,7 +292,6 @@ const buildSaveRequestFromModel = (
 ): InterfaceDocSaveRequest => ({
   interfaceInfoId: interfaceInfoId.value,
   docStatus,
-  docVersion: mainForm.docVersion,
   requestContentType: mainForm.requestContentType,
   responseContentType: mainForm.responseContentType,
   successExample: mainForm.successExample,
@@ -347,7 +344,7 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
     return '';
   }).find(Boolean);
   if (invalidErrorCodeBoundary) return invalidErrorCodeBoundary;
-  if (!form.docVersion || !form.requestContentType || !form.responseContentType) return '文档版本和内容格式不能为空';
+  if (!form.requestContentType || !form.responseContentType) return '请求格式和响应格式不能为空';
   if (responseParams.value.some((param) => !param.name || !param.type)) return '响应字段名称和类型不能为空';
   const responseTreeValidation = validateResponseFieldTree(responseParams.value);
   if (!responseTreeValidation.valid) return responseTreeValidation.message;

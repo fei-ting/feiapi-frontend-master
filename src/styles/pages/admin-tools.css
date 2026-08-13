@@ -471,7 +471,7 @@
 .fei-doc-main-info__title > span { display: inline-grid; width: 32px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 5px; background: #eef4ff; letter-spacing: 0 !important; }
 .fei-doc-main-info__title > div { display: grid; gap: 4px; }
 .fei-doc-main-info__title p { margin: 0; color: var(--fei-text-secondary); font-size: 13px; line-height: 1.5; text-align: left; }
-.fei-doc-main-info__grid { grid-template-columns: minmax(220px, .55fr) repeat(2, minmax(320px, 1fr)); gap: 24px; }
+.fei-doc-main-info__grid { grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 24px; }
 .fei-doc-main-info__label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .fei-doc-main-info__label-row .fei-boundary-remaining { margin-top: 0; white-space: nowrap; }
 .fei-doc-main-info .fei-input,

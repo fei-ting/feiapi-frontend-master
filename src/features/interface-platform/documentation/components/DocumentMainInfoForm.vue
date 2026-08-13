@@ -5,18 +5,11 @@
         <span>01</span>
         <div>
           <h2>文档主信息</h2>
-          <p>配置文档版本、内容格式和面向调用方的公开备注</p>
+          <p>配置内容格式和面向调用方的公开备注</p>
         </div>
       </div>
     </div>
     <div class="fei-form-grid fei-doc-main-info__grid">
-      <label class="fei-field">
-        <span class="fei-doc-main-info__label-row">
-          <span class="fei-label">文档版本</span>
-          <BoundaryRemaining :current="modelValue.docVersion.length" :max="INTERFACE_DOC_LIMITS.docVersionLength" unit="字符" />
-        </span>
-        <input class="fei-input" :value="modelValue.docVersion" maxlength="64" required @input="updateText('docVersion', $event, true)" />
-      </label>
       <label class="fei-field">
         <span class="fei-label">请求格式</span>
         <select class="fei-select" :value="modelValue.requestContentType" @change="updateText('requestContentType', $event)">
