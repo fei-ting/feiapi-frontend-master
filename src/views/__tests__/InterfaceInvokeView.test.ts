@@ -55,7 +55,6 @@ const buildDocDetail = (): InterfaceDocDetailVO => ({
     quotaTypeText: '基础额度接口',
   },
   doc: {
-    docVersion: 'v1',
     requestContentType: 'application/json',
     responseContentType: 'application/json',
     successExample: '{"ok":true}',
@@ -64,7 +63,7 @@ const buildDocDetail = (): InterfaceDocDetailVO => ({
   structuredDocMissing: false,
   requestHeaders: [],
   requestParams: [
-    { id: 1, name: 'name', paramScene: 'BODY', type: 'string', required: true, exampleValue: 'alice' },
+    { id: 1, name: 'name', paramScene: 'BODY', type: 'string', required: true, exampleValue: 'alice', description: '用户名称' },
     { id: 2, name: 'age', paramScene: 'BODY', type: 'number', required: true, exampleValue: '18' },
     { id: 3, name: 'enabled', paramScene: 'BODY', type: 'boolean', required: true, exampleValue: 'true' },
     { id: 4, name: 'meta', paramScene: 'BODY', type: 'object', required: true, exampleValue: '{"level":2}' },
@@ -128,6 +127,7 @@ describe('InterfaceInvokeView', () => {
 
     expect((wrapper.get('#invoke-param-name').element as HTMLInputElement).value).toBe('');
     expect(wrapper.get('#invoke-param-name').attributes('placeholder')).toBe('请输入name');
+    expect(wrapper.get('.fei-invoke-param__info').attributes('data-tooltip')).toBe('用户名称');
     await clickButton(wrapper, '填充示例');
 
     await clickButton(wrapper, '发送请求');

@@ -164,7 +164,6 @@ const baseline = ref('');
 const keySequence = ref(0);
 /** 文档主信息表单。 */
 const form = reactive<DocMainForm>({
-  docVersion: 'v1',
   requestContentType: 'application/json',
   responseContentType: 'application/json',
   successExample: '',
@@ -186,7 +185,7 @@ const canOperate = computed(() => editable.value && !loading.value && !loadError
 /** 当前页面是否允许保存草稿。 */
 const canSaveDraft = computed(() => canOperate.value && dirty.value);
 /** 当前页面是否允许完成维护。 */
-const canComplete = computed(() => canOperate.value && (dirty.value || detail.value?.docStatus === 'DRAFT'));
+const canComplete = computed(() => canOperate.value);
 /** 生成前端稳定键。 */
 const nextClientKey = (prefix: string): string => `${prefix}-${Date.now()}-${++keySequence.value}`;
 /** 校验聚合详情是否包含全部可替换集合。 */
@@ -241,7 +240,6 @@ const loadDocument = async (): Promise<boolean> => {
     const data = await interfaceService.getDocDetail(interfaceInfoId.value);
     validateCompleteCollectionSnapshot(data);
     const loadedForm: DocMainForm = {
-      docVersion: data.doc?.docVersion ?? 'v1',
       requestContentType: data.doc?.requestContentType ?? 'application/json',
       responseContentType: data.doc?.responseContentType ?? 'application/json',
       successExample: data.doc?.successExample ?? '',
@@ -294,7 +292,6 @@ const buildSaveRequestFromModel = (
 ): InterfaceDocSaveRequest => ({
   interfaceInfoId: interfaceInfoId.value,
   docStatus,
-  docVersion: mainForm.docVersion,
   requestContentType: mainForm.requestContentType,
   responseContentType: mainForm.responseContentType,
   successExample: mainForm.successExample,
@@ -347,7 +344,7 @@ const validateForm = (targetStatus: InterfaceDocStatus): string => {
     return '';
   }).find(Boolean);
   if (invalidErrorCodeBoundary) return invalidErrorCodeBoundary;
-  if (!form.docVersion || !form.requestContentType || !form.responseContentType) return '文档版本和内容格式不能为空';
+  if (!form.requestContentType || !form.responseContentType) return '请求格式和响应格式不能为空';
   if (responseParams.value.some((param) => !param.name || !param.type)) return '响应字段名称和类型不能为空';
   const responseTreeValidation = validateResponseFieldTree(responseParams.value);
   if (!responseTreeValidation.valid) return responseTreeValidation.message;
@@ -432,6 +429,9 @@ const saveDocument = async (targetStatus: InterfaceDocStatus): Promise<void> => 
       return;
     }
     emit('show-toast', targetStatus === 'READY' ? '文档维护已完成' : '草稿已保存', 'success');
+    if (targetStatus === 'READY') {
+      await router.push({ name: 'admin-interfaces' });
+    }
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : '接口文档保存失败';
   } finally {
