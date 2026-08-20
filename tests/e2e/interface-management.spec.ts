@@ -31,14 +31,12 @@ test('管理员新增接口并完成发布、下线和删除', async ({ page, ap
 
   await page.getByLabel('成功响应示例', { exact: true }).fill('{"ok":true}');
   await page.getByRole('button', { name: '完成维护' }).first().click();
+  await expect(page).toHaveURL(/#\/admin\/interfaces$/);
   await expect(page.getByText('文档维护已完成', { exact: true })).toBeVisible();
   expect(apiMock.requestsFor('POST', '/api/interfaceDoc/save')[0]?.body).toMatchObject({
     interfaceInfoId: 103,
     docStatus: 'READY',
   });
-
-  await page.getByRole('button', { name: '返回列表' }).click();
-  await expect(page).toHaveURL(/#\/admin\/interfaces$/);
 
   const weatherRow = page.getByRole('row').filter({ hasText: NEW_INTERFACE.name });
   await weatherRow.getByRole('button', { name: '发布', exact: true }).click();
