@@ -63,3 +63,9 @@ export interface CurrentUserPasswordUpdateRequest {
   /** 确认密码 */
   checkPassword: string;
 }
+
+/** 当前用户 secretKey 重置请求 */
+export interface SecretKeyResetRequest {
+  /** 当前登录密码 */
+  userPassword: string;
+}

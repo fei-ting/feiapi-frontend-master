@@ -4,6 +4,7 @@ import type {
   CurrentUserProfileUpdateRequest,
   LoginRequest,
   RegisterRequest,
+  SecretKeyResetRequest,
   UserKeyVO,
   UserVO,
 } from '@/types/user';
@@ -29,5 +30,8 @@ export const userService = {
   },
   updateCurrentUserPassword(data: CurrentUserPasswordUpdateRequest) {
     return http.post<boolean>('/user/update/my/password', data);
+  },
+  resetCurrentUserSecretKey(data: SecretKeyResetRequest) {
+    return http.post<UserKeyVO>('/user/reset/my/secretKey', data);
   },
 };
