@@ -12,8 +12,8 @@ ENV HUSKY=0
 COPY package.json ./package.json
 COPY yarn.lock ./yarn.lock
 
-# 安装依赖（不使用 --frozen-lockfile，允许更新 lockfile）
-RUN yarn config set registry ${NPM_REGISTRY} && yarn install --network-timeout 600000
+# 严格按 yarn.lock 安装依赖，保证镜像构建可复现；lockfile 与 package.json 不一致时直接失败
+RUN yarn config set registry ${NPM_REGISTRY} && yarn install --frozen-lockfile --network-timeout 600000
 
 # 复制项目源码和配置文件
 COPY index.html ./index.html

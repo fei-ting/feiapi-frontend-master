@@ -4,12 +4,14 @@ import AccessKeysView from '../AccessKeysView.vue';
 
 const mocks = vi.hoisted(() => ({
   getCurrentUserKeys: vi.fn(),
+  resetCurrentUserSecretKey: vi.fn(),
   loginUser: { id: 1, userRole: 'user' } as { id: number; userRole: string } | null,
 }));
 
 vi.mock('@/services/user', () => ({
   userService: {
     getCurrentUserKeys: mocks.getCurrentUserKeys,
+    resetCurrentUserSecretKey: mocks.resetCurrentUserSecretKey,
   },
 }));
 
@@ -74,6 +76,56 @@ describe('AccessKeysView', () => {
 
     expect(writeText).not.toHaveBeenCalled();
     expect(wrapper.emitted('show-toast')).toContainEqual(['密钥暂未加载完成', 'error']);
+    wrapper.unmount();
+  });
+
+  it('重置成功后展示新密钥并提示旧密钥失效', async () => {
+    mocks.resetCurrentUserSecretKey.mockResolvedValue({
+      accessKey: 'access-key-value',
+      secretKey: 'new-secret-key-value',
+    });
+    const wrapper = await mountView();
+
+    // Secret Key 卡片的第 3 个按钮为重置入口
+    await wrapper.findAll('.fei-key-card')[1].findAll('button')[2].trigger('click');
+    expect(wrapper.find('.fei-reset-dialog').exists()).toBe(true);
+
+    await wrapper.get('#reset-secret-password').setValue('password123');
+    await wrapper.get('.fei-reset-dialog__footer button').trigger('click');
+    await flushPromises();
+
+    expect(mocks.resetCurrentUserSecretKey).toHaveBeenCalledWith({ userPassword: 'password123' });
+    expect(wrapper.find('.fei-reset-dialog').exists()).toBe(false);
+    // 重置成功后直接展示新密钥明文
+    expect(wrapper.text()).toContain('new-secret-key-value');
+    expect(wrapper.emitted('show-toast')).toContainEqual(['Secret Key 已重置，旧密钥已失效', 'success']);
+    wrapper.unmount();
+  });
+
+  it('密码为空时确认按钮禁用', async () => {
+    const wrapper = await mountView();
+
+    await wrapper.findAll('.fei-key-card')[1].findAll('button')[2].trigger('click');
+    const confirmButton = wrapper.get('.fei-reset-dialog__footer button');
+
+    expect(confirmButton.attributes('disabled')).toBeDefined();
+
+    await wrapper.get('#reset-secret-password').setValue('  ');
+    expect(confirmButton.attributes('disabled')).toBeDefined();
+    wrapper.unmount();
+  });
+
+  it('重置失败时提示错误并保留弹窗', async () => {
+    mocks.resetCurrentUserSecretKey.mockRejectedValue(new Error('当前密码错误'));
+    const wrapper = await mountView();
+
+    await wrapper.findAll('.fei-key-card')[1].findAll('button')[2].trigger('click');
+    await wrapper.get('#reset-secret-password').setValue('wrongpass1');
+    await wrapper.get('.fei-reset-dialog__footer button').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('.fei-reset-dialog').exists()).toBe(true);
+    expect(wrapper.emitted('show-toast')).toContainEqual(['当前密码错误', 'error']);
     wrapper.unmount();
   });
 });

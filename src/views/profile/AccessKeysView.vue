@@ -36,6 +36,9 @@
         <button class="fei-btn fei-btn--secondary fei-btn--sm" @click="copyKey(userKeys?.secretKey || '')">
           复制
         </button>
+        <button class="fei-btn fei-btn--danger fei-btn--sm" @click="openResetDialog">
+          重置
+        </button>
       </div>
 
       <!-- SDK 接入示例 -->
@@ -47,6 +50,52 @@
           </button>
         </div>
         <pre class="fei-sdk-snippet__code"><code>{{ sdkSnippet }}</code></pre>
+      </div>
+    </div>
+
+    <!-- 重置 secretKey 确认弹窗 -->
+    <div
+      v-if="resetDialogVisible"
+      class="fei-reset-mask"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reset-secret-dialog-title"
+      @keyup.esc="cancelReset"
+    >
+      <div class="fei-reset-dialog">
+        <h2 id="reset-secret-dialog-title">重置 Secret Key</h2>
+        <p class="fei-reset-dialog__warning">
+          重置后旧密钥将立即失效，正在使用旧密钥的调用会验签失败。此操作不可撤销，请确认后继续。
+        </p>
+        <label class="fei-reset-dialog__label" for="reset-secret-password">当前密码</label>
+        <input
+          id="reset-secret-password"
+          v-model="resetPassword"
+          class="fei-reset-dialog__input"
+          type="password"
+          autocomplete="current-password"
+          placeholder="请输入当前登录密码"
+          :disabled="resetSubmitting"
+          @keyup.enter="confirmReset"
+        />
+        <div class="fei-reset-dialog__footer">
+          <button
+            class="fei-btn fei-btn--danger"
+            type="button"
+            :disabled="resetSubmitting || !resetPassword.trim()"
+            @click="confirmReset"
+          >
+            {{ resetSubmitting ? '重置中...' : '确认重置' }}
+          </button>
+          <button
+            class="fei-btn fei-btn--secondary"
+            type="button"
+            :disabled="resetSubmitting"
+            @click="cancelReset"
+          >
+            取消
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -74,6 +123,15 @@ const userKeysLoading = ref(false);
 
 /** 是否显示密钥明文 */
 const showSecret = ref(false);
+
+/** 重置弹窗是否可见 */
+const resetDialogVisible = ref(false);
+
+/** 重置弹窗中的密码输入 */
+const resetPassword = ref('');
+
+/** 重置请求提交中状态 */
+const resetSubmitting = ref(false);
 
 /** 密钥占位符 */
 const keyPlaceholder = '********************';
@@ -152,7 +210,120 @@ const loadUserKeys = async () => {
   }
 };
 
+/** 打开重置弹窗 */
+const openResetDialog = () => {
+  resetPassword.value = '';
+  resetDialogVisible.value = true;
+};
+
+/** 关闭重置弹窗 */
+const cancelReset = () => {
+  if (resetSubmitting.value) return;
+  resetDialogVisible.value = false;
+  resetPassword.value = '';
+};
+
+/** 确认重置 secretKey */
+const confirmReset = async () => {
+  const password = resetPassword.value.trim();
+  if (!password || resetSubmitting.value) return;
+  resetSubmitting.value = true;
+  try {
+    const data = await userService.resetCurrentUserSecretKey({ userPassword: password });
+    userKeys.value = data || null;
+    // 重置成功后直接展示新密钥，便于用户立即复制保存
+    showSecret.value = true;
+    resetDialogVisible.value = false;
+    resetPassword.value = '';
+    showToast('Secret Key 已重置，旧密钥已失效', 'success');
+  } catch (error) {
+    const message = error instanceof Error && error.message ? error.message : '重置失败，请稍后重试';
+    showToast(message, 'error');
+  } finally {
+    resetSubmitting.value = false;
+  }
+};
+
 onMounted(async () => {
   await loadUserKeys();
 });
 </script>
+
+<style scoped>
+.fei-btn--danger {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.fei-btn--danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.fei-btn--danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fei-reset-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(3px);
+}
+
+.fei-reset-dialog {
+  width: min(420px, 100%);
+  padding: 24px;
+  background: #fff;
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius-lg);
+  box-shadow: var(--fei-shadow);
+}
+
+.fei-reset-dialog h2 {
+  margin: 0;
+  color: var(--fei-text);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fei-reset-dialog__warning {
+  margin: 12px 0 0;
+  color: #b45309;
+  line-height: 1.8;
+}
+
+.fei-reset-dialog__label {
+  display: block;
+  margin-top: 16px;
+  color: var(--fei-text);
+  font-weight: 600;
+}
+
+.fei-reset-dialog__input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--fei-border);
+  border-radius: var(--fei-radius);
+  font-size: 14px;
+}
+
+.fei-reset-dialog__input:focus {
+  outline: none;
+  border-color: var(--fei-primary);
+}
+
+.fei-reset-dialog__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+</style>
